@@ -56,45 +56,63 @@ function isPalindrome(s: string) {
     selector: "pali-runner",
     template: `
         <tim-plugin-frame [markupError]="markupError">
-            <tim-plugin-header *ngIf="header" header>
-                <span [innerHTML]="header | purify"></span>
+          @if (header) {
+            <tim-plugin-header header>
+              <span [innerHTML]="header | purify"></span>
             </tim-plugin-header>
-            <p stem *ngIf="stem" [innerHTML]="stem | purify"></p>
-            <ng-container body>
-                <div class="form-inline">
-                    <label>{{inputstem}}
-                        <input type="text"
-                               class="form-control"
-                               [ngModel]="userword"
-                               (ngModelChange)="modelChanged.next($event)"
-                               [readonly]="readonly"
-                               [placeholder]="inputplaceholder"
-                               [size]="cols">
-                    </label>
-                    <ng-container *ngIf="userword">
-                        <i title="This word is a palindrome" i18n-title class="glyphicon glyphicon-ok" *ngIf="correct"></i>
-                        <i title="This word is not a palindrome" i18n-title class="glyphicon glyphicon-remove"
-                           *ngIf="!correct"></i>
-                    </ng-container>
-                </div>
-                <div class="buttons">
-                    <button class="timButton"
-                            *ngIf="buttonText()"
-                            [disabled]="isRunning || !userword || readonly"
-                            (click)="saveText()"
-                            [innerHTML]="buttonText() | purify"                    >
-                    </button>
-                    <button class="btn btn-default btn-xs"
-                            *ngIf="edited"
-                            (click)="reset($event)">{{resetText}}</button>
-                </div>
-                <tim-loading *ngIf="isRunning"></tim-loading>
-                <div *ngIf="error" [innerHTML]="error | purify"></div>
-                <pre *ngIf="result" [innerHTML]="result | purify"></pre>
-            </ng-container>
-            <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
+          }
+          @if (stem) {
+            <p stem [innerHTML]="stem | purify"></p>
+          }
+          <ng-container body>
+            <div class="form-inline">
+              <label>{{inputstem}}
+                <input type="text"
+                  class="form-control"
+                  [ngModel]="userword"
+                  (ngModelChange)="modelChanged.next($event)"
+                  [readonly]="readonly"
+                  [placeholder]="inputplaceholder"
+                  [size]="cols">
+              </label>
+              @if (userword) {
+                @if (correct) {
+                  <i title="This word is a palindrome" i18n-title class="glyphicon glyphicon-ok"></i>
+                }
+                @if (!correct) {
+                  <i title="This word is not a palindrome" i18n-title class="glyphicon glyphicon-remove"
+                  ></i>
+                }
+              }
+            </div>
+            <div class="buttons">
+              @if (buttonText()) {
+                <button class="timButton"
+                  [disabled]="isRunning || !userword || readonly"
+                  (click)="saveText()"
+                  [innerHTML]="buttonText() | purify"                    >
+                </button>
+              }
+              @if (edited) {
+                <button class="btn btn-default btn-xs"
+                (click)="reset($event)">{{resetText}}</button>
+              }
+            </div>
+            @if (isRunning) {
+              <tim-loading></tim-loading>
+            }
+            @if (error) {
+              <div [innerHTML]="error | purify"></div>
+            }
+            @if (result) {
+              <pre [innerHTML]="result | purify"></pre>
+            }
+          </ng-container>
+          @if (footer) {
+            <p footer [innerHTML]="footer | purify"></p>
+          }
         </tim-plugin-frame>
-    `,
+        `,
     styleUrls: ["./pali.scss"],
     standalone: false,
 })

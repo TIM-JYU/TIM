@@ -12,19 +12,21 @@ interface MessageDialogData {
 @Component({
     selector: "tim-message-dialog",
     template: `
-        <div class="modal-bg" *ngIf="data.modal"></div>
+        @if (data.modal) {
+          <div class="modal-bg"></div>
+        }
         <tim-dialog-frame>
-            <ng-container header>
-                Message
-            </ng-container>
-            <ng-container body>
-                <span [innerHTML]="data.message"></span>
-            </ng-container>
-            <ng-container footer>
-                <button class="timButton" type="button" (click)="close({})">OK</button>
-            </ng-container>
+          <ng-container header>
+            Message
+          </ng-container>
+          <ng-container body>
+            <span [innerHTML]="data.message"></span>
+          </ng-container>
+          <ng-container footer>
+            <button class="timButton" type="button" (click)="close({})">OK</button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class MessageDialogComponent extends AngularDialogComponent<

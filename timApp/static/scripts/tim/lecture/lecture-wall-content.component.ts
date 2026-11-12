@@ -7,14 +7,22 @@ import {CommonModule} from "@angular/common";
     selector: "tim-lecture-wall-content",
     template: `
         <ul class="list-unstyled">
-            <li *ngFor="let m of messages">
-                <span *ngIf="showName">{{m.user.name}}</span>
-                <span *ngIf="showTime">&lt;{{ m.timestamp | timtime }}&gt;</span>
-                <span *ngIf="showTime || showName">:</span>
-                {{m.message}}
+          @for (m of messages; track m) {
+            <li>
+              @if (showName) {
+                <span>{{m.user.name}}</span>
+              }
+              @if (showTime) {
+                <span>&lt;{{ m.timestamp | timtime }}&gt;</span>
+              }
+              @if (showTime || showName) {
+                <span>:</span>
+              }
+              {{m.message}}
             </li>
+          }
         </ul>
-    `,
+        `,
     standalone: false,
 })
 export class LectureWallContentComponent {

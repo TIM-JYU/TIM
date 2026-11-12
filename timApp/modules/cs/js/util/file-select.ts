@@ -82,37 +82,49 @@ let nextId = 0;
 @Component({
     selector: "file-select",
     template: `
-    <div *ngIf="!dragAndDrop && stem">{{stem}}:</div>
-        <input #input [disabled]="!!progress" type="file"
-               [hidden]="dragAndDrop"
-               [id]="inputId"
-               (change)="onFileChange($event)"
-               (attr.multiple)="multiple"
-               [accept]="accept"/>
-        <notification *ngIf="!dragAndDrop" class="error" #error></notification>
-        <ng-container *ngIf="dragAndDrop">
-            <label i18n-title title="Drag-and-drop or Click to browse" [for]="inputId" *ngIf="dragAndDrop"
-                   class="drag-and-drop"
-                   (drop)="onDrop($event)"
-                   (dragover)="onDragOver($event)"
-                   (click)="clearStatus();">
-                <div>
-                    <div>
-                        <p *ngIf="!progress && loadInfo.length == 0 && error.length == 0">{{stem}}</p>
-                        <ng-container *ngIf="progress">
-                            <tim-loading></tim-loading>
-                            <p *ngIf="numFiles > 1">File {{numUploaded + 1}} / {{numFiles}}</p>
-                            <p>{{progress}}</p>
-                        </ng-container>
-                        <notification #loadInfo></notification>
-                        <notification class="error" #error></notification>
-                        <notification class="warning" #warning></notification>
-                    </div>
-                </div>
-            </label>
-        </ng-container>
-        <p *ngIf="!isValidUploadTarget" i18n class="error">No file upload or observers present, the upload may not work. This is a programming/configuration error.</p>
-`,
+    @if (!dragAndDrop && stem) {
+      <div>{{stem}}:</div>
+    }
+    <input #input [disabled]="!!progress" type="file"
+      [hidden]="dragAndDrop"
+      [id]="inputId"
+      (change)="onFileChange($event)"
+      (attr.multiple)="multiple"
+      [accept]="accept"/>
+    @if (!dragAndDrop) {
+      <notification class="error" #error></notification>
+    }
+    @if (dragAndDrop) {
+      @if (dragAndDrop) {
+        <label i18n-title title="Drag-and-drop or Click to browse" [for]="inputId"
+          class="drag-and-drop"
+          (drop)="onDrop($event)"
+          (dragover)="onDragOver($event)"
+          (click)="clearStatus();">
+          <div>
+            <div>
+              @if (!progress && loadInfo.length == 0 && error.length == 0) {
+                <p>{{stem}}</p>
+              }
+              @if (progress) {
+                <tim-loading></tim-loading>
+                @if (numFiles > 1) {
+                  <p>File {{numUploaded + 1}} / {{numFiles}}</p>
+                }
+                <p>{{progress}}</p>
+              }
+              <notification #loadInfo></notification>
+              <notification class="error" #error></notification>
+              <notification class="warning" #warning></notification>
+            </div>
+          </div>
+        </label>
+      }
+    }
+    @if (!isValidUploadTarget) {
+      <p i18n class="error">No file upload or observers present, the upload may not work. This is a programming/configuration error.</p>
+    }
+    `,
     standalone: false,
 })
 export class FileSelectComponent {
@@ -428,7 +440,8 @@ export class FileSelectComponent {
 @Component({
     selector: "file-select-manager",
     template: `
-        <file-select *ngFor="let info of fileInfo"
+        @for (info of fileInfo; track info) {
+          <file-select
             [dragAndDrop]="dragAndDrop"
             [stem]="info.stem"
             [id]="info.id"
@@ -442,7 +455,8 @@ export class FileSelectComponent {
             [mappingFunction]="fileMappings(this)"
             [accept]="accept"
             [maxSize]="maxSize">
-        </file-select>`,
+          </file-select>
+        }`,
     standalone: false,
 })
 export class FileSelectManagerComponent {

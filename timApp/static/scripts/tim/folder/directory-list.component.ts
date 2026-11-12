@@ -31,114 +31,164 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
 @Component({
     selector: "tim-index",
     template: `
-        <table class="table" *ngIf="itemList.length > 0 || item.path">
+        @if (itemList.length > 0 || item.path) {
+          <table class="table">
             <thead>
-            <ng-template #sortAsc><span class="glyphicon glyphicon-triangle-top" aria-hidden="true"></span>
-            </ng-template>
-            <ng-template #sortDesc><span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>
-            </ng-template>
-            <tr>
+              <tr>
                 <th></th>
                 <th (click)="sortListing('name')">
-                    Name
-                    <span *ngIf="currentSortOrder === 'name'">
-                        <span *ngIf="sortByNameAsc; then sortDesc else sortAsc"></span>
+                  Name
+                  @if (currentSortOrder === 'name') {
+                    <span>
+                      @if (sortByNameAsc) {
+                        <span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>
+                      } @else {
+                        <span class="glyphicon glyphicon-triangle-top" aria-hidden="true"></span>
+                      }
                     </span>
+                  }
                 </th>
                 <th (click)="sortListing('time')">
-                    Last modified
-                    <span *ngIf="currentSortOrder === 'time'">
-                        <span *ngIf="sortByModifiedDesc; then sortAsc else sortDesc"></span>
+                  Last modified
+                  @if (currentSortOrder === 'time') {
+                    <span>
+                      @if (sortByModifiedDesc) {
+                        <span class="glyphicon glyphicon-triangle-top" aria-hidden="true"></span>
+                      } @else {
+                        <span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>
+                      }
                     </span>
+                  }
                 </th>
-                <th *ngIf="displayAccessBadges"
+                @if (displayAccessBadges) {
+                  <th
                     (click)="showAccessBadges = !showAccessBadges">{{ showAccessBadges ? "Access" : "A" }}
-                </th>
+                  </th>
+                }
                 <th>Owners</th>
                 <th>Rights</th>
-                <th *ngIf="displayDocumentTags" (click)="showTags = !showTags">{{ showTags ? "Tags" : "T" }}</th>
-                <th *ngIf="showId" class="gray" (click)="sortListing('id')">
+                @if (displayDocumentTags) {
+                  <th (click)="showTags = !showTags">{{ showTags ? "Tags" : "T" }}</th>
+                }
+                @if (showId) {
+                  <th class="gray" (click)="sortListing('id')">
                     Id
-                    <span *ngIf="currentSortOrder === 'id'">
-                        <span *ngIf="sortByIdAsc; then sortDesc else sortAsc"></span>
-                    </span>
-                </th>
-            </tr>
+                    @if (currentSortOrder === 'id') {
+                      <span>
+                        @if (sortByIdAsc) {
+                          <span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span>
+                        } @else {
+                          <span class="glyphicon glyphicon-triangle-top" aria-hidden="true"></span>
+                        }
+                      </span>
+                    }
+                  </th>
+                }
+              </tr>
             </thead>
             <tbody>
-            <tr *ngIf="item.path">
-                <td>
+              @if (item.path) {
+                <tr>
+                  <td>
                     <a href="/view/{{ item.location }}">
-                        <span class="glyphicon glyphicon-level-up" aria-hidden="true"></span>
+                      <span class="glyphicon glyphicon-level-up" aria-hidden="true"></span>
                     </a>
-                </td>
-                <td><a href="/view/{{ item.location }}">Go to parent folder</a></td>
-                <td *ngIf="displayAccessBadges"></td>
-                <td *ngIf="displayDocumentTags"></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr *ngFor="let item of itemList">
-                <td>
-                    <a *ngIf="item.isFolder" href="/view/{{ item.path }}">
+                  </td>
+                  <td><a href="/view/{{ item.location }}">Go to parent folder</a></td>
+                  @if (displayAccessBadges) {
+                    <td></td>
+                  }
+                  @if (displayDocumentTags) {
+                    <td></td>
+                  }
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              }
+              @for (item of itemList; track item) {
+                <tr>
+                  <td>
+                    @if (item.isFolder) {
+                      <a href="/view/{{ item.path }}">
                         <span class="glyphicon glyphicon-folder-open" aria-hidden="true"></span>
-                    </a>
-                </td>
-                <td>
+                      </a>
+                    }
+                  </td>
+                  <td>
                     <a href="/view/{{ item.path }}">{{ item.title }}</a>&ngsp;
-                </td>
-                <td>{{ item.modified }}</td>
-                <td *ngIf="displayAccessBadges" class="col-access-badges">
-                    <ng-container *ngIf="showAccessBadges">
+                  </td>
+                  <td>{{ item.modified }}</td>
+                  @if (displayAccessBadges) {
+                    <td class="col-access-badges">
+                      @if (showAccessBadges) {
                         <span class="accessbadge ab-{{ getItemBadgeName(item.id).toLowerCase() }}"
-                              title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</span>
-                    </ng-container>
+                        title="{{ AccessLevelBadgeInfo[getItemBadge(item.id)] }}">{{ getItemBadgeName(item.id) }}</span>
+                      }
+                    </td>
+                  }
+                  <td>{{ listOwnerNames(item) }}</td>
+                  <td>
+                    @if (item.rights.editable && !item.isFolder) {
+                      <a title="Edit"
+                        href="/view/{{ item.path }}"><i
+                      class="glyphicon glyphicon-pencil"></i></a>
+                    }
+                    <ng-container> &ngsp;</ng-container>@if (item.rights.manage) {
+                    <a title="Manage" href="/manage/{{ item.path }}"><i
+                    class="glyphicon glyphicon-cog"></i></a>
+                  }
+                  <ng-container> &ngsp;</ng-container>@if (item.rights.teacher && !item.isFolder) {
+                  <a title="Teacher"
+                    href="/teacher/{{ item.path }}"><i class="glyphicon glyphicon-education"></i></a>
+                  }
                 </td>
-                <td>{{ listOwnerNames(item) }}</td>
-                <td>
-                    <a title="Edit" *ngIf="item.rights.editable && !item.isFolder"
-                       href="/view/{{ item.path }}"><i
-                            class="glyphicon glyphicon-pencil"></i></a>
-                    &ngsp;<a title="Manage" *ngIf="item.rights.manage" href="/manage/{{ item.path }}"><i
-                        class="glyphicon glyphicon-cog"></i></a>
-                    &ngsp;<a title="Teacher" *ngIf="item.rights.teacher && !item.isFolder"
-                             href="/teacher/{{ item.path }}"><i class="glyphicon glyphicon-education"></i></a>
-                </td>
-                <td *ngIf="displayDocumentTags" class="col-item-tags">
-                    <ng-container *ngIf="showTags">
-                        <span class="itemtags" *ngFor="let tag of getItemTags(item)">
-                            <span class="itemtag tagtype-{{ getTagTypeString(tag) }}"
-                                  title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires!.toDate() + ')' : '' }}">{{ tag.name }}</span>
+                @if (displayDocumentTags) {
+                  <td class="col-item-tags">
+                    @if (showTags) {
+                      @for (tag of getItemTags(item); track tag) {
+                        <span class="itemtags">
+                          <span class="itemtag tagtype-{{ getTagTypeString(tag) }}"
+                          title="{{ tag.name }} {{ tag.expires ? '(expires on ' + tag.expires!.toDate() + ')' : '' }}">{{ tag.name }}</span>
                         </span>
-                    </ng-container>
-                </td>
-                <td *ngIf="showId">
+                      }
+                    }
+                  </td>
+                }
+                @if (showId) {
+                  <td>
                     {{ item.id }}
-                </td>
-            </tr>
-            </tbody>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
         </table>
-        <p *ngIf="itemList.length == 0">There are no items to show.</p>
-        <tabset *ngIf="canCreate">
+        }
+        @if (itemList.length == 0) {
+          <p>There are no items to show.</p>
+        }
+        @if (canCreate) {
+          <tabset>
             <tab [active]="false" (selectTab)="tabSelection(0)">
-                <ng-template tabHeading>
-                    <span>Create a new document</span>
-                    <span class="glyphicon glyphicon-file icon-inline" aria-hidden="true"></span>
-                </ng-template>
-                <create-item itemType="document" itemLocation="{{ item.path }}"
-                             [enable]="activeTab === 0"></create-item>
+              <ng-template tabHeading>
+                <span>Create a new document</span>
+                <span class="glyphicon glyphicon-file icon-inline" aria-hidden="true"></span>
+              </ng-template>
+              <create-item itemType="document" itemLocation="{{ item.path }}"
+              [enable]="activeTab === 0"></create-item>
             </tab>
             <tab [active]="false" (selectTab)="tabSelection(1)">
-                <ng-template tabHeading>
-                    <span>Create a new folder</span>
-                    <span class="glyphicon glyphicon-folder-open icon-inline" aria-hidden="true"></span>
-                </ng-template>
-                <create-item itemType="folder" itemLocation="{{ item.path }}" [enable]="activeTab === 1"></create-item>
+              <ng-template tabHeading>
+                <span>Create a new folder</span>
+                <span class="glyphicon glyphicon-folder-open icon-inline" aria-hidden="true"></span>
+              </ng-template>
+              <create-item itemType="folder" itemLocation="{{ item.path }}" [enable]="activeTab === 1"></create-item>
             </tab>
-        </tabset>
-    `,
+          </tabset>
+        }
+        `,
     styleUrls: ["directory-list.component.scss"],
     standalone: false,
 })

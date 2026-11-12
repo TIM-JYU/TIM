@@ -9,31 +9,46 @@ import {isDocumentGlobals, someglobals} from "tim/util/globals";
 @Component({
     selector: "tim-site-header",
     template: `
-        <div class="siteheader" *ngIf="!hide.siteheader">
+        @if (!hide.siteheader) {
+          <div class="siteheader">
             <div class="hidden-lg hidden-md hamburger-placeholder" style="width: 27px; height: 1px"></div>
-            <a class="logolink" title="To TIM main page" i18n-title *ngIf="!hide.links" href="/">
-                <tim-logo *ngIf="!hide.logo"></tim-logo>
-            </a>
-            <a class="view-toggle"
-               *ngIf="activeView && !hide.headerNav"
-               (click)="toggleViewVisibility()"
-               title="Show/hide view menu"
-               i18n-title>
+            @if (!hide.links) {
+              <a class="logolink" title="To TIM main page" i18n-title href="/">
+                @if (!hide.logo) {
+                  <tim-logo></tim-logo>
+                }
+              </a>
+            }
+            @if (activeView && !hide.headerNav) {
+              <a class="view-toggle"
+                (click)="toggleViewVisibility()"
+                title="Show/hide view menu"
+                i18n-title>
                 <span>{{activeView}}</span>
                 <i class="glyphicon"
-                   [class.glyphicon-triangle-bottom]="!displayViewHeader"
-                   [class.glyphicon-triangle-top]="displayViewHeader"></i>
-            </a>
-            <tim-logo *ngIf="hide.links && !hide.logo"></tim-logo>
-            <tim-login-menu *ngIf="!hide.login"></tim-login-menu>
-            <img *ngIf="!hide.unilogo"
-                 class="jyu-logo"
-                 alt="University of Jyväskylä"
-                 i18n-alt
-                 src="/static/images/jyulogo.png"/>
-            <tim-search-button [floating]="true" *ngIf="!hide.search"></tim-search-button>
-        </div>
-    `,
+                  [class.glyphicon-triangle-bottom]="!displayViewHeader"
+                [class.glyphicon-triangle-top]="displayViewHeader"></i>
+              </a>
+            }
+            @if (hide.links && !hide.logo) {
+              <tim-logo></tim-logo>
+            }
+            @if (!hide.login) {
+              <tim-login-menu></tim-login-menu>
+            }
+            @if (!hide.unilogo) {
+              <img
+                class="jyu-logo"
+                alt="University of Jyväskylä"
+                i18n-alt
+                src="/static/images/jyulogo.png"/>
+            }
+            @if (!hide.search) {
+              <tim-search-button [floating]="true"></tim-search-button>
+            }
+          </div>
+        }
+        `,
     styleUrls: ["./site-header.component.scss"],
     standalone: false,
 })

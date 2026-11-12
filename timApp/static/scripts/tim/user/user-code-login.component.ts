@@ -18,30 +18,36 @@ export const SPLIT_EVERY = 4;
 @Component({
     selector: "tim-user-code-login",
     template: `
-        <tim-alert *ngIf="loginError">{{ loginError }}</tim-alert>
-        <div class="login-message" *ngIf="loginMessage" [innerHTML]="loginMessage | purify"></div>
+        @if (loginError) {
+          <tim-alert>{{ loginError }}</tim-alert>
+        }
+        @if (loginMessage) {
+          <div class="login-message" [innerHTML]="loginMessage | purify"></div>
+        }
         <form (submit)="login()">
-            <fieldset [disabled]="loggingIn">
-                <input focusMe 
-                       [enable]="doFocus"
-                       class="form-control code-input"
-                       id="login-code"
-                       name="login-code"
-                       type="text"
-                       autocomplete="off"
-                       inputmode="numeric"
-                       pattern="[0-9]*"
-                       [value]="loginCode"
-                       [selectionStart]="selectionPos"
-                       [selectionEnd]="selectionPos"
-                       (input)="onInput($event)"
-                       (keydown)="onKey($event)"
-                >
-                <input class="timButton" type="submit" value="Log in" i18n-value [disabled]="!canLogin">
-                <div class="login-progress" *ngIf="loggingIn"><tim-loading></tim-loading> <ng-container i18n>Logging in, please wait...</ng-container></div>
-            </fieldset>
+          <fieldset [disabled]="loggingIn">
+            <input focusMe
+              [enable]="doFocus"
+              class="form-control code-input"
+              id="login-code"
+              name="login-code"
+              type="text"
+              autocomplete="off"
+              inputmode="numeric"
+              pattern="[0-9]*"
+              [value]="loginCode"
+              [selectionStart]="selectionPos"
+              [selectionEnd]="selectionPos"
+              (input)="onInput($event)"
+              (keydown)="onKey($event)"
+              >
+            <input class="timButton" type="submit" value="Log in" i18n-value [disabled]="!canLogin">
+            @if (loggingIn) {
+              <div class="login-progress"><tim-loading></tim-loading> <ng-container i18n>Logging in, please wait...</ng-container></div>
+            }
+          </fieldset>
         </form>
-    `,
+        `,
     styleUrls: ["./user-code-login.component.scss"],
     standalone: false,
 })

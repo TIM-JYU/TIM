@@ -17,40 +17,44 @@ import type {Annotation} from "tim/velp/velptypes";
     selector: "velp-summary",
     template: `
         <div class="velpArea">
-            <div class="velpSummary velp-summary-autoscroll">
-                <h5>{{ selectedUser.name }} task annotations</h5>
-                <table>
-                    <tr>
-                        <th class="summSecColumn">Annotation</th>
-                        <th class="summThirdColumn">Points</th>
-                    </tr>
-                    <tr *ngFor="let a of taskAnns">
-                        <td class="summSecColumn"><a
-                                (click)="annotationselected.emit(a)">{{ a.content }}</a>
-                        </td>
-                        <td class="summThirdColumn"><span>{{ a.points }}</span></td>
-                    </tr>
-                    <tr>
-                        <th class="summSecColumn">Points total in all answers</th>
-                        <th class="summThirdColumn"><span>{{ getTotalPoints(taskAnns) }}</span></th>
-                    </tr>
-                </table>
-                <h5>Other document annotations</h5>
-                <table>
-                    <tr>
-                        <th class="summSecColumn">Annotation</th>
-                        <th class="summThirdColumn">Points</th>
-                    </tr>
-                    <tr *ngFor="let b of docAnns">
-                        <td class="summSecColumn"><a
-                                (click)="annotationselected.emit(b)">{{ b.content }}</a>
-                        </td>
-                        <td class="summThirdColumn"><span>{{ b.points }}</span></td>
-                    </tr>
-                </table>
-            </div>
+          <div class="velpSummary velp-summary-autoscroll">
+            <h5>{{ selectedUser.name }} task annotations</h5>
+            <table>
+              <tr>
+                <th class="summSecColumn">Annotation</th>
+                <th class="summThirdColumn">Points</th>
+              </tr>
+              @for (a of taskAnns; track a) {
+                <tr>
+                  <td class="summSecColumn"><a
+                  (click)="annotationselected.emit(a)">{{ a.content }}</a>
+                </td>
+                <td class="summThirdColumn"><span>{{ a.points }}</span></td>
+              </tr>
+            }
+            <tr>
+              <th class="summSecColumn">Points total in all answers</th>
+              <th class="summThirdColumn"><span>{{ getTotalPoints(taskAnns) }}</span></th>
+            </tr>
+          </table>
+          <h5>Other document annotations</h5>
+          <table>
+            <tr>
+              <th class="summSecColumn">Annotation</th>
+              <th class="summThirdColumn">Points</th>
+            </tr>
+            @for (b of docAnns; track b) {
+              <tr>
+                <td class="summSecColumn"><a
+                (click)="annotationselected.emit(b)">{{ b.content }}</a>
+              </td>
+              <td class="summThirdColumn"><span>{{ b.points }}</span></td>
+            </tr>
+          }
+        </table>
         </div>
-    `,
+        </div>
+        `,
     styleUrls: ["./velp-summary.component.scss"],
     standalone: false,
 })

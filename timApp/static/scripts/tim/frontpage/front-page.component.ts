@@ -15,98 +15,126 @@ import {getVisibilityVars} from "tim/timRoot";
     selector: "tim-start",
     template: `
         <div class="row">
-            <div class="col-lg-6 col-lg-offset-3">
-                <h1 class="text-center">TIM - The Interactive Material</h1>
+          <div class="col-lg-6 col-lg-offset-3">
+            <h1 class="text-center">TIM - The Interactive Material</h1>
+          </div>
+          @if (isLoggedIn()) {
+            <div class="col-lg-3">
+              <tim-language-selector [saveOnChange]="true" [(language)]="settings.language"></tim-language-selector>
             </div>
-            <div class="col-lg-3" *ngIf="isLoggedIn()">
-                <tim-language-selector [saveOnChange]="true" [(language)]="settings.language"></tim-language-selector>
-            </div>
+          }
         </div>
         <div class="row">
-            <div class="col-md-7 col-md-offset-3">
-                <tim-bookmark-folder-box *ngIf="bookmarks"
-                                         [bookmarks]="bookmarks"
-                                         [displayName]="'My courses' | bookmarkName"
-                                         [hideMode]="true"
-                                         bookmarkFolderName="My courses">
-                </tim-bookmark-folder-box>
-            </div>
+          <div class="col-md-7 col-md-offset-3">
+            @if (bookmarks) {
+              <tim-bookmark-folder-box
+                [bookmarks]="bookmarks"
+                [displayName]="'My courses' | bookmarkName"
+                [hideMode]="true"
+                bookmarkFolderName="My courses">
+              </tim-bookmark-folder-box>
+            }
+          </div>
         </div>
         <div class="row">
-            <div class="col-md-5 col-md-offset-2">
-                <a href="/view/about">
-                    <img class="img-responsive" alt="TIM brochure" i18n-alt src="/static/images/responsive.jpg"/>
-                </a>
-            </div>
-            <div class="col-md-4">
-                <h2 i18n>Get started</h2>
-                <button *ngIf="!isLoggedIn()" (click)="openLoginDialog(false)" type="button"
-                        class="timButton margin-4" i18n>Log in
+          <div class="col-md-5 col-md-offset-2">
+            <a href="/view/about">
+              <img class="img-responsive" alt="TIM brochure" i18n-alt src="/static/images/responsive.jpg"/>
+            </a>
+          </div>
+          <div class="col-md-4">
+            <h2 i18n>Get started</h2>
+            @if (!isLoggedIn()) {
+              <button (click)="openLoginDialog(false)" type="button"
+                class="timButton margin-4" i18n>Log in
                 </button>
-                <button *ngIf="!isLoggedIn() && !hideVars.signup" (click)="openLoginDialog(true)" type="button"
-                        class="timButton margin-4"
-                        title="Create a TIM account"
-                        i18n-title
-                        i18n>Sign up
+            }
+            @if (!isLoggedIn() && !hideVars.signup) {
+              <button (click)="openLoginDialog(true)" type="button"
+                class="timButton margin-4"
+                title="Create a TIM account"
+                i18n-title
+                i18n>Sign up
                 </button>
-                <ul class="list-unstyled">
-                    <li *ngIf="isLoggedIn()" class="h5">
-                        <a href="/view/{{getCurrentUserFolderPath()}}" i18n>My documents</a>
-                    </li>
-                    <li class="h5"><a href="/view/" i18n>All documents</a></li>
-                    <li class="h5">
-                        <a (click)="openCourseListDialog()" href="#" i18n>Available courses</a>
-                    </li>
-                    <li *ngIf="isLoggedIn()" class="h5">
-                        <a (click)="enableCreate()" href="#" i18n>Create a new document</a>
-                    </li>
-                </ul>
-                <bootstrap-panel *ngIf="creatingNew"
-                                 title="Create a new document"
-                                 i18n-title
-                                 [showClose]="true"
-                                 (closed)="cancelCreate()">
-                    <create-item itemTitle="My document"
-                                 i18n-itemTitle
-                                 itemLocation="{{getCurrentUserFolderPath()}}"
-                                 itemType="document">
-                    </create-item>
-                </bootstrap-panel>
-            </div>
+            }
+            <ul class="list-unstyled">
+              @if (isLoggedIn()) {
+                <li class="h5">
+                  <a href="/view/{{getCurrentUserFolderPath()}}" i18n>My documents</a>
+                </li>
+              }
+              <li class="h5"><a href="/view/" i18n>All documents</a></li>
+              <li class="h5">
+                <a (click)="openCourseListDialog()" href="#" i18n>Available courses</a>
+              </li>
+              @if (isLoggedIn()) {
+                <li class="h5">
+                  <a (click)="enableCreate()" href="#" i18n>Create a new document</a>
+                </li>
+              }
+            </ul>
+            @if (creatingNew) {
+              <bootstrap-panel
+                title="Create a new document"
+                i18n-title
+                [showClose]="true"
+                (closed)="cancelCreate()">
+                <create-item itemTitle="My document"
+                  i18n-itemTitle
+                  itemLocation="{{getCurrentUserFolderPath()}}"
+                  itemType="document">
+                </create-item>
+              </bootstrap-panel>
+            }
+          </div>
         </div>
         <div class="row">
-            <div class="col-md-7 col-md-offset-3">
-                <h3 i18n>What is TIM?</h3>
-                <p i18n>TIM is a document-based cloud service for producing interactive materials.</p>
-            </div>
+          <div class="col-md-7 col-md-offset-3">
+            <h3 i18n>What is TIM?</h3>
+            <p i18n>TIM is a document-based cloud service for producing interactive materials.</p>
+          </div>
         </div>
         <div class="row">
-            <div class="col-md-3 col-md-offset-3">
-                <h3>TIM</h3>
-                <ul class="list-unstyled">
-                    <li><a href="{{ getIntroLink() }}" i18n>Introduction</a></li>
-                    <li><a href="/view/tim/ohjeita/pikaohje" i18n>Quick start</a><sup *ngIf="notFinnish()"> (F)</sup></li>
-                    <li><a href="/view/tim/ohjeita/ohjeet" i18n>Content creator guide</a><sup *ngIf="notFinnish()"> (F)</sup></li>
-                    <li><a href="/view/tim/TIM-ohjeet" i18n>All guides</a><sup *ngIf="notFinnish()"> (F)</sup></li>
-                </ul>
-            </div>
-            <div class="col-md-4">
-                <h3 i18n>Examples <sup *ngIf="notFinnish()">(F)</sup></h3>
-                <ul class="list-unstyled">
-                    <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista" i18n>TIM's possibilities</a></li>
-                    <li><a *ngIf="isLoggedIn()" href="/view/tim/Eri-ohjelmointikielia" i18n>
-                        Various programming languages</a></li>
-                    <li><a *ngIf="isLoggedIn()" href="/view/tim/muita-esimerkkeja" i18n>
-                        Usage in different subjects</a></li>
-                </ul>
-            </div>
+          <div class="col-md-3 col-md-offset-3">
+            <h3>TIM</h3>
+            <ul class="list-unstyled">
+              <li><a href="{{ getIntroLink() }}" i18n>Introduction</a></li>
+              <li><a href="/view/tim/ohjeita/pikaohje" i18n>Quick start</a>@if (notFinnish()) {
+              <sup> (F)</sup>
+            }</li>
+            <li><a href="/view/tim/ohjeita/ohjeet" i18n>Content creator guide</a>@if (notFinnish()) {
+            <sup> (F)</sup>
+          }</li>
+          <li><a href="/view/tim/TIM-ohjeet" i18n>All guides</a>@if (notFinnish()) {
+          <sup> (F)</sup>
+        }</li>
+        </ul>
         </div>
-        <div class="row" *ngIf="notFinnish()">
+        <div class="col-md-4">
+          <h3 i18n>Examples @if (notFinnish()) {
+<sup>(F)</sup>
+}</h3>
+          <ul class="list-unstyled">
+            <li><a href="/view/tim/Esimerkkeja-TIMin-mahdollisuuksista" i18n>TIM's possibilities</a></li>
+            <li>@if (isLoggedIn()) {
+              <a href="/view/tim/Eri-ohjelmointikielia" i18n>
+                        Various programming languages</a>
+            }</li>
+            <li>@if (isLoggedIn()) {
+              <a href="/view/tim/muita-esimerkkeja" i18n>
+                        Usage in different subjects</a>
+            }</li>
+          </ul>
+        </div>
+        </div>
+        @if (notFinnish()) {
+          <div class="row">
             <div class="col-md-4 col-md-offset-4 text-center" i18n>
                 <sup>(F)</sup> in Finnish
             </div>
-        </div>
-    `,
+          </div>
+        }
+        `,
     standalone: false,
 })
 export class FrontPageComponent {

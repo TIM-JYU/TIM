@@ -269,132 +269,154 @@ export function postProcessCalendarEvent(
         },
     ],
     template: `
-        <tim-calendar-header 
-                [locale]="locale" 
-                [(view)]="viewMode" 
-                [(viewDate)]="viewDate" 
-                *ngIf="advancedUI">
-        </tim-calendar-header>
-        <div class="row text-center" *ngIf="advancedUI">
+        @if (advancedUI) {
+          <tim-calendar-header
+            [locale]="locale"
+            [(view)]="viewMode"
+            [(viewDate)]="viewDate"
+            >
+          </tim-calendar-header>
+        }
+        @if (advancedUI) {
+          <div class="row text-center">
             <div class="col-md-4">
-                <div class="btn-group edit-btn" [hidden]="!userIsManager() || this.eventTypes.length == 0">
-                    <button i18n (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
-                    <button i18n (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
-                </div>
+              <div class="btn-group edit-btn" [hidden]="!userIsManager() || this.eventTypes.length == 0">
+                <button i18n (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
+                <button i18n (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
+              </div>
             </div>
             <div class="col-md-4">
-                <div [style.visibility]="editEnabled ? 'visible' : 'hidden'" class="event-btn">
-                    <select [(ngModel)]="selectedEvent" class="form-control">
-                        <option *ngFor="let button of eventTypes" [value]="button">{{button}}</option>
-                    </select>
-                </div>
+              <div [style.visibility]="editEnabled ? 'visible' : 'hidden'" class="event-btn">
+                <select [(ngModel)]="selectedEvent" class="form-control">
+                  @for (button of eventTypes; track button) {
+                    <option [value]="button">{{button}}</option>
+                  }
+                </select>
+              </div>
             </div>
             <div class="col-md-4">
-                <!-- TODO: Checkboxes for filtering purposes
-                <div class="checkbox-group"> Show:
-                    <div *ngFor="let box of checkboxEvents"> 
-                        <input i18n (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
-                               [(ngModel)]="box.checked" [checked]="">{{box.name}}
-                    </div>
+              <!-- TODO: Checkboxes for filtering purposes
+              <div class="checkbox-group"> Show:
+                <div *ngFor="let box of checkboxEvents">
+                  <input i18n (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
+                    [(ngModel)]="box.checked" [checked]="">{{box.name}}
+                  </div>
                 </div>
                 -->
             </div>
-        </div>
-
+          </div>
+        }
+        
         <ng-template
-                #weekViewHourSegmentTemplate
-                let-segment="segment"
-                let-locale="locale"
-                let-segmentHeight="segmentHeight"
-                let-isTimeLabel="isTimeLabel"
-        >
-            <div
-                    #segmentElement
-                    class="cal-hour-segment"
-                    [style.height.px]="segmentHeight"
-                    [class.cal-hour-start]="segment.isStart"
-                    [class.cal-after-hour-start]="!segment.isStart"
-                    [ngClass]="segment.cssClass"
-                    (mousedown)="editEnabled && startDragToCreate(segment, $event, segmentElement)"
-
+          #weekViewHourSegmentTemplate
+          let-segment="segment"
+          let-locale="locale"
+          let-segmentHeight="segmentHeight"
+          let-isTimeLabel="isTimeLabel"
+          >
+          <div
+            #segmentElement
+            class="cal-hour-segment"
+            [style.height.px]="segmentHeight"
+            [class.cal-hour-start]="segment.isStart"
+            [class.cal-after-hour-start]="!segment.isStart"
+            [ngClass]="segment.cssClass"
+            (mousedown)="editEnabled && startDragToCreate(segment, $event, segmentElement)"
+        
             >
-                <div class="cal-time" *ngIf="isTimeLabel">
-                    {{ segment.date | calendarDate:'weekViewHour':locale }}
-                </div>
-            </div>
+            @if (isTimeLabel) {
+              <div class="cal-time">
+                {{ segment.date | calendarDate:'weekViewHour':locale }}
+              </div>
+            }
+          </div>
         </ng-template>
         <div class="cal-ui-switch">
-            <label><input type="checkbox" [(ngModel)]="advancedUI" /><ng-container i18n>Advanced</ng-container></label>
-            <tim-calendar-minimal-header 
-                    [locale]="locale" 
-                    [(view)]="viewMode" 
-                    [(viewDate)]="viewDate" 
-                    *ngIf="!advancedUI">
+          <label><input type="checkbox" [(ngModel)]="advancedUI" /><ng-container i18n>Advanced</ng-container></label>
+          @if (!advancedUI) {
+            <tim-calendar-minimal-header
+              [locale]="locale"
+              [(view)]="viewMode"
+              [(viewDate)]="viewDate"
+              >
             </tim-calendar-minimal-header>
+          }
         </div>
-        <div class="progress" *ngIf="loadingEvents">
-            <div class="progress-bar progress-bar-striped active" role="progressbar" [style.width.%]="100"></div>    
+        @if (loadingEvents) {
+          <div class="progress">
+            <div class="progress-bar progress-bar-striped active" role="progressbar" [style.width.%]="100"></div>
+          </div>
+        }
+        <div>
+          @switch (viewMode) {
+            @case ('month') {
+              <mwl-calendar-month-view
+                [viewDate]="viewDate"
+                [events]="events"
+                [locale]="locale"
+                [weekStartsOn]="weekStartsOn"
+                (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
+                (dayClicked)="changeToDay($event.day.date)"
+                (eventClicked)="handleEventClick($event.event)"
+                >
+              </mwl-calendar-month-view>
+            }
+            @case ('week') {
+              <mwl-calendar-week-view
+                [viewDate]="viewDate"
+                [events]="events"
+                [hourSegmentHeight]="segmentHeight"
+                [hourDuration]="hourDuration"
+                [hourSegments]="segmentsInHour"
+                [dayStartHour]="dayStartHour"
+                [dayEndHour]="dayEndHour"
+                [locale]="locale"
+                [minimumEventHeight]="minimumEventHeight"
+                [weekStartsOn]="weekStartsOn"
+                (dayHeaderClicked)="viewDay($event.day.date)"
+                (hourSegmentClicked)="clickedDate = $event.date"
+                [hourSegmentTemplate]="weekViewHourSegmentTemplate"
+                (eventClicked)="handleEventClick($event.event)"
+                (eventTimesChanged)="eventTimesChanged($event)"
+                >
+              </mwl-calendar-week-view>
+            }
+            @case ('day') {
+              <mwl-calendar-day-view
+                [viewDate]="viewDate"
+                [events]="events"
+                [hourDuration]="hourDuration"
+                [hourSegments]="segmentsInHour"
+                [dayStartHour]="dayStartHour"
+                [dayEndHour]="dayEndHour"
+                [locale]="locale"
+                (hourSegmentClicked)="clickedDate = $event.date"
+                [hourSegmentTemplate]="weekViewHourSegmentTemplate"
+                (eventClicked)="handleEventClick($event.event)"
+                (eventTimesChanged)="eventTimesChanged($event)"
+                >
+              </mwl-calendar-day-view>
+            }
+          }
         </div>
-        <div [ngSwitch]="viewMode">
-            <mwl-calendar-month-view
-                    *ngSwitchCase="'month'"
-                    [viewDate]="viewDate"
-                    [events]="events"
-                    [locale]="locale"
-                    [weekStartsOn]="weekStartsOn"
-                    (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
-                    (dayClicked)="changeToDay($event.day.date)"
-                    (eventClicked)="handleEventClick($event.event)"
+        @if (advancedUI) {
+          <tim-time-view-selector [style.visibility]="viewMode == 'month' ? 'hidden' : 'visible'"
+            [(segmentDuration)]="segmentDuration"
+            [(startHour)]="dayStartHour"
+            [(endHour)]="dayEndHour"
             >
-            </mwl-calendar-month-view>
-            <mwl-calendar-week-view
-                    *ngSwitchCase="'week'"
-                    [viewDate]="viewDate"
-                    [events]="events"
-                    [hourSegmentHeight]="segmentHeight"
-                    [hourDuration]="hourDuration"
-                    [hourSegments]="segmentsInHour"
-                    [dayStartHour]="dayStartHour"
-                    [dayEndHour]="dayEndHour"
-                    [locale]="locale"
-                    [minimumEventHeight]="minimumEventHeight"
-                    [weekStartsOn]="weekStartsOn"
-                    (dayHeaderClicked)="viewDay($event.day.date)"
-                    (hourSegmentClicked)="clickedDate = $event.date"
-                    [hourSegmentTemplate]="weekViewHourSegmentTemplate"
-                    (eventClicked)="handleEventClick($event.event)"
-                    (eventTimesChanged)="eventTimesChanged($event)"
-            >
-            </mwl-calendar-week-view>
-            <mwl-calendar-day-view
-                    *ngSwitchCase="'day'"
-                    [viewDate]="viewDate"
-                    [events]="events"
-                    [hourDuration]="hourDuration"
-                    [hourSegments]="segmentsInHour"
-                    [dayStartHour]="dayStartHour"
-                    [dayEndHour]="dayEndHour"
-                    [locale]="locale"
-                    (hourSegmentClicked)="clickedDate = $event.date"
-                    [hourSegmentTemplate]="weekViewHourSegmentTemplate"
-                    (eventClicked)="handleEventClick($event.event)"
-                    (eventTimesChanged)="eventTimesChanged($event)"
-
-            >
-            </mwl-calendar-day-view>
-        </div>
-        <tim-time-view-selector [style.visibility]="viewMode == 'month' ? 'hidden' : 'visible'"
-                                [(segmentDuration)]="segmentDuration"
-                                [(startHour)]="dayStartHour"
-                                [(endHour)]="dayEndHour"
-                                *ngIf="advancedUI">
-        </tim-time-view-selector>
-        <div class="button-panel" *ngIf="advancedUI">
+          </tim-time-view-selector>
+        }
+        @if (advancedUI) {
+          <div class="button-panel">
             <button i18n class="btn timButton" (click)="export()">Export calendar (ICS)</button>
-            <button i18n class="btn timButton" *ngIf="editEnabled" (click)="openEventEditor()">Mass edit (JSON)</button>
+            @if (editEnabled) {
+              <button i18n class="btn timButton" (click)="openEventEditor()">Mass edit (JSON)</button>
+            }
             <span class="exportDone">{{exportDone}}</span>
-        </div>
-    `,
+          </div>
+        }
+        `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: [
         "calendar.component.scss",

@@ -1,248 +1,296 @@
 <tabset [hidden]="!proeditor">
-    <tab *ngFor="let t of getVisibleTabs()"
-         [heading]="t.name"
-         [active]="activeTab === getTabIndex(t)"
-         (selectTab)="setActiveTab(getTabIndex(t))">
-        <div *ngIf="t.name === 'TeX' && editor" class="formula-editor-tab">
-            <cs-formula-editor-loader
-                    (okClose)="toggleFormulaEditor(true, $event)"
-                    (cancelClose)="toggleFormulaEditor(true, $event)"
-                    (componentLoaded)="registerFormulaCancelFunction($event)"
-                    (toggle)="toggleFormulaEditor()"
-                    [visible]="formulaEditorOpen"
-                    [editor]="editor"
-                    [currentSymbol]="currentSymbol"
-                    [templateButtons]="templateButtons"
+  @for (t of getVisibleTabs(); track t) {
+    <tab
+      [heading]="t.name"
+      [active]="activeTab === getTabIndex(t)"
+      (selectTab)="setActiveTab(getTabIndex(t))">
+      @if (t.name === 'TeX' && editor) {
+        <div class="formula-editor-tab">
+          <cs-formula-editor-loader
+            (okClose)="toggleFormulaEditor(true, $event)"
+            (cancelClose)="toggleFormulaEditor(true, $event)"
+            (componentLoaded)="registerFormulaCancelFunction($event)"
+            (toggle)="toggleFormulaEditor()"
+            [visible]="formulaEditorOpen"
+            [editor]="editor"
+            [currentSymbol]="currentSymbol"
+            [templateButtons]="templateButtons"
             >
-
-            </cs-formula-editor-loader>
+          </cs-formula-editor-loader>
         </div>
-        <tim-editor-entry *ngFor="let e of t.entries" [data]="e"></tim-editor-entry>
-
-        <div *ngIf="t.extra" [innerHTML]="t.extra | purify"></div>
+      }
+      @for (e of t.entries; track e) {
+        <tim-editor-entry [data]="e"></tim-editor-entry>
+      }
+      @if (t.extra) {
+        <div [innerHTML]="t.extra | purify"></div>
+      }
     </tab>
+  }
 
 
-    <tab *ngIf="getOptions().showUpload"
-         customClass="editor-upload"
-         heading="Upload"
-         [active]="activeTab === 'upload_main_tab'"
-         (selectTab)="setActiveTab('upload_main_tab')">
-        <tabset>
-            <tab heading="File or Image" *ngIf="getOptions().showImageUpload">
-                <div class="upload-options">
-                    <label class="font-weight-normal margin-5-right"
-                    title="Show filename input before save">
-                        <input type="checkbox" [(ngModel)]="askFilename"/>
-                        Ask filename</label>
-                    <label class="font-weight-normal margin-5-right"
-                    title="Use folder/document in URL; keep resource ID for this version, or remove it when sharing to link to latest version.">
-                        <input type="checkbox" [(ngModel)]="useDocumentName"/>
-                        Use document name</label>
-                </div>
-                <div class="select-file">
-                    <input type="file" multiple (change)="onFileInputChange($event)">
-                    <span *ngIf="file && file.progress != null && file.progress >= 0 && !file.error">{{ file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!' }}</span>
-                    <a [href]="uploadedFile" target="_blank">{{ uploadedFile }}</a>
-                    <span [hidden]="!fileURL"> -
-                    <a [href]="fileURL" target="_blank" title="URL using the document name">URL via document</a> -
-                    <a [href]="fileURLLatest" target="_blank" title="URL for the latest upload of this name.">Latest</a>
-                    </span>
-                </div>
-                <div class="error" *ngIf="file?.error">{{ file?.error }}</div>
-                <span>
-                </span>
-                <tim-editor-entry *ngFor="let e of getUploadTab()?.entries ?? []" [data]="e"></tim-editor-entry>
-            </tab>
-
-            <!-- Pandoc document conversion-->
-            <tab heading="Import document" *ngIf="getOptions().showDocumentImport">
-                <div id="import_instructions">
-                    <strong>{{ docImportHelp.heading }}</strong><br/>
-                    {{ docImportHelp.shortHelp }}<br/>
-                    {{ docImportHelp.formats }}<br/>
-                    {{ docImportHelp.styles }}<br/>
-                    {{ docImportHelp.images }}
-                </div>
-                <span>
-                    <input type="file" (change)="onPandocFileInputChange($event)">
-                    <span *ngIf="file && file.progress != null && file.progress >= 0 && !file.error">{{ file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!' }}</span>
-                    <a [href]="uploadedFile">{{ uploadedFile }}</a>
-                </span>
-                <div class="error" *ngIf="file?.error">{{ file?.error }}</div>
-                <span>
-                </span>
-                <tim-editor-entry *ngFor="let e of getPandocTab()?.entries ?? []" [data]="e"></tim-editor-entry>
-            </tab>
-        </tabset>
-        <tim-editor-entry *ngFor="let e of getUploadMainTab()?.entries ?? []" [data]="e"></tim-editor-entry>
+  @if (getOptions().showUpload) {
+    <tab
+      customClass="editor-upload"
+      heading="Upload"
+      [active]="activeTab === 'upload_main_tab'"
+      (selectTab)="setActiveTab('upload_main_tab')">
+      <tabset>
+        @if (getOptions().showImageUpload) {
+          <tab heading="File or Image">
+            <div class="upload-options">
+              <label class="font-weight-normal margin-5-right"
+                title="Show filename input before save">
+                <input type="checkbox" [(ngModel)]="askFilename"/>
+              Ask filename</label>
+              <label class="font-weight-normal margin-5-right"
+                title="Use folder/document in URL; keep resource ID for this version, or remove it when sharing to link to latest version.">
+                <input type="checkbox" [(ngModel)]="useDocumentName"/>
+              Use document name</label>
+            </div>
+            <div class="select-file">
+              <input type="file" multiple (change)="onFileInputChange($event)">
+              @if (file && file.progress != null && file.progress >= 0 && !file.error) {
+                <span>{{ file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!' }}</span>
+              }
+              <a [href]="uploadedFile" target="_blank">{{ uploadedFile }}</a>
+              <span [hidden]="!fileURL"> -
+                <a [href]="fileURL" target="_blank" title="URL using the document name">URL via document</a> -
+                <a [href]="fileURLLatest" target="_blank" title="URL for the latest upload of this name.">Latest</a>
+              </span>
+            </div>
+            @if (file?.error) {
+              <div class="error">{{ file?.error }}</div>
+            }
+            <span>
+            </span>
+            @for (e of getUploadTab()?.entries ?? []; track e) {
+              <tim-editor-entry [data]="e"></tim-editor-entry>
+            }
+          </tab>
+        }
+        <!-- Pandoc document conversion-->
+        @if (getOptions().showDocumentImport) {
+          <tab heading="Import document">
+            <div id="import_instructions">
+              <strong>{{ docImportHelp.heading }}</strong><br/>
+              {{ docImportHelp.shortHelp }}<br/>
+              {{ docImportHelp.formats }}<br/>
+              {{ docImportHelp.styles }}<br/>
+              {{ docImportHelp.images }}
+            </div>
+            <span>
+              <input type="file" (change)="onPandocFileInputChange($event)">
+              @if (file && file.progress != null && file.progress >= 0 && !file.error) {
+                <span>{{ file.progress < 100 ? 'Uploading... ' + file.progress + '%' : 'Done!' }}</span>
+              }
+              <a [href]="uploadedFile">{{ uploadedFile }}</a>
+            </span>
+            @if (file?.error) {
+              <div class="error">{{ file?.error }}</div>
+            }
+            <span>
+            </span>
+            @for (e of getPandocTab()?.entries ?? []; track e) {
+              <tim-editor-entry [data]="e"></tim-editor-entry>
+            }
+          </tab>
+        }
+      </tabset>
+      @for (e of getUploadMainTab()?.entries ?? []; track e) {
+        <tim-editor-entry [data]="e"></tim-editor-entry>
+      }
     </tab>
+  }
 
 
 
-    <!-- ngIf keeps the tab order: tabs are ordered by creation time and the tabs above are created by structural directives. -->
-    <tab *ngIf="true"
-         heading="Help"
-         [active]="activeTab === 'help'"
-         (selectTab)="setActiveTab('help')">
-        <a class="helpButton margin-4" href="https://tim.jyu.fi/view/tim/TIM-ohjeet" target="_blank"
-           title="General TIM Help">TIM
-            Help</a>
-        <span class="margin-4">To cite this paragraph:</span>
-        <input readonly
-               class="form-control"
-               type="text"
-               [value]="citeText"
-               title="Copy this line to cite this paragraph"
-               (focus)="selectAllText($event)"/>
-        <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen" target="_blank"
-           title="Help for references"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
-    </tab>
-    <tab *ngIf="!originalDocument"
-         heading="Translation"
-         [active]="activeTab === 'translator'"
-         (selectTab)="setActiveTab('translator')">
+  <!-- ngIf keeps the tab order: tabs are ordered by creation time and the tabs above are created by structural directives. -->
+  @if (true) {
+    <tab
+      heading="Help"
+      [active]="activeTab === 'help'"
+      (selectTab)="setActiveTab('help')">
+      <a class="helpButton margin-4" href="https://tim.jyu.fi/view/tim/TIM-ohjeet" target="_blank"
+        title="General TIM Help">TIM
+      Help</a>
+      <span class="margin-4">To cite this paragraph:</span>
+      <input readonly
+        class="form-control"
+        type="text"
+        [value]="citeText"
+        title="Copy this line to cite this paragraph"
+        (focus)="selectAllText($event)"/>
+      <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen" target="_blank"
+        title="Help for references"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
+      </tab>
+    }
+    @if (!originalDocument) {
+      <tab
+        heading="Translation"
+        [active]="activeTab === 'translator'"
+        (selectTab)="setActiveTab('translator')">
         <div id="translationTab">
-            <label for="translator">Translator:</label>
-            <select id="translator" name="translator-select" class="form-control"
-                    [(ngModel)]="docTranslator" (ngModelChange)="updatePareditorTranslatorLanguages()">
-                <option *ngFor="let option of translators" [disabled]="!option.available"
-                        [value]="option.name">{{ option.name }}</option>
-            </select>
-            <p [hidden]="!translationInProgress">
-                <tim-loading></tim-loading>
-                Translating... This may take a while.
-            </p>
-            <button class="timButton" id="translateButton"
-                    [disabled]="saving || translationInProgress || docTranslator == '' || !translatorAvailable"
-                    [hidden]="!isTranslationSupported()"
-                    (click)="translateClicked()" style="right: 2px;">Translate
-            </button>
-            <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB" target="_blank">
-                <span class="glyphicon glyphicon-question-sign"
-                      style="margin-left: 0.3em; font-size: x-large; vertical-align: -22%;"
-                      title="Help with machine translation"></span>
-            </a>
-            <b [hidden]="translatorAvailable">{{ errorMessage }}</b>
+          <label for="translator">Translator:</label>
+          <select id="translator" name="translator-select" class="form-control"
+            [(ngModel)]="docTranslator" (ngModelChange)="updatePareditorTranslatorLanguages()">
+            @for (option of translators; track option) {
+              <option [disabled]="!option.available"
+              [value]="option.name">{{ option.name }}</option>
+            }
+          </select>
+          <p [hidden]="!translationInProgress">
+            <tim-loading></tim-loading>
+            Translating... This may take a while.
+          </p>
+          <button class="timButton" id="translateButton"
+            [disabled]="saving || translationInProgress || docTranslator == '' || !translatorAvailable"
+            [hidden]="!isTranslationSupported()"
+            (click)="translateClicked()" style="right: 2px;">Translate
+          </button>
+          <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB" target="_blank">
+            <span class="glyphicon glyphicon-question-sign"
+              style="margin-left: 0.3em; font-size: x-large; vertical-align: -22%;"
+            title="Help with machine translation"></span>
+          </a>
+          <b [hidden]="translatorAvailable">{{ errorMessage }}</b>
         </div>
-    </tab>
+      </tab>
+    }
 
-</tabset>
-<div id="editorflex" class="stacked" [hidden]="activeTab == 'tex' && formulaEditorOpen">
+  </tabset>
+  <div id="editorflex" class="stacked" [hidden]="activeTab == 'tex' && formulaEditorOpen">
     <div id="editorbox">
-        <div class="editorContainer">
-        </div>
-        <div class="editButtonArea">
-            <button class="timButton save" [disabled]="saving" title="Save (Ctrl-S)"
-                    (click)="saveClicked()">Save
-            </button>
-            <button class="timButton" [disabled]="saving" (click)="cancelClicked()">Cancel</button>
-            <span [hidden]="!proeditor">
-        <button class="btn btn-danger" [disabled]="saving" [hidden]="!getOptions().showDelete"
-                (click)="deleteClicked()">Delete</button>
+      <div class="editorContainer">
+      </div>
+      <div class="editButtonArea">
+        <button class="timButton save" [disabled]="saving" title="Save (Ctrl-S)"
+          (click)="saveClicked()">Save
+        </button>
+        <button class="timButton" [disabled]="saving" (click)="cancelClicked()">Cancel</button>
+        <span [hidden]="!proeditor">
+          <button class="btn btn-danger" [disabled]="saving" [hidden]="!getOptions().showDelete"
+          (click)="deleteClicked()">Delete</button>
         </span>
-            <div class="hidingButtonArea">
-                <button class="timButton" [disabled]="saving" [hidden]="!showUnread()"
-                        (click)="unreadClicked()" style="right: 2px;">Mark as unread
-                </button>
-            </div>
+        <div class="hidingButtonArea">
+          <button class="timButton" [disabled]="saving" [hidden]="!showUnread()"
+            (click)="unreadClicked()" style="right: 2px;">Mark as unread
+          </button>
         </div>
-        <div class="choices" [hidden]="!getOptions().choices">
-            <div *ngFor="let choice of getOptions().choices ?? []" [title]="choice.title ?? ''">
-                <span>{{ choice.desc }}</span>
-                <label [ngClass]="opt.value" *ngFor="let opt of choice.opts" [title]="opt.title ?? ''">
-                    <input type="radio"
-                           [name]="'choice-' + choice.name"
-                           [checked]="getChoice(choice.name) === opt.value"
-                           (change)="setChoice(choice.name, opt.value)"/>{{ opt.desc }}&nbsp;
+      </div>
+      <div class="choices" [hidden]="!getOptions().choices">
+        @for (choice of getOptions().choices ?? []; track choice) {
+          <div [title]="choice.title ?? ''">
+            <span>{{ choice.desc }}</span>
+            @for (opt of choice.opts; track opt) {
+              <label [ngClass]="opt.value" [title]="opt.title ?? ''">
+                <input type="radio"
+                  [name]="'choice-' + choice.name"
+                  [checked]="getChoice(choice.name) === opt.value"
+                  (change)="setChoice(choice.name, opt.value)"/>{{ opt.desc }}&nbsp;
                 </label>
+              }
             </div>
+          }
         </div>
         <div class="editorOptions">
-            <label class="font-weight-normal margin-5-right" title="Show more options to editor"><input type="checkbox"
-                                                                                                        [(ngModel)]="proeditor"/>
-                Advanced view </label>
-            <span [hidden]="!proeditor">
-            <label class="font-weight-normal margin-5-right" title="Change editor between Ace and normal textarea">
-                <input type="checkbox" [checked]="!!isAce()" (click)="changeEditor()"> Ace editor</label>
+          <label class="font-weight-normal margin-5-right" title="Show more options to editor"><input type="checkbox"
+            [(ngModel)]="proeditor"/>
+        Advanced view </label>
+        <span [hidden]="!proeditor">
+          <label class="font-weight-normal margin-5-right" title="Change editor between Ace and normal textarea">
+            <input type="checkbox" [checked]="!!isAce()" (click)="changeEditor()"> Ace editor</label>
             <label class="font-weight-normal margin-5-right" [hidden]="!fullscreenSupported()"><input
-                    type="checkbox" (click)="goFullScreen()"> Fullscreen </label>
+            type="checkbox" (click)="goFullScreen()"> Fullscreen </label>
             <label class="font-weight-normal margin-5-right"><input type="checkbox" [(ngModel)]="spellcheck"
-                                                                    (ngModelChange)="editorChanged()"/> Check spelling (in Finnish)</label>
+            (ngModelChange)="editorChanged()"/> Check spelling (in Finnish)</label>
+          </span>
+          <label class="font-weight-normal margin-5-right" [hidden]="!isAce()"><input type="checkbox"
+            [(ngModel)]="autocomplete"/>
+        Autocomplete </label>
+        @for (tag of getOptions().tags; track tag) {
+          <label class="font-weight-normal margin-5-right">
+            <input type="checkbox" [(ngModel)]="getExtraData().tags[tag.name]"/> {{ tag.desc }}
+          </label>
+        }
+        <span class="pull-right font-weight-normal" title="Put 0 to no wrap">
+          <button class="timButton btn-xs" title="Click to reformat text for given line length"
+            (click)="editor?.forceWrap(true)">Wrap
+          </button>
+          <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto"/>
+          <input type="text" title="Choose line length for text.  0=no wrap" pattern="[-0-9]*"
+            [(ngModel)]="wrap.n" size="2"/>
         </span>
-            <label class="font-weight-normal margin-5-right" [hidden]="!isAce()"><input type="checkbox"
-                                                                                       [(ngModel)]="autocomplete"/>
-                Autocomplete </label>
-            <label class="font-weight-normal margin-5-right" *ngFor="let tag of getOptions().tags">
-                <input type="checkbox" [(ngModel)]="getExtraData().tags[tag.name]"/> {{ tag.desc }}
-            </label>
-            <span class="pull-right font-weight-normal" title="Put 0 to no wrap">
-            <button class="timButton btn-xs" title="Click to reformat text for given line length"
-                    (click)="editor?.forceWrap(true)">Wrap
-            </button>
-            <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto"/>
-            <input type="text" title="Choose line length for text.  0=no wrap" pattern="[-0-9]*"
-                   [(ngModel)]="wrap.n" size="2"/>
-        </span>
-        </div>
+      </div>
     </div>
-    <div *ngIf="trdiff"
-         [hidden]="!proeditor"
-         class="halfsize"
-         tim-draggable-fixed
-         [detachable]="true"
-         [canMinimize]="true"
-         caption="Difference in original document"
-         [save]="getOptions().localSaveTag + 'Trdiff'"
-         id="diff">
+    @if (trdiff) {
+      <div
+        [hidden]="!proeditor"
+        class="halfsize"
+        tim-draggable-fixed
+        [detachable]="true"
+        [canMinimize]="true"
+        caption="Difference in original document"
+        [save]="getOptions().localSaveTag + 'Trdiff'"
+        id="diff">
         <div class="draggable-content">
-            <div class="border background">
-                <label class="font-weight-normal margin-5-right"><input type="checkbox" [(ngModel)]="sideBySide"
-                                                                        (click)="changePositioning()"/> View
-                    beside the editor </label>
-            </div>
-            <div class="diff border">
-                <pre><ng-container *ngFor="let d of getDiff()"><ins *ngIf="d.op === 1">{{ d.text }}</ins><del *ngIf="d.op === -1">{{ d.text }}</del><span *ngIf="d.op === 0">{{ d.text }}</span></ng-container></pre>
-                <a [href]="getSourceDocumentLink()"><i class="glyphicon glyphicon-link"></i></a>
-            </div>
+          <div class="border background">
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" [(ngModel)]="sideBySide"
+              (click)="changePositioning()"/> View
+            beside the editor </label>
+          </div>
+          <div class="diff border">
+            <pre>@for (d of getDiff(); track d) {
+              @if (d.op === 1) {
+                <ins>{{ d.text }}</ins>
+                }@if (d.op === -1) {
+                <del>{{ d.text }}</del>
+                }@if (d.op === 0) {
+                <span>{{ d.text }}</span>
+              }
+            }</pre>
+            <a [href]="getSourceDocumentLink()"><i class="glyphicon glyphicon-link"></i></a>
+          </div>
         </div>
-    </div>
-</div>
-<div id="previews" class="sidebyside">
+      </div>
+    }
+  </div>
+  <div id="previews" class="sidebyside">
     <div tim-draggable-fixed
-         [detachable]="true"
-         [canMinimize]="true"
-         [caption]="'Current Block ' + getPreviewCaption()"
-         [save]="getOptions().localSaveTag + 'Preview'"
-         class="previewDiv"
-         [hidden]="!proeditor"
-         id="currpreview">
-        <div class="preview-warnings" [innerHTML]="warnings"></div>
-        <div class="draggable-content">
-            <div
-                    class="previewcontent paragraphs fullsize"
-                    [class.csrun-clicking]="activeTab == 'tex'"
-                    (dblclick)="handleSelectFormulaFromPreview($event)">
-            </div>
+      [detachable]="true"
+      [canMinimize]="true"
+      [caption]="'Current Block ' + getPreviewCaption()"
+      [save]="getOptions().localSaveTag + 'Preview'"
+      class="previewDiv"
+      [hidden]="!proeditor"
+      id="currpreview">
+      <div class="preview-warnings" [innerHTML]="warnings"></div>
+      <div class="draggable-content">
+        <div
+          class="previewcontent paragraphs fullsize"
+          [class.csrun-clicking]="activeTab == 'tex'"
+          (dblclick)="handleSelectFormulaFromPreview($event)">
         </div>
+      </div>
     </div>
-    <div tim-draggable-fixed
-         [detachable]="true"
-         [canMinimize]="true"
-         [caption]="'Source Block ' + getPreviewCaption()"
-         [save]="getOptions().localSaveTag + 'Preview (original block)'"
-         class="previewDiv"
-         *ngIf="trdiff?.new"
-         [hidden]="!proeditor"
-         id="origpreview">
+    @if (trdiff?.new) {
+      <div tim-draggable-fixed
+        [detachable]="true"
+        [canMinimize]="true"
+        [caption]="'Source Block ' + getPreviewCaption()"
+        [save]="getOptions().localSaveTag + 'Preview (original block)'"
+        class="previewDiv"
+        [hidden]="!proeditor"
+        id="origpreview">
         <div class="draggable-content">
-            <div class="previeworiginalcontent paragraphs fullsize">
-                <div class="par">
-                    <div class="parContent">
-                        <p>{{ trdiff?.new }}</p>
-                    </div>
-                </div>
+          <div class="previeworiginalcontent paragraphs fullsize">
+            <div class="par">
+              <div class="parContent">
+                <p>{{ trdiff?.new }}</p>
+              </div>
             </div>
+          </div>
         </div>
-    </div>
-</div>
+      </div>
+    }
+  </div>

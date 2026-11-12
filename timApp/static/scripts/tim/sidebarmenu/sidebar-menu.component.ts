@@ -49,29 +49,33 @@ const sizeBreakpoint = "md";
 @Component({
     selector: "tim-sidebar-menu",
     template: `
-        <div *ngIf="!hide.sidebar && tabsVisible" (window:resize)="onResize()" class="left-fixed-side" [class.show]="showMenu">
+        @if (!hide.sidebar && tabsVisible) {
+          <div (window:resize)="onResize()" class="left-fixed-side" [class.show]="showMenu">
             <div class="btn btn-default btn-sm pull-left" (click)="nextVisibilityState()" i18n-title title="Show menu">
-                <i class="glyphicon glyphicon-{{nextGlyphicon}}" i18n-title title="Open sidebar"></i>
+              <i class="glyphicon glyphicon-{{nextGlyphicon}}" i18n-title title="Open sidebar"></i>
             </div>
-            <ng-container *ngIf="showTabset">
-                <tim-switch-button></tim-switch-button>
-            </ng-container>
+            @if (showTabset) {
+              <tim-switch-button></tim-switch-button>
+            }
             <tabset id="menuTabs" [class.show]="showTabset" #tabs>
-                <ng-container *ngFor="let menuTab of menuTabs">
-                    <tab *ngIf="tabsVisTable[menuTab.id]"
-                         [id]="menuTab.id"
-                         (selectTab)="onTabSelect($event, tabContainer)">
-                        <ng-template tabHeading>
-                            <i class="glyphicon glyphicon-{{menuTab.icon}}" title="{{menuTab.title}}"></i>
-                            <span class="sr-only">Open {{menuTab.title}}</span>
-                        </ng-template>
-                        <tab-container #tabContainer [tabItem]="menuTab"
-                                       [class.hidden]="!shouldRender(menuTab.id)"></tab-container>
-                    </tab>
-                </ng-container>
+              @for (menuTab of menuTabs; track menuTab) {
+                @if (tabsVisTable[menuTab.id]) {
+                  <tab
+                    [id]="menuTab.id"
+                    (selectTab)="onTabSelect($event, tabContainer)">
+                    <ng-template tabHeading>
+                      <i class="glyphicon glyphicon-{{menuTab.icon}}" title="{{menuTab.title}}"></i>
+                      <span class="sr-only">Open {{menuTab.title}}</span>
+                    </ng-template>
+                    <tab-container #tabContainer [tabItem]="menuTab"
+                    [class.hidden]="!shouldRender(menuTab.id)"></tab-container>
+                  </tab>
+                }
+              }
             </tabset>
-        </div>
-    `,
+          </div>
+        }
+        `,
     standalone: false,
 })
 export class SidebarMenuComponent

@@ -46,39 +46,51 @@ function isExpired(tag: ITag) {
 @Component({
     selector: "tim-header",
     template: `
-        <div *ngIf="!hideLinks && item">
+        @if (!hideLinks && item) {
+          <div>
             <div class="pull-right">
-                <button *ngIf="!hideVars.headerDocumentActions && showAddToMyCourses()"
-                        (click)="addToBookmarkFolder()"
-                        title="Add this page to 'My courses' bookmark folder"
-                        i18n-title
-                        class="timButton label" i18n>
+              @if (!hideVars.headerDocumentActions && showAddToMyCourses()) {
+                <button
+                  (click)="addToBookmarkFolder()"
+                  title="Add this page to 'My courses' bookmark folder"
+                  i18n-title
+                  class="timButton label" i18n>
                     Add to 'My courses'
                 </button>
-                <ng-container *ngIf="translations && translations.length > 1">
-            <span *ngFor="let tr of translations">
-                <a class="label label-primary"
-                   href="/{{ route }}/{{ tr.path + this.sanitizeSearch() }}">{{ getLanguageDisplayName(tr) }}</a>&ngsp;
-            </span>
-                </ng-container>
+              }
+              @if (translations && translations.length > 1) {
+                @for (tr of translations; track tr) {
+                  <span>
+                    <a class="label label-primary"
+                    href="/{{ route }}/{{ tr.path + this.sanitizeSearch() }}">{{ getLanguageDisplayName(tr) }}</a>&ngsp;
+                  </span>
+                }
+              }
             </div>
-            <div class="doc-header" *ngIf="!hideVars.headerNav">
+            @if (!hideVars.headerNav) {
+              <div class="doc-header">
                 <div class="nav nav-tabs">
-                    <li *ngFor="let link of itemLinks"
-                        role="presentation"
-                        [ngClass]="{active: isActive(link)}">
-                        <a [href]="getViewURL(link)">{{ link.title }}</a>
+                  @for (link of itemLinks; track link) {
+                    <li
+                      role="presentation"
+                      [ngClass]="{active: isActive(link)}">
+                      <a [href]="getViewURL(link)">{{ link.title }}</a>
                     </li>
+                  }
                 </div>
                 <ol class="breadcrumb">
-                    <li *ngFor="let c of crumbs">
-                        <a href="/{{ route }}/{{ c.path }}">{{ c.title }}</a>
+                  @for (c of crumbs; track c) {
+                    <li>
+                      <a href="/{{ route }}/{{ c.path }}">{{ c.title }}</a>
                     </li>
-                    <li class="current">{{ item.title }}</li>
+                  }
+                  <li class="current">{{ item.title }}</li>
                 </ol>
-            </div>
-        </div>
-    `,
+              </div>
+            }
+          </div>
+        }
+        `,
     styleUrls: ["./header.component.scss"],
     standalone: false,
 })

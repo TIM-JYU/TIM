@@ -212,82 +212,120 @@ type MatrixElement = string | number;
 @Component({
     selector: "tim-answer-sheet",
     template: `
-        <form *ngIf="json">
+        @if (json) {
+          <form>
             <h5 [innerHtml]="getHeader() | purify"></h5>
-            <p *ngIf="userpoints != null && questionHasPoints()">Points received: {{ userpoints }}</p>
+            @if (userpoints != null && questionHasPoints()) {
+              <p>Points received: {{ userpoints }}</p>
+            }
             <table class="table" [ngClass]="getTableClass()">
-                <colgroup *ngIf="processed.rows.length > 0">
-                    <col *ngIf="isMatrix()">
-                    <col *ngFor="let _ of processed.rows[0].columns">
-                </colgroup>
-                <thead *ngIf="customHeader" [innerHTML]="customHeader | htmlSanitize"></thead>
+              @if (processed.rows.length > 0) {
+                <colgroup>
+                @if (isMatrix()) {
+                  <col>
+                  }
+                  @for (_ of processed.rows[0].columns; track _) {
+                    <col>
+                    }
+                  </colgroup>
+                }
+                @if (customHeader) {
+                  <thead [innerHTML]="customHeader | htmlSanitize"></thead>
+                }
                 <tbody>
-                <tr *ngIf="hasHeaders()" class="answer-heading-row">
-                    <th *ngIf="isMatrix()"></th>
-                    <th *ngFor="let h of processed.headers" [innerHtml]="fixText(h.text) | purify"></th>
-                    <th *ngIf="canShowExpl()"></th>
-                </tr>
-                <tr *ngFor="let row of processed.rows; let rowi = index" [ngClass]="getTableRowClass()">
-                    <td *ngIf="isMatrix()" [innerHtml]="fixText(row.text) | purify" class="qst-row_text"></td>
-                    <td *ngFor="let _col of row.columns; let coli = index;" class="qst-td">
-                        <ng-template #points>
+                  @if (hasHeaders()) {
+                    <tr class="answer-heading-row">
+                      @if (isMatrix()) {
+                        <th></th>
+                      }
+                      @for (h of processed.headers; track h) {
+                        <th [innerHtml]="fixText(h.text) | purify"></th>
+                      }
+                      @if (canShowExpl()) {
+                        <th></th>
+                      }
+                    </tr>
+                  }
+                  @for (row of processed.rows; track row; let rowi = $index) {
+                    <tr [ngClass]="getTableRowClass()">
+                      @if (isMatrix()) {
+                        <td [innerHtml]="fixText(row.text) | purify" class="qst-row_text"></td>
+                      }
+                      @for (_col of row.columns; track _col; let coli = $index) {
+                        <td class="qst-td">
+                          <ng-template #points>
                             &ngsp;<span [innerHtml]="getLabelText(row) | purify"></span>
-                            <p *ngIf="getPoints(rowi, coli) as p" class="qst-points" [innerText]="p"></p>
-                        </ng-template>
-                        <div *ngIf="isRadio()" [ngClass]="radioClass(rowi, coli)">
-                            <label>
+                            @if (getPoints(rowi, coli); as p) {
+                              <p class="qst-points" [innerText]="p"></p>
+                            }
+                          </ng-template>
+                          @if (isRadio()) {
+                            <div [ngClass]="radioClass(rowi, coli)">
+                              <label>
                                 <input
-                                        [disabled]="disabled"
-                                        type="radio"
-                                        [(ngModel)]="answerMatrix[isMatrix() ? rowi : 0][0]"
-                                        (ngModelChange)="signalUpdate()"
-                                        [name]="getGroupName(rowi)"
-                                        [value]="getInputValue(rowi, coli)">
+                                  [disabled]="disabled"
+                                  type="radio"
+                                  [(ngModel)]="answerMatrix[isMatrix() ? rowi : 0][0]"
+                                  (ngModelChange)="signalUpdate()"
+                                  [name]="getGroupName(rowi)"
+                                  [value]="getInputValue(rowi, coli)">
                                 <ng-container *ngTemplateOutlet="points"></ng-container>
-                            </label>
-                        </div>
-                        <div *ngIf="isCheckbox()" [ngClass]="checkBoxClass(rowi, coli)">
-                            <label>
+                              </label>
+                            </div>
+                          }
+                          @if (isCheckbox()) {
+                            <div [ngClass]="checkBoxClass(rowi, coli)">
+                              <label>
                                 <input
-                                        [attr.disabled]="disabled || null"
-                                        type="checkbox"
-                                        [checked]="answerMatrix[rowi][coli] === 1"
-                                        (change)="checkBoxChanged(rowi, coli, $event)"
-                                        [name]="getGroupName(rowi)">
+                                  [attr.disabled]="disabled || null"
+                                  type="checkbox"
+                                  [checked]="answerMatrix[rowi][coli] === 1"
+                                  (change)="checkBoxChanged(rowi, coli, $event)"
+                                  [name]="getGroupName(rowi)">
                                 <ng-container *ngTemplateOutlet="points"></ng-container>
-                            </label>
-                        </div>
-                        <div *ngIf="isText()" class="qst-text">
-                            <label>
-                            <textarea
-                                    class="form-control"
-                                    [disabled]="disabled"
-                                    [(ngModel)]="answerMatrix[rowi][coli]"
-                                    [ngModelOptions]="{standalone: true}"
-                                    (ngModelChange)="signalUpdate()"></textarea>
+                              </label>
+                            </div>
+                          }
+                          @if (isText()) {
+                            <div class="qst-text">
+                              <label>
+                                <textarea
+                                  class="form-control"
+                                  [disabled]="disabled"
+                                  [(ngModel)]="answerMatrix[rowi][coli]"
+                                  [ngModelOptions]="{standalone: true}"
+                                (ngModelChange)="signalUpdate()"></textarea>
                                 <ng-container *ngTemplateOutlet="points"></ng-container>
-                            </label>
-                        </div>
-                        <div *ngIf="isInputText()" [ngClass]="inputTextClass(rowi, coli)">
-                            <label>
+                              </label>
+                            </div>
+                          }
+                          @if (isInputText()) {
+                            <div [ngClass]="inputTextClass(rowi, coli)">
+                              <label>
                                 <input
-                                        [ngClass]="getInputClass(rowi, coli, -1)"
-                                        [disabled]="disabled"
-                                        [(ngModel)]="answerMatrix[rowi][coli]"
-                                        [ngModelOptions]="{standalone: true}"
-                                        (ngModelChange)="signalUpdate()"
-                                        type="text"
-                                        [size]="json.size || 3">
+                                  [ngClass]="getInputClass(rowi, coli, -1)"
+                                  [disabled]="disabled"
+                                  [(ngModel)]="answerMatrix[rowi][coli]"
+                                  [ngModelOptions]="{standalone: true}"
+                                  (ngModelChange)="signalUpdate()"
+                                  type="text"
+                                  [size]="json.size || 3">
                                 <ng-container *ngTemplateOutlet="points"></ng-container>
-                            </label>
-                        </div>
-                    </td>
-                    <td *ngIf="getExpl(rowi) as p" [innerHtml]="p | purify" class="explanation"></td>
-                </tr>
+                              </label>
+                            </div>
+                          }
+                        </td>
+                      }
+                      @if (getExpl(rowi); as p) {
+                        <td [innerHtml]="p | purify" class="explanation"></td>
+                      }
+                    </tr>
+                  }
                 </tbody>
-            </table>
-        </form>
-    `,
+              </table>
+            </form>
+          }
+        `,
     standalone: false,
 })
 export class AnswerSheetComponent implements OnChanges {

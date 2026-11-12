@@ -5,15 +5,17 @@ import {PluginMarkupErrors} from "tim/plugin/util";
     selector: "tim-plugin-frame[markupError]",
     template: `
         <div class="root no-popup-menu">
-            <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-            <ng-content select="[header]"></ng-content>
-            <div class="body">
-                <ng-content select="[stem]"></ng-content>
-                <ng-content select="[body]"></ng-content>
-                <ng-content select="[footer]"></ng-content>
-            </div>
+          @if (markupError) {
+            <tim-markup-error [data]="markupError"></tim-markup-error>
+          }
+          <ng-content select="[header]"></ng-content>
+          <div class="body">
+            <ng-content select="[stem]"></ng-content>
+            <ng-content select="[body]"></ng-content>
+            <ng-content select="[footer]"></ng-content>
+          </div>
         </div>
-    `,
+        `,
     styleUrls: ["./plugin-frame.component.scss"],
     standalone: false,
 })

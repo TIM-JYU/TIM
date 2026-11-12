@@ -413,34 +413,40 @@ class AssessmentTableModel implements DataModelProvider {
     selector: "tim-sisu-assessment-export",
     template: `
         <div>
-            <button class="timButton"
-                    [disabled]="loading"
-                    (click)="togglePreviewAssessments()">
-                {{ model ? 'Sulje esikatselu' : 'Esikatsele arviointeja' }}
-            </button>
-            <tim-loading *ngIf="loading && !model"></tim-loading>
+          <button class="timButton"
+            [disabled]="loading"
+            (click)="togglePreviewAssessments()">
+            {{ model ? 'Sulje esikatselu' : 'Esikatsele arviointeja' }}
+          </button>
+          @if (loading && !model) {
+            <tim-loading></tim-loading>
+          }
         </div>
-        <div *ngIf="model" class="sisu-table">
+        @if (model) {
+          <div class="sisu-table">
             <p>
-    <span class="red">
-        Sisussa vahvistettua arvosanaa ei voi enää muuttaa (ei edes hylättyjä).
-    </span>
+              <span class="red">
+                Sisussa vahvistettua arvosanaa ei voi enää muuttaa (ei edes hylättyjä).
+              </span>
             </p>
             <p>Taulukosta voi valita lähetettäväksi vain niitä arviointeja, joissa on arvosana.</p>
-            <p *ngIf="testOnly"><i>Tämä plugin on vain demo. Arvosanojen lähettäminen ei oikeasti tee mitään.</i></p>
+            @if (testOnly) {
+              <p><i>Tämä plugin on vain demo. Arvosanojen lähettäminen ei oikeasti tee mitään.</i></p>
+            }
             <!--suppress TypeScriptValidateTypes -->
             <tim-data-view [modelProvider]="model"
-                           [selectedIndices]="model.checkedRows //noinspection UnresolvedReference"
-                           [headerStyle]="{backgroundColor: 'rgb(240, 240, 240)', fontWeight: 'bold', whiteSpace: 'nowrap'}"
-                           [tableStyle]="{fontSize: 'smaller'}"
-                           [virtualScrolling]="{enabled: false}"
-                           tableMaxHeight="60vh"
-                           [noWrap]="true"
-                           [cbFilter]="initialSelectedFilter">
+              [selectedIndices]="model.checkedRows //noinspection UnresolvedReference"
+              [headerStyle]="{backgroundColor: 'rgb(240, 240, 240)', fontWeight: 'bold', whiteSpace: 'nowrap'}"
+              [tableStyle]="{fontSize: 'smaller'}"
+              [virtualScrolling]="{enabled: false}"
+              tableMaxHeight="60vh"
+              [noWrap]="true"
+              [cbFilter]="initialSelectedFilter">
             </tim-data-view>
             <p>{{ numSelectedAssessments() }} arviointia valittu.</p>
             <!--suppress TypeScriptUnresolvedReference -->
-            <p class="red" *ngIf="notSendableButChanged && notSendableButChanged.length > 0">
+            @if (notSendableButChanged && notSendableButChanged.length > 0) {
+              <p class="red">
                 Taulukossa on {{ notSendableButChanged.length }} kpl arviointeja, joiden arvosana tai
                 opintopistemäärä on
                 muuttunut
@@ -448,34 +454,40 @@ class AssessmentTableModel implements DataModelProvider {
                 Näitä ei voi päivittää Sisun kautta, mutta voit ottaa
                 <a (click)="copyNotSendableButChanged()">tästä CSV-tiedoston</a> ja pyytää kansliaa päivittämään
                 kyseiset arvioinnit.
-            </p>
+              </p>
+            }
             <div class="form-inline">
-                Suorituspäivä:
-                <input type="text"
-                       class="form-control"
-                       bsDatepicker
-                       [(bsValue)]="completionDate">
-                &ngsp;
-                <button class="timButton"
-                        [disabled]="loading || numSelectedAssessments() === 0"
-                        (click)="sendAssessments()">
-                    Lähetä valitut Sisuun
-                </button>
+              Suorituspäivä:
+              <input type="text"
+                class="form-control"
+                bsDatepicker
+                [(bsValue)]="completionDate">
+              &ngsp;
+              <button class="timButton"
+                [disabled]="loading || numSelectedAssessments() === 0"
+                (click)="sendAssessments()">
+                Lähetä valitut Sisuun
+              </button>
             </div>
-            <tim-loading *ngIf="loading"></tim-loading>
-            <ng-container *ngIf="okAssessments != null && !loading">
-                <p>
-                    {{ okAssessments }} arviointia lähetettiin Sisuun.
-                    <span *ngIf="errAssessments != null && errAssessments > 0">{{ errAssessments }} virheellistä arviointia torjuttiin.</span>
-                </p>
-                <p>
-                    Käy tarkistamassa ja vahvistamassa arvioinnit kurssin <a
-                        href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/confirmation">Tarkista
-                    ja vahvista</a> -näkymästä.
-                </p>
-            </ng-container>
+            @if (loading) {
+              <tim-loading></tim-loading>
+            }
+            @if (okAssessments != null && !loading) {
+              <p>
+                {{ okAssessments }} arviointia lähetettiin Sisuun.
+                @if (errAssessments != null && errAssessments > 0) {
+                  <span>{{ errAssessments }} virheellistä arviointia torjuttiin.</span>
+                }
+              </p>
+              <p>
+                Käy tarkistamassa ja vahvistamassa arvioinnit kurssin <a
+                href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/confirmation">Tarkista
+              ja vahvista</a> -näkymästä.
+            </p>
+          }
         </div>
-    `,
+        }
+        `,
     standalone: false,
 })
 export class SisuAssessmentExportComponent {
@@ -669,7 +681,7 @@ export class SisuAssessmentExportComponent {
     imports: [
         CommonModule,
         TimUtilityModule,
-        BsDatepickerModule.forRoot(),
+        BsDatepickerModule,
         DataViewModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],

@@ -29,76 +29,96 @@ const tagParsingSeparator = ",";
     selector: "tim-edit-tags-dialog",
     template: `
         <tim-dialog-frame class="overflow-visible">
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <h4>Document tags</h4>
-                <p *ngIf="tagsList.length > 0">The following tags were found for the document. Select a tag to edit
-                    or input new tags.</p>
-                <p *ngIf="tagsList.length === 0">No tags were found for the document.</p>
-                <div class="tags-list">
-            <span *ngFor="let x of tagsList">
-                <span class="btn-xs cursor-pointer" (click)="selectTag(x)" title="Toggle selected tag"
-                      [ngClass]="tagClass(x)">{{x.name}}</span>
-                <i *ngIf="x.expires" class="glyphicon glyphicon-time"
-                   tooltip="Expires: {{x.expires | timdate}}"></i>
-                <a><span class="glyphicon glyphicon-remove" title="Remove tag" (click)="removeTag(x)"></span></a>
-                <span style="opacity: 0">,</span>
-            </span>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            <h4>Document tags</h4>
+            @if (tagsList.length > 0) {
+              <p>The following tags were found for the document. Select a tag to edit
+              or input new tags.</p>
+            }
+            @if (tagsList.length === 0) {
+              <p>No tags were found for the document.</p>
+            }
+            <div class="tags-list">
+              @for (x of tagsList; track x) {
+                <span>
+                  <span class="btn-xs cursor-pointer" (click)="selectTag(x)" title="Toggle selected tag"
+                  [ngClass]="tagClass(x)">{{x.name}}</span>
+                  @if (x.expires) {
+                    <i class="glyphicon glyphicon-time"
+                    tooltip="Expires: {{x.expires | timdate}}"></i>
+                  }
+                  <a><span class="glyphicon glyphicon-remove" title="Remove tag" (click)="removeTag(x)"></span></a>
+                  <span style="opacity: 0">,</span>
+                </span>
+              }
+            </div>
+            @if (!selected) {
+              <h4>Add new tags</h4>
+            }
+            @if (selected) {
+              <h4>Edit '{{selected.name}}'</h4>
+            }
+            <p>Tag the document by adding words that briefly describe and classify it.</p>
+            <form #f="ngForm" class="form-horizontal">
+              <div class="form-group" timErrorState title="Write tag names separated by commas">
+                <label for="tag-field" class="col-sm-4 control-label">Tag name:</label>
+                <div class="col-sm-8">
+                  <input required
+                    focusMe
+                    [(ngModel)]="tagName"
+                    name="tag-field"
+                    type="text"
+                    (keydown.enter)="enterPressed()"
+                    autocomplete="off"
+                    class="form-control"
+                    id="tag-field"
+                    placeholder="Tag names separated by commas"
+                    [typeahead]="allUnusedTags"
+                    [typeaheadMinLength]="1">
                 </div>
-                <h4 *ngIf="!selected">Add new tags</h4>
-                <h4 *ngIf="selected">Edit '{{selected.name}}'</h4>
-                <p>Tag the document by adding words that briefly describe and classify it.</p>
-                <form #f="ngForm" class="form-horizontal">
-                    <div class="form-group" timErrorState title="Write tag names separated by commas">
-                        <label for="tag-field" class="col-sm-4 control-label">Tag name:</label>
-                        <div class="col-sm-8">
-                            <input required
-                                   focusMe
-                                   [(ngModel)]="tagName"
-                                   name="tag-field"
-                                   type="text"
-                                   (keydown.enter)="enterPressed()"
-                                   autocomplete="off"
-                                   class="form-control"
-                                   id="tag-field"
-                                   placeholder="Tag names separated by commas"
-                                   [typeahead]="allUnusedTags"
-                                   [typeaheadMinLength]="1">
-                        </div>
-                        <tim-error-message></tim-error-message>
-                    </div>
-                    <div class="form-group" title="Add optional expiration date to specify how long the tag is valid">
-                        <label for="expiration-selector" class="col-sm-4 control-label">Expiration date:</label>
-                        <div class="col-sm-8">
-                            <tim-datetime-picker [(time)]="expires"
-                                                 placeholder="Leave blank for indefinite period of validity">
-                            </tim-datetime-picker>
-                        </div>
-                    </div>
-                </form>
-                <button *ngIf="!selected" class="timButton" [disabled]="f.invalid"
-                        (click)="addTagClicked()">Save new tags
-                </button>
-                <button *ngIf="selected" class="timButton" [disabled]="f.invalid"
-                        (click)="editSelectedTag()">Save changes
-                </button>
-                <button class="timButton" [disabled]="!selected" title="Return to adding new tags"
-                        (click)="selected = undefined">Unselect
-                </button>
-                <button class="timButton" (click)="dismiss()">Close</button>
-                <div *ngIf="successMessage" class="alert alert-success">
-                    <span class="glyphicon glyphicon-ok"></span> {{successMessage}}
+                <tim-error-message></tim-error-message>
+              </div>
+              <div class="form-group" title="Add optional expiration date to specify how long the tag is valid">
+                <label for="expiration-selector" class="col-sm-4 control-label">Expiration date:</label>
+                <div class="col-sm-8">
+                  <tim-datetime-picker [(time)]="expires"
+                    placeholder="Leave blank for indefinite period of validity">
+                  </tim-datetime-picker>
                 </div>
-                <div *ngIf="errorMessage" class="alert alert-warning">
-                    <span class="glyphicon glyphicon-exclamation-sign"></span> {{errorMessage}}
-                </div>
-            </ng-container>
-            <ng-container footer>
-            </ng-container>
+              </div>
+            </form>
+            @if (!selected) {
+              <button class="timButton" [disabled]="f.invalid"
+                (click)="addTagClicked()">Save new tags
+              </button>
+            }
+            @if (selected) {
+              <button class="timButton" [disabled]="f.invalid"
+                (click)="editSelectedTag()">Save changes
+              </button>
+            }
+            <button class="timButton" [disabled]="!selected" title="Return to adding new tags"
+              (click)="selected = undefined">Unselect
+            </button>
+            <button class="timButton" (click)="dismiss()">Close</button>
+            @if (successMessage) {
+              <div class="alert alert-success">
+                <span class="glyphicon glyphicon-ok"></span> {{successMessage}}
+              </div>
+            }
+            @if (errorMessage) {
+              <div class="alert alert-warning">
+                <span class="glyphicon glyphicon-exclamation-sign"></span> {{errorMessage}}
+              </div>
+            }
+          </ng-container>
+          <ng-container footer>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class EditTagsDialogComponent extends AngularDialogComponent<
@@ -341,8 +361,8 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
         FormsModule,
         TimUtilityModule,
         DialogModule,
-        TypeaheadModule.forRoot(),
-        TooltipModule.forRoot(),
+        TypeaheadModule,
+        TooltipModule,
         DatetimePickerModule,
     ],
     providers: [SessionVerify, provideHttpClient(withInterceptorsFromDi())],

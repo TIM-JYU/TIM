@@ -86,51 +86,76 @@ const multisaveAll = t.intersection([
     selector: "tim-multisave",
     template: `
         <span class="no-popup-menu">
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header"></h4>
-    <tim-sisu-assessment-export
-            *ngIf="markup.destCourse"
-            [docId]="vctrl.item.id"
-            [destCourse]="markup.destCourse"
-            [includeUsers]="markup.includeUsers"
-            [testOnly]="markup.testOnly"
-            [group]="markup.group">
-    </tim-sisu-assessment-export>
-    <div *ngIf="saveMessages.length > 0" class="saveMessages">
-        <div *ngFor="let m of saveMessages">{{m}}</div>
-    </div>
-    <div *ngIf="livefeed"> <!-- unsaved fields -->
-        <div *ngIf="!allSaved()">
-            {{unsavedText}}
-            <ul>
-                <li *ngFor="let tag of unsavedTasksWithAliases">
-                    <a (click)="scrollTo(tag.component); $event.preventDefault()">{{tag.alias}}</a>
-                </li>
-            </ul>
-        </div>
-        <div *ngIf="allSaved()">
-            {{allSavedText}}
-        </div>
-    </div> <!-- unsaved fields -->
-    <div *ngIf="!livefeed || !allSaved()">
-    <button class="timButton"
-            [disabled]="(disableUnchanged && allSaved())"
-            *ngIf="buttonText() && !markup.destCourse"
-            (click)="save()">
-        {{buttonText()}}
-    </button>
-    &nbsp;
-    <button class="btn btn-default"
-            *ngIf="(undoButton && !allSaved())"
-            [title]="undoTitle"
-            (click)="tryResetChanges($event)">
-        {{undoButton}}
-    </button>
-    <p class="savedtext" *ngIf="isSaved && allSaved()">{{savedText}}</p>
-    </div>
-    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
-</span>
-    `,
+          @if (markupError) {
+            <tim-markup-error [data]="markupError"></tim-markup-error>
+          }
+          @if (header) {
+            <h4 [innerHtml]="header"></h4>
+          }
+          @if (markup.destCourse) {
+            <tim-sisu-assessment-export
+              [docId]="vctrl.item.id"
+              [destCourse]="markup.destCourse"
+              [includeUsers]="markup.includeUsers"
+              [testOnly]="markup.testOnly"
+              [group]="markup.group">
+            </tim-sisu-assessment-export>
+          }
+          @if (saveMessages.length > 0) {
+            <div class="saveMessages">
+              @for (m of saveMessages; track m) {
+                <div>{{m}}</div>
+              }
+            </div>
+          }
+          @if (livefeed) {
+            <div> <!-- unsaved fields -->
+              @if (!allSaved()) {
+                <div>
+                  {{unsavedText}}
+                  <ul>
+                    @for (tag of unsavedTasksWithAliases; track tag) {
+                      <li>
+                        <a (click)="scrollTo(tag.component); $event.preventDefault()">{{tag.alias}}</a>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+              @if (allSaved()) {
+                <div>
+                  {{allSavedText}}
+                </div>
+              }
+            </div>
+            } <!-- unsaved fields -->
+            @if (!livefeed || !allSaved()) {
+              <div>
+                @if (buttonText() && !markup.destCourse) {
+                  <button class="timButton"
+                    [disabled]="(disableUnchanged && allSaved())"
+                    (click)="save()">
+                    {{buttonText()}}
+                  </button>
+                }
+                <ng-container> &nbsp; </ng-container>
+                @if ((undoButton && !allSaved())) {
+                  <button class="btn btn-default"
+                    [title]="undoTitle"
+                    (click)="tryResetChanges($event)">
+                    {{undoButton}}
+                  </button>
+                }
+                @if (isSaved && allSaved()) {
+                  <p class="savedtext">{{savedText}}</p>
+                }
+              </div>
+            }
+            @if (footer) {
+              <p [innerHtml]="footer | purify" class="plgfooter"></p>
+            }
+          </span>
+        `,
     styleUrls: ["./multisave.component.scss"],
     standalone: false,
 })

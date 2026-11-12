@@ -29,126 +29,170 @@ export interface IPrintParams {
     selector: "tim-print-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <div *ngIf="doctemplate===''">
-                    <p *ngIf="templates.length">The following LaTeX templates were found that you can use.</p>
-                    <h5>Please choose a template:</h5>
-                </div>
-
-                <form>
-                    <div class="form-group input-group-sm">
-                        <div *ngFor="let item of templates">
-                            <div class="radio" *ngIf="showTemplate(item)">
-                                <label>
-                                    <input type="radio" [(ngModel)]="selectedTemplate" [value]="item"
-                                           name="template-selection">
-                                    <span>{{ item.title }} <span *ngIf="showPaths">({{ item.path }})</span></span>
-                                    <a *ngIf="showPaths" href="/view/{{ item.path }}" target="_blank"
-                                       class="force-hyphenate-link">
-                                        <span class="glyphicon glyphicon-pencil"></span>
-                                    </a>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-
-                <p *ngIf="templates.length === 0 && doctemplate === ''" class="text-danger">
-                    No printing templates were found.
-                </p>
-
-                <tim-alert *ngIf="notificationmsg" severity="warning">
-                    {{ notificationmsg }}
-                </tim-alert>
-                <tim-alert *ngIf="errormsg" severity="danger">
-                    <strong>Error!</strong>
-                    <p [innerHtml]="errormsg"></p>
-                    <ul>
-                        <li *ngIf="latexline">
-                            <a [href]="latexline" target="_blank">View erroneous LaTeX line</a>
-                        </li>
-                        <li *ngIf="docUrl">
-                            <a [href]="docUrl" target="_blank">Try to view PDF</a>
-                        </li>
-                        <li *ngIf="latex">
-                            <a [href]="latex" target="_blank">View LaTeX</a>
-                        </li>
-                        <li *ngIf="docUrl">
-                            <a [href]="docUrl+'&showerror=true'" target="_blank">Recreation link</a>
-                        </li>
-                    </ul>
-                </tim-alert>
-                <div>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            @if (doctemplate==='') {
+              <div>
+                @if (templates.length) {
+                  <p>The following LaTeX templates were found that you can use.</p>
+                }
+                <h5>Please choose a template:</h5>
+              </div>
+            }
+        
+            <form>
+              <div class="form-group input-group-sm">
+                @for (item of templates; track item) {
+                  <div>
+                    @if (showTemplate(item)) {
+                      <div class="radio">
+                        <label>
+                          <input type="radio" [(ngModel)]="selectedTemplate" [value]="item"
+                            name="template-selection">
+                          <span>{{ item.title }} @if (showPaths) {
+                            <span>({{ item.path }})</span>
+                          }</span>
+                          @if (showPaths) {
+                            <a href="/view/{{ item.path }}" target="_blank"
+                              class="force-hyphenate-link">
+                              <span class="glyphicon glyphicon-pencil"></span>
+                            </a>
+                          }
+                        </label>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </form>
+        
+            @if (templates.length === 0 && doctemplate === '') {
+              <p class="text-danger">
+                No printing templates were found.
+              </p>
+            }
+        
+            @if (notificationmsg) {
+              <tim-alert severity="warning">
+                {{ notificationmsg }}
+              </tim-alert>
+            }
+            @if (errormsg) {
+              <tim-alert severity="danger">
+                <strong>Error!</strong>
+                <p [innerHtml]="errormsg"></p>
+                <ul>
+                  @if (latexline) {
+                    <li>
+                      <a [href]="latexline" target="_blank">View erroneous LaTeX line</a>
+                    </li>
+                  }
+                  @if (docUrl) {
+                    <li>
+                      <a [href]="docUrl" target="_blank">Try to view PDF</a>
+                    </li>
+                  }
+                  @if (latex) {
+                    <li>
+                      <a [href]="latex" target="_blank">View LaTeX</a>
+                    </li>
+                  }
+                  @if (docUrl) {
+                    <li>
+                      <a [href]="docUrl+'&showerror=true'" target="_blank">Recreation link</a>
+                    </li>
+                  }
+                </ul>
+              </tim-alert>
+            }
+            <div>
+              <label class="footerLabel">
+                <input type="checkbox" [(ngModel)]="pluginsUserCode">
+                Show user answers in plugins
+              </label>
+            </div>
+            <div>
+              <label title="More output formats and other options">
+                <input type="checkbox" [(ngModel)]="showPaths">
+                Show advanced options
+              </label>
+            </div>
+            <div>
+              Output format: &nbsp;
+              <label class="footerLabel">
+                <input type="radio" [(ngModel)]="selected.name" value="PDF">
+                PDF
+              </label>&nbsp;
+              <label class="footerLabel">
+                <input type="radio" [(ngModel)]="selected.name" value="LaTeX">
+                LaTeX
+              </label>&nbsp;
+              @if (showPaths) {
+                <label class="footerLabel">
+                  <input type="radio" [(ngModel)]="selected.name" value="MD">
+                  MD
+                </label>
+                }<ng-container>&nbsp; </ng-container>
+                @if (showPaths) {
+                  <label class="footerLabel">
+                    <input type="radio" [(ngModel)]="selected.name" value="JSON">
+                    JSON
+                  </label>
+                  }<ng-container>&nbsp; </ng-container>
+                  @if (showPaths) {
                     <label class="footerLabel">
-                        <input type="checkbox" [(ngModel)]="pluginsUserCode">
-                        Show user answers in plugins
+                      <input type="radio" [(ngModel)]="selected.name" value="HTML">
+                      HTML
                     </label>
-                </div>
-                <div>
-                    <label title="More output formats and other options">
-                        <input type="checkbox" [(ngModel)]="showPaths">
-                        Show advanced options
-                    </label>
-                </div>
-                <div>
-                    Output format: &nbsp;
+                  }
+                  @if (showPaths) {
                     <label class="footerLabel">
-                        <input type="radio" [(ngModel)]="selected.name" value="PDF">
-                        PDF
-                    </label>&nbsp;
+                      <input type="radio" [(ngModel)]="selected.name" value="PLAIN">
+                      Plain
+                    </label>
+                  }
+                  @if (showPaths) {
                     <label class="footerLabel">
-                        <input type="radio" [(ngModel)]="selected.name" value="LaTeX">
-                        LaTeX
-                    </label>&nbsp;
-                    <label class="footerLabel" *ngIf="showPaths">
-                        <input type="radio" [(ngModel)]="selected.name" value="MD">
-                        MD
-                    </label>&nbsp;
-                    <label class="footerLabel" *ngIf="showPaths">
-                        <input type="radio" [(ngModel)]="selected.name" value="JSON">
-                        JSON
-                    </label>&nbsp;
-                    <label class="footerLabel" *ngIf="showPaths">
-                        <input type="radio" [(ngModel)]="selected.name" value="HTML">
-                        HTML
+                      <input type="radio" [(ngModel)]="selected.name" value="RST">
+                      RST
                     </label>
-                    <label class="footerLabel" *ngIf="showPaths">
-                        <input type="radio" [(ngModel)]="selected.name" value="PLAIN">
-                        Plain
-                    </label>
-                    <label class="footerLabel" *ngIf="showPaths">
-                        <input type="radio" [(ngModel)]="selected.name" value="RST">
-                        RST
-                    </label>
+                  }
                 </div>
-                <div *ngIf="showPaths">
+                @if (showPaths) {
+                  <div>
                     <label class="footerLabel" title="If you think images have changed after last print">
-                        <input type="checkbox" [(ngModel)]="removeOldImages">
-                        Reload external images
+                      <input type="checkbox" [(ngModel)]="removeOldImages">
+                      Reload external images
                     </label>
-                </div>
-                <div *ngIf="showPaths">
+                  </div>
+                }
+                @if (showPaths) {
+                  <div>
                     <label class="footerLabel" title="Use this in case referenced docs have changed">
-                        <input type="checkbox" [(ngModel)]="forceRefresh">
-                        Force reprint (skip cache)
+                      <input type="checkbox" [(ngModel)]="forceRefresh">
+                      Force reprint (skip cache)
                     </label>
-                </div>
+                  </div>
+                }
                 <button [disabled]="loading" class="timButton" (click)="create()">
-                    Create
+                  Create
                 </button>
-                <tim-loading *ngIf="loading"></tim-loading>
-                <tim-alert *ngIf="docUrl && !errormsg" severity="success">
+                @if (loading) {
+                  <tim-loading></tim-loading>
+                }
+                @if (docUrl && !errormsg) {
+                  <tim-alert severity="success">
                     Creation succeeded!
                     <a [href]="docUrl"
-                       target="_blank">View the document.</a>
-                </tim-alert>
-            </ng-container>
-            <ng-container footer></ng-container>
-        </tim-dialog-frame>
-    `,
+                    target="_blank">View the document.</a>
+                  </tim-alert>
+                }
+              </ng-container>
+              <ng-container footer></ng-container>
+            </tim-dialog-frame>
+        `,
     styleUrls: ["./print-dialog.component.scss"],
     standalone: false,
 })

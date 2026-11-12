@@ -1,334 +1,464 @@
 <div [class.updating]="updating" [class.loading]="loading" [class.teacher]="viewctrl.teacherMode">
-    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="closeAlert(i)">
-        <div [innerHTML]="alert.msg | purify"></div>
+  @for (alert of alerts; track alert; let i = $index) {
+    <tim-alert [severity]="alert.type" [closeable]="true" (closing)="closeAlert(i)">
+      <div [innerHTML]="alert.msg | purify"></div>
     </tim-alert>
-    <label *ngIf="hidden && anyInvalid && !formMode" class="checkbox-inline onlyValid">
-        <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
-    <div *ngIf="!hidden" class="answerbrowser-container">
-        <div *ngIf="viewctrl.teacherMode && users && users.length > 0" class="flex user-select">
+  }
+  @if (hidden && anyInvalid && !formMode) {
+    <label class="checkbox-inline onlyValid">
+      <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
+    }
+    @if (!hidden) {
+      <div class="answerbrowser-container">
+        @if (viewctrl.teacherMode && users && users.length > 0) {
+          <div class="flex user-select">
             <div>
-                <div class="input-group input-group-xs">
-            <span class="input-group-btn">
-               <button i18n-title class="btn btn-primary random-student" (click)="randomStudent()" title="Choose random student">R</button>
-               <button i18n-title title="Previous user" class="btn btn-primary scroll-users" (click)="changeStudent(-1)">&uarr;</button>
-             </span>
-                    <select class="form-control"
-                            focus-me="!selectedAnswer && shouldFocus #blurWhenFalse"
-                            [(ngModel)]="user"
-                            (ngModelChange)="userSelected()">
-                             <option *ngFor="let user of users" [ngValue]="user">{{(user.real_name + ' (' + user.name + ')')}}</option>
-
-                    </select>
-                    <span class="input-group-btn">
-             <button i18n-title title="Next user" class="btn btn-primary scroll-users" (click)="changeStudent(+1)">&darr;</button>
-            </span>
-                </div>
+              <div class="input-group input-group-xs">
+                <span class="input-group-btn">
+                  <button i18n-title class="btn btn-primary random-student" (click)="randomStudent()" title="Choose random student">R</button>
+                  <button i18n-title title="Previous user" class="btn btn-primary scroll-users" (click)="changeStudent(-1)">&uarr;</button>
+                </span>
+                <select class="form-control"
+                  focus-me="!selectedAnswer && shouldFocus #blurWhenFalse"
+                  [(ngModel)]="user"
+                  (ngModelChange)="userSelected()">
+                  @for (user of users; track user) {
+                    <option [ngValue]="user">{{(user.real_name + ' (' + user.name + ')')}}</option>
+                  }
+                </select>
+                <span class="input-group-btn">
+                  <button i18n-title title="Next user" class="btn btn-primary scroll-users" (click)="changeStudent(+1)">&darr;</button>
+                </span>
+              </div>
             </div>
             <div class="no-shrink">
-            <span class="user-index-count">
+              <span class="user-index-count">
                 {{ findSelectedUserIndex() + 1 }}/{{ users.length }}
-            </span>
-                <a class="email" href="mailto:{{user?.email}}">email</a>
+              </span>
+              <a class="email" href="mailto:{{user?.email}}">email</a>
             </div>
-        </div>
-        <div i18n *ngIf="isGlobal()" class="flex">
+          </div>
+        }
+        @if (isGlobal()) {
+          <div i18n class="flex">
             Showing answers from all users
         </div>
-        <div class="answer-edit-tools" *ngIf="!hasUserChanged() || loading">
-                        <span class="flex align-center">
-                            <div  *ngIf="answers.length==0 && showRefresh" class="input-group input-group-xs answer-picker">
+        }
+        @if (!hasUserChanged() || loading) {
+          <div class="answer-edit-tools">
+            <span class="flex align-center">
+              @if (answers.length==0 && showRefresh) {
+                <div  class="input-group input-group-xs answer-picker">
+                  <span class="input-group-btn">
+                    <button i18n-title title="Load the newest answer" (click)="refreshPlugin()" class="btn btn-primary" style="top: 0; ">
+                      @if (!refreshing) {
+                        <span class="glyphicon glyphicon-refresh" style="margin-right: unset"></span>
+                      }
+                      @if (refreshing) {
+                        <tim-loading></tim-loading>
+                      }
+                    </button>
+                  </span>
+                </div>
+              }
+              @if (answers.length > 0) {
+                <div>
+                  @if (showBrowseAnswers) {
+                    <div class="flex align-center ab-option-row">
+                      @if (filteredAnswers.length > 0) {
+                        <div>
+                          <div class="input-group input-group-xs answer-picker">
                             <span class="input-group-btn">
-
-            <button i18n-title title="Load the newest answer" (click)="refreshPlugin()" class="btn btn-primary" style="top: 0; ">
-                <span *ngIf="!refreshing" class="glyphicon glyphicon-refresh" style="margin-right: unset"></span>
-                <tim-loading *ngIf="refreshing"></tim-loading>
-            </button>
-
-                            </span>
+                              @if (showRefresh) {
+                                <button i18n-title title="Load the newest answer" (click)="refreshPlugin()"  class="btn btn-primary" style="top: 0">
+                                  @if (!refreshing) {
+                                    <span class="glyphicon glyphicon-refresh" style="margin-right: unset"></span>
+                                  }
+                                  @if (refreshing) {
+                                    <tim-loading></tim-loading>
+                                  }</button>
+                                }
+                                <button i18n-title title="Previous answer" class="btn btn-primary prevAnswer"
+                                (click)="changeAnswerTo(-1)">&larr;</button>
+                              </span>
+                              <select i18n-title class="form-control answer-select"
+                                title="List of answers"
+                                [(ngModel)]="selectedAnswer"
+                                (ngModelChange)="changeAnswer(undefined,undefined, true)">
+                                @for (answer of filteredAnswers; track answer; let idx = $index) {
+                                  <option [ngValue]="answer">{{((filteredAnswers.length - idx) + '. ' + (answer.answered_on |  date:'dd.MM.yyyy HH:mm:ss' ))}}</option>
+                                }
+                              </select>
+                              <span class="input-group-btn">
+                                <button i18n-title title="Next answer" class="btn btn-primary nextAnswer" (click)="changeAnswerTo(1)">&rarr;</button>
+                              </span>
                             </div>
-                <div *ngIf="answers.length > 0">
-                <div *ngIf="showBrowseAnswers" class="flex align-center ab-option-row">
-                    <div *ngIf="filteredAnswers.length > 0">
-                        <div class="input-group input-group-xs answer-picker">
-                <span class="input-group-btn">
-                    <button i18n-title title="Load the newest answer" *ngIf="showRefresh" (click)="refreshPlugin()"  class="btn btn-primary" style="top: 0">
-                        <span *ngIf="!refreshing" class="glyphicon glyphicon-refresh" style="margin-right: unset"></span>
-                        <tim-loading *ngIf="refreshing"></tim-loading></button>
-                    <button i18n-title title="Previous answer" class="btn btn-primary prevAnswer"
-                            (click)="changeAnswerTo(-1)">&larr;</button>
-                </span>
-                            <select i18n-title class="form-control answer-select"
-                                    title="List of answers"
-                                    [(ngModel)]="selectedAnswer"
-                                    (ngModelChange)="changeAnswer(undefined,undefined, true)">
-                                 <option *ngFor="let answer of filteredAnswers; let idx = index" [ngValue]="answer">{{((filteredAnswers.length - idx) + '. ' + (answer.answered_on |  date:'dd.MM.yyyy HH:mm:ss' ))}}</option>
-                            </select>
-                            <span class="input-group-btn">
-                    <button i18n-title title="Next answer" class="btn btn-primary nextAnswer" (click)="changeAnswerTo(1)">&rarr;</button>
-                </span>
-                        </div>
-                    </div>
-                    <div class="no-shrink">
-                    <span *ngIf="filteredAnswers.length > 0" class="answer-index-count">{{ filteredAnswers.length - findSelectedAnswerIndex() }}/<a i18n-title tabindex="0"
-                                                                                                  title="Newest answer" (click)="setNewest()">{{ filteredAnswers.length }}</a></span>
-                        <span *ngIf="filteredAnswers.length == 0">
-                                <ng-container i18n *ngIf="!isGlobal() && viewctrl.teacherMode; else emptyCurrentuser">(no valid answers from the selected user)</ng-container>
-                            <ng-template #emptyCurrentuser>
-                                <ng-container #emptyCurrentuser i18n *ngIf="isGlobal() || !viewctrl.teacherMode">(no valid answers)</ng-container>
-                            </ng-template>
+                          </div>
+                        }
+                        <div class="no-shrink">
+                          @if (filteredAnswers.length > 0) {
+                            <span class="answer-index-count">{{ filteredAnswers.length - findSelectedAnswerIndex() }}/<a i18n-title tabindex="0"
+                            title="Newest answer" (click)="setNewest()">{{ filteredAnswers.length }}</a></span>
+                          }
+                          @if (filteredAnswers.length == 0) {
+                            <span>
+                              @if (!isGlobal() && viewctrl.teacherMode) {
+                                <ng-container i18n>(no valid answers from the selected user)</ng-container>
+                              } @else {
+                                @if (isGlobal() || !viewctrl.teacherMode) {
+                                  <ng-container #emptyCurrentuser i18n>(no valid answers)</ng-container>
+                                }
+                              }
+                            </span>
+                          }
+                          @if (anyInvalid) {
+                            <label class="checkbox-inline onlyValid">
+                              <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
+                            }
+                            @if (showTeacher()) {
+                              <span class="all-answers"> <span class="delimiter">|</span> <a i18n (click)="getAllAnswers()">All answers</a>
+                            </span>
+                          }
+                          <span #buttonNewTaskStem2>@if (showNewTask) {
+                            <button #buttonNewTaskStem i18n-title class="timButton buttonNewTask" title="Change to new task" (click)="newTask()">{{ buttonNewTask }}</button>
+                          }</span>
+                          @if (selectedAnswer) {
+                            <span class="answer-link"><span class="delimiter">|</span> <a i18n i18n-title title="Link to currently selected answer"
+                            (click)="$event.preventDefault()"
+                          href="{{ getAnswerLink() }}">Link</a>
+                          <span class="answer-only-link"> (<a i18n-title title="Link to currently selected answer without other document content"
+                            target="_blank"
+                          href="{{ getAnswerLink(true) }}">only</a>)&nbsp;
                         </span>
-                        <label class="checkbox-inline onlyValid" *ngIf="anyInvalid">
-                            <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
-                        <span class="all-answers" *ngIf="showTeacher()"> <span class="delimiter">|</span> <a i18n (click)="getAllAnswers()">All answers</a>
-                    </span>
-                        <span #buttonNewTaskStem2><button #buttonNewTaskStem i18n-title class="timButton buttonNewTask" *ngIf="showNewTask" title="Change to new task" (click)="newTask()">{{ buttonNewTask }}</button></span>
-                        <span class="answer-link" *ngIf="selectedAnswer"><span class="delimiter">|</span> <a i18n i18n-title title="Link to currently selected answer"
-                                                          (click)="$event.preventDefault()"
-                                                          href="{{ getAnswerLink() }}">Link</a>
-                            <span class="answer-only-link"> (<a i18n-title title="Link to currently selected answer without other document content"
-                                target="_blank"
-                                href="{{ getAnswerLink(true) }}">only</a>)&nbsp;
-                        </span>
-                        </span>
-                    </div>
+                      </span>
+                    }
+                  </div>
                 </div>
-                </div>
-                <a i18n i18n-title *ngIf="peerReviewEnabled && !isPeerReview"
-                    title="Link to peer review"
-                href="{{ getReviewLink() }}">Review</a>
-                </span>
-                 <div *ngIf="answers.length == 0 && viewctrl.teacherMode">
-                     <ng-container *ngIf="!hasUserChanged()">
-                        <span i18n *ngIf="!isGlobal()">(no answers from the selected user)</span>
-                        <span i18n *ngIf="isGlobal()">(no answers)</span>
-                     </ng-container>
-                     <span *ngIf="hasUserChanged()"> <tim-loading></tim-loading> </span>
-                 </div>
-                 <div class="flex ab-option-row">
-                            <form (ngSubmit)="trySavePoints(false, true)" class="point-form form-inline">
-                                <label class="inline" *ngIf="showTeacher() || (giveCustomPoints && allowCustomPoints())">
-                                    <ng-container i18n>Points:</ng-container><input class="form-control input-xs"
+              }
+            </div>
+          }
+          @if (peerReviewEnabled && !isPeerReview) {
+            <a i18n i18n-title
+              title="Link to peer review"
+            href="{{ getReviewLink() }}">Review</a>
+          }
+        </span>
+        @if (answers.length == 0 && viewctrl.teacherMode) {
+          <div>
+            @if (!hasUserChanged()) {
+              @if (!isGlobal()) {
+                <span i18n>(no answers from the selected user)</span>
+              }
+              @if (isGlobal()) {
+                <span i18n>(no answers)</span>
+              }
+            }
+            @if (hasUserChanged()) {
+              <span> <tim-loading></tim-loading> </span>
+            }
+          </div>
+        }
+        <div class="flex ab-option-row">
+          <form (ngSubmit)="trySavePoints(false, true)" class="point-form form-inline">
+            @if (showTeacher() || (giveCustomPoints && allowCustomPoints())) {
+              <label class="inline">
+                <ng-container i18n>Points:</ng-container><input class="form-control input-xs"
                                                   [ngClass]="{ unsaved: points != selectedAnswer?.points,
                                                   'no-step': !markupSettings.pointsStep }"
-                                                  (focus)="shouldFocusIfSelectedAnswer()"
-                                                  (blur)="handlePointsFocusOut($event)"
-                                                  [(ngModel)]="points"
-                                                  (keydown)="handlePointScroll($event)"
-                                                  name="points"
-                                                  type="number"
-                                                  step="{{ pointsStep }}"
-                                                  style="max-width: 5em"
-                                                  autocomplete="off"
-                                                  size="2" min="{{limitPoints.min}}" max="{{limitPoints.max}}">
-                                </label>
-
-                                <button i18n-title title="Save points"
-                                        class="timButton btn-xs"
-                                        *ngIf="selectedAnswer && points != selectedAnswer.points && !autosave">
-                                    <i class="glyphicon glyphicon-ok"></i>
-                                </button>
-                            </form>
-<!--in ab-option-row span elements have right margin-->
-                            <div *ngIf="selectedAnswer || taskInfo">
-                            <ng-container *ngIf="selectedAnswer || (taskInfo && markupSettings.showMaxPoints)">
-                            <span class="inline" *ngIf="(points !== null || markupSettings.showMaxPoints) && !(showTeacher() || (giveCustomPoints && allowCustomPoints())) && pointsTextVisible()">
-                        {{ getPointsText() }} {{ points ?? "-" }} <span i18n *ngIf="!taskInfo?.showPoints">(only visible to teachers)</span>
+                (focus)="shouldFocusIfSelectedAnswer()"
+                (blur)="handlePointsFocusOut($event)"
+                [(ngModel)]="points"
+                (keydown)="handlePointScroll($event)"
+                name="points"
+                type="number"
+                step="{{ pointsStep }}"
+                style="max-width: 5em"
+                autocomplete="off"
+                size="2" min="{{limitPoints.min}}" max="{{limitPoints.max}}">
+              </label>
+            }
+            @if (selectedAnswer && points != selectedAnswer.points && !autosave) {
+              <button i18n-title title="Save points"
+                class="timButton btn-xs"
+                >
+                <i class="glyphicon glyphicon-ok"></i>
+              </button>
+            }
+          </form>
+          <!--in ab-option-row span elements have right margin-->
+          @if (selectedAnswer || taskInfo) {
+            <div>
+              @if (selectedAnswer || (taskInfo && markupSettings.showMaxPoints)) {
+                @if ((points !== null || markupSettings.showMaxPoints) && !(showTeacher() || (giveCustomPoints && allowCustomPoints())) && pointsTextVisible()) {
+                  <span class="inline">
+                    {{ getPointsText() }} {{ points ?? "-" }} @if (!taskInfo?.showPoints) {
+                    <span i18n>(only visible to teachers)</span>
+                  }
+                </span>
+              }
+              @if (taskInfo?.maxPoints && (points !== null || markupSettings.showMaxPoints)) {
+                <span class="inline">/ {{ taskInfo?.maxPoints }}</span>
+              }
+            }
+            @if (selectedAnswer) {
+              @if (!selectedAnswer.valid && points !== null) {
+                <span i18n>(invalid)</span>
+              }
+              @if (!viewctrl.teacherMode && allowCustomPoints()) {
+                <span>
+                  <label class="checkbox-inline">
+                    <input type="checkbox"
+                      [(ngModel)]="giveCustomPoints"><ng-container i18n>Set custom points</ng-container></label>
                     </span>
-                            <span class="inline" *ngIf="taskInfo?.maxPoints && (points !== null || markupSettings.showMaxPoints)">/ {{ taskInfo?.maxPoints }}</span>
-                            </ng-container>
-                            <ng-container *ngIf="selectedAnswer">
-                            <span i18n *ngIf="!selectedAnswer.valid && points !== null">(invalid)</span>
-                            <span *ngIf="!viewctrl.teacherMode && allowCustomPoints()">
-                        <label class="checkbox-inline">
-                            <input type="checkbox"
-                                   [(ngModel)]="giveCustomPoints"><ng-container i18n>Set custom points</ng-container></label>
-                    </span>
-                        <span class="answer-validity">
-                            <ng-container *ngIf="showTeacher()">
-                            <label class="checkbox-inline">
-                                <input type="checkbox" [(ngModel)]="isValidAnswer"><ng-container i18n="@@abIsValidCheckbox">Valid</ng-container>
-                            </label>
-                                </ng-container>
-                            <span>
-                                <button i18n-title title="Save validity"
-                                        (click)="saveValidity()"
-                                        class="timButton btn-xs"
-                                        *ngIf="isValidAnswer != selectedAnswer.valid">
-                                    <i class="glyphicon glyphicon-ok"></i>
-                                </button>
-                            </span>
-                        </span>
-                                <span *ngIf="viewctrl.teacherMode && allowCustomPoints()">
-                                    <label class="checkbox-inline">
-                                        <input type="checkbox" [(ngModel)]="giveCustomPoints"><ng-container i18n>cp</ng-container>
-                                    </label>
-                                </span>
-                            </ng-container>
-                            </div>
-                            <span *ngIf="showTeacher()" class="save-teacher">
-                                <label class="checkbox-inline">
-                                    <input type="checkbox" (change)="toggleInput()" [(ngModel)]="saveTeacher"><ng-container i18n>Save teacher's fix</ng-container>
-                                </label>
-                            </span>
-                            <div class="flex">
-                                <ng-container *ngIf="selectedAnswer">
-                                    <span *ngIf="showVelpsCheckBox()">
-                                    <label class="checkbox-inline" >
-                                        <input type="checkbox" [(ngModel)]="review" (ngModelChange)="reviewToggled()"><ng-container i18n>Velps</ng-container>
-                                    </label>
-                                    </span>
-                                    <button i18n-title *ngIf="showDelete"
-                                            title="Delete answer"
-                                            (click)="deleteAnswer()"
-                                            class="timButton btn-xs btn-danger">
-                                        <i class="glyphicon glyphicon-trash"></i>
-                                    </button>
-                                </ng-container>
-                                <div class="input-group input-group-xs" *ngIf="showReviewUserSelector()">
-                                    <select i18n-title class="form-control"
-                                            title="List of reviewers"
-                                            [(ngModel)]="reviewerUser"
-                                            (ngModelChange)="changeReviewerUser()">
-                                        <option i18n [ngValue]="undefined">All reviewers</option>
-                                        <option *ngFor="let user of reviewerUsers"
-                                                [ngValue]="user">{{(user.real_name + ' (' + user.name + ')')}}</option>
-                                    </select>
-                                </div>
-                            </div>
-                        <span *ngIf="selectedAnswerWithUsers">
-                        <div class="flex" *ngIf="selectedAnswerWithUsers.users.length > 1">
-                            <div>
-                                <ng-container i18n>Collaborators</ng-container>:
-                                <ul>
-                                    <li *ngFor="let c of selectedAnswerWithUsers.users"><a
-                                            href="mailto:{{c.email}}">{{ c.real_name }}</a>
-                                        <button i18n-title *ngIf="showDelete"
-                                                title="Delete collaborator"
-                                                (click)="deleteCollab(c.id)"
-                                                class="timButton btn-xs btn-danger">
-                                            <i class="glyphicon glyphicon-trash"></i>
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        </span>
-                    </div><!-- end flex-->
-                 <div class="flex review-row">
-                           <form (ngSubmit)="saveReview()" *ngIf="hasPeerReviewers || isPeerReview" class="point-form peer-review-area form-inline">
-                               <span class="ab-option-row">
-                                   <span>
-                                       <label class="inline">
-                                            <ng-container i18n>Peer review: </ng-container>
-                                        </label>
-                                   </span>
-                                   <span *ngIf="isPeerReview">
-                                        <label class="radio-inline"><input [(ngModel)]="previewingPeerReview"
-                                                   name="previewingPeerReview"
-                                                   [value]="false"
-                                                   (ngModelChange)="peerReviewPreviewChanged()"
-                                               type="radio"> <ng-container i18n>Edit</ng-container>
-                                       </label>
-                                        <label class="radio-inline">
-                                        <input [(ngModel)]="previewingPeerReview"
-                                                   name="previewingPeerReview"
-                                                   [value]="true"
-                                                    (ngModelChange)="peerReviewPreviewChanged()"
-                                               type="radio"> <ng-container i18n>Preview</ng-container>
-                                       </label>
-                                   </span>
-                               </span>
-                               <div class="peer-review-area">
-                                    <textarea i18n-placeholder class="peer-review-text"
-                                              #peerReviewEditArea
-                                              (keydown.control.s)="$event.preventDefault(); saveReview()"
-                                              (keydown.meta.s)="$event.preventDefault(); saveReview()"
-                                              [(ngModel)]="reviewComment"
-                                              [hidden]="!isPeerReview || previewingPeerReview"
-                                              rows="6"
-                                              name="reviewComment"
-                                              placeholder="Add your review">
-                                    </textarea>
-                                   <div #peerReviewContentDiv class="peer-review-render" [hidden]="isPeerReview && !previewingPeerReview">
-                                       <div class="math" [innerHtml]="reviewComment | purify"></div>
-                                   </div>
-                               </div>
-                               <div class="ab-option-row">
-                                   <span><ng-container i18n>Points:</ng-container>
-                                   <input class="form-control input-xs"
+                  }
+                  <span class="answer-validity">
+                    @if (showTeacher()) {
+                      <label class="checkbox-inline">
+                        <input type="checkbox" [(ngModel)]="isValidAnswer"><ng-container i18n="@@abIsValidCheckbox">Valid</ng-container>
+                      </label>
+                    }
+                    <span>
+                      @if (isValidAnswer != selectedAnswer.valid) {
+                        <button i18n-title title="Save validity"
+                          (click)="saveValidity()"
+                          class="timButton btn-xs"
+                          >
+                        <i class="glyphicon glyphicon-ok"></i>
+                      </button>
+                    }
+                  </span>
+                </span>
+                @if (viewctrl.teacherMode && allowCustomPoints()) {
+                  <span>
+                    <label class="checkbox-inline">
+                      <input type="checkbox" [(ngModel)]="giveCustomPoints"><ng-container i18n>cp</ng-container>
+                    </label>
+                  </span>
+                }
+              }
+            </div>
+          }
+          @if (showTeacher()) {
+            <span class="save-teacher">
+              <label class="checkbox-inline">
+                <input type="checkbox" (change)="toggleInput()" [(ngModel)]="saveTeacher"><ng-container i18n>Save teacher's fix</ng-container>
+              </label>
+            </span>
+          }
+          <div class="flex">
+            @if (selectedAnswer) {
+              @if (showVelpsCheckBox()) {
+                <span>
+                  <label class="checkbox-inline" >
+                    <input type="checkbox" [(ngModel)]="review" (ngModelChange)="reviewToggled()"><ng-container i18n>Velps</ng-container>
+                  </label>
+                </span>
+              }
+              @if (showDelete) {
+                <button i18n-title
+                  title="Delete answer"
+                  (click)="deleteAnswer()"
+                  class="timButton btn-xs btn-danger">
+                  <i class="glyphicon glyphicon-trash"></i>
+                </button>
+              }
+            }
+            @if (showReviewUserSelector()) {
+              <div class="input-group input-group-xs">
+                <select i18n-title class="form-control"
+                  title="List of reviewers"
+                  [(ngModel)]="reviewerUser"
+                  (ngModelChange)="changeReviewerUser()">
+                  <option i18n [ngValue]="undefined">All reviewers</option>
+                  @for (user of reviewerUsers; track user) {
+                    <option
+                    [ngValue]="user">{{(user.real_name + ' (' + user.name + ')')}}</option>
+                  }
+                </select>
+              </div>
+            }
+          </div>
+          @if (selectedAnswerWithUsers) {
+            <span>
+              @if (selectedAnswerWithUsers.users.length > 1) {
+                <div class="flex">
+                  <div>
+                    <ng-container i18n>Collaborators</ng-container>:
+                    <ul>
+                      @for (c of selectedAnswerWithUsers.users; track c) {
+                        <li><a
+                        href="mailto:{{c.email}}">{{ c.real_name }}</a>
+                        @if (showDelete) {
+                          <button i18n-title
+                            title="Delete collaborator"
+                            (click)="deleteCollab(c.id)"
+                            class="timButton btn-xs btn-danger">
+                            <i class="glyphicon glyphicon-trash"></i>
+                          </button>
+                        }
+                      </li>
+                    }
+                  </ul>
+                </div>
+              </div>
+            }
+          </span>
+        }
+      </div><!-- end flex-->
+      <div class="flex review-row">
+        @if (hasPeerReviewers || isPeerReview) {
+          <form (ngSubmit)="saveReview()" class="point-form peer-review-area form-inline">
+            <span class="ab-option-row">
+              <span>
+                <label class="inline">
+                  <ng-container i18n>Peer review: </ng-container>
+                </label>
+              </span>
+              @if (isPeerReview) {
+                <span>
+                  <label class="radio-inline"><input [(ngModel)]="previewingPeerReview"
+                    name="previewingPeerReview"
+                    [value]="false"
+                    (ngModelChange)="peerReviewPreviewChanged()"
+                    type="radio"> <ng-container i18n>Edit</ng-container>
+                  </label>
+                  <label class="radio-inline">
+                    <input [(ngModel)]="previewingPeerReview"
+                      name="previewingPeerReview"
+                      [value]="true"
+                      (ngModelChange)="peerReviewPreviewChanged()"
+                      type="radio"> <ng-container i18n>Preview</ng-container>
+                    </label>
+                  </span>
+                }
+              </span>
+              <div class="peer-review-area">
+                <textarea i18n-placeholder class="peer-review-text"
+                  #peerReviewEditArea
+                  (keydown.control.s)="$event.preventDefault(); saveReview()"
+                  (keydown.meta.s)="$event.preventDefault(); saveReview()"
+                  [(ngModel)]="reviewComment"
+                  [hidden]="!isPeerReview || previewingPeerReview"
+                  rows="6"
+                  name="reviewComment"
+                  placeholder="Add your review">
+              </textarea>
+              <div #peerReviewContentDiv class="peer-review-render" [hidden]="isPeerReview && !previewingPeerReview">
+                <div class="math" [innerHtml]="reviewComment | purify"></div>
+              </div>
+            </div>
+            <div class="ab-option-row">
+              <span><ng-container i18n>Points:</ng-container>
+              <input class="form-control input-xs"
                                                   [ngClass]="{ unsaved: reviewPoints != savedReviewPoints,
                                                   'no-step': !markupSettings.pointsStep }"
-                                                  (focus)="shouldFocusIfSelectedAnswer()"
-                                                  (blur)="shouldFocus = false"
-                                                  [(ngModel)]="reviewPoints"
-                                                  (keydown)="handlePointScroll($event)"
-                                                  (keydown.control.s)="$event.preventDefault(); saveReview()"
-                                                  (keydown.meta.s)="$event.preventDefault(); saveReview()"
-                                                  [disabled]="!isPeerReview"
-                                                  name="reviewPoints"
-                                                  type="number"
-                                                  step="{{ pointsStep }}"
-                                                  style="max-width: 5em"
-                                                  autocomplete="off"
-                                                  size="2">
-                                   </span>
-                                   <button i18n i18n-title title="Save your review"
-                                           class="timButton btn-xs"
-                                           *ngIf="isPeerReview"
-                                           [disabled]="reviewPoints == savedReviewPoints && reviewComment == savedReviewComment">Save your review</button>
-
-                                    <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length == 1 && this.reviewPoints == undefined">(no points given)</ng-container>
-                                    <ng-container i18n *ngIf="!isPeerReview && this.filteredPeerReviews.length > 1">(average of {{peerReviews.length}} reviews)</ng-container>
-                                    <ng-container i18n *ngIf="!isPeerReview && filteredPeerReviews.length == 0">(no reviews given)</ng-container>
-                               </div>
-                            </form>
-                 </div>
-            <div class="reviewcontainer" *ngIf="review">
-                <div *ngIf="imageReview">
-                    <draw-canvas
-                            [options]="{enabled: false, color: 'red', drawType: 2, opacity: 1.0, fill: false, w: 2}"
-                            [toolBar]="viewctrl.velpMode" [bgSources]="imageReviewData"
-                            [imgLoadCallback]="setImageReview"></draw-canvas>
-                </div>
-                <div *ngIf="!imageReview" class="review" [innerHtml]="reviewHtml">
-
-                </div>
-            </div>
-    <ng-container *ngIf="taskInfo">
-                <span class="triesLeft"
-                      *ngIf="taskInfo.answerLimit && triesTextVisible()">{{ getTriesText() }} {{ getTriesLeft() }}. </span>
-
-            <span class="answeringTime" *ngIf="taskInfo.starttime || taskInfo.deadline">
-        <ng-container i18n>Answering time:</ng-container>
-        <span *ngIf="taskInfo.starttime && !taskInfo.deadline">
-            <ng-container i18n>Since</ng-container> {{ taskInfo.starttime | date:'dd.MM.yyyy HH:mm:ss' }}
+                (focus)="shouldFocusIfSelectedAnswer()"
+                (blur)="shouldFocus = false"
+                [(ngModel)]="reviewPoints"
+                (keydown)="handlePointScroll($event)"
+                (keydown.control.s)="$event.preventDefault(); saveReview()"
+                (keydown.meta.s)="$event.preventDefault(); saveReview()"
+                [disabled]="!isPeerReview"
+                name="reviewPoints"
+                type="number"
+                step="{{ pointsStep }}"
+                style="max-width: 5em"
+                autocomplete="off"
+                size="2">
+            </span>
+            @if (isPeerReview) {
+              <button i18n i18n-title title="Save your review"
+                class="timButton btn-xs"
+              [disabled]="reviewPoints == savedReviewPoints && reviewComment == savedReviewComment">Save your review</button>
+            }
+            @if (!isPeerReview && this.filteredPeerReviews.length == 1 && this.reviewPoints == undefined) {
+              <ng-container i18n>(no points given)</ng-container>
+            }
+            @if (!isPeerReview && this.filteredPeerReviews.length > 1) {
+              <ng-container i18n>(average of {{peerReviews.length}} reviews)</ng-container>
+            }
+            @if (!isPeerReview && filteredPeerReviews.length == 0) {
+              <ng-container i18n>(no reviews given)</ng-container>
+            }
+          </div>
+        </form>
+      }
+    </div>
+    @if (review) {
+      <div class="reviewcontainer">
+        @if (imageReview) {
+          <div>
+            <draw-canvas
+              [options]="{enabled: false, color: 'red', drawType: 2, opacity: 1.0, fill: false, w: 2}"
+              [toolBar]="viewctrl.velpMode" [bgSources]="imageReviewData"
+            [imgLoadCallback]="setImageReview"></draw-canvas>
+          </div>
+        }
+        @if (!imageReview) {
+          <div class="review" [innerHtml]="reviewHtml">
+          </div>
+        }
+      </div>
+    }
+    @if (taskInfo) {
+      @if (taskInfo.answerLimit && triesTextVisible()) {
+        <span class="triesLeft"
+        >{{ getTriesText() }} {{ getTriesLeft() }}. </span>
+      }
+      @if (taskInfo.starttime || taskInfo.deadline) {
+        <span class="answeringTime">
+          <ng-container i18n>Answering time:</ng-container>
+          @if (taskInfo.starttime && !taskInfo.deadline) {
+            <span>
+              <ng-container i18n>Since</ng-container> {{ taskInfo.starttime | date:'dd.MM.yyyy HH:mm:ss' }}
+            </span>
+          }
+          @if (!taskInfo.starttime && taskInfo.deadline) {
+            <span>
+              <ng-container i18n>Until</ng-container> {{ taskInfo.deadline | date:'dd.MM.yyyy HH:mm:ss' }}
+            </span>
+          }
+          @if (taskInfo.starttime && taskInfo.deadline) {
+            <span>
+              {{ taskInfo.starttime | date:'dd.MM.yyyy HH:mm:ss' }} - {{ taskInfo.deadline | date:'dd.MM.yyyy HH:mm:ss' }}
+            </span>
+          }
         </span>
-        <span *ngIf="!taskInfo.starttime && taskInfo.deadline">
-            <ng-container i18n>Until</ng-container> {{ taskInfo.deadline | date:'dd.MM.yyyy HH:mm:ss' }}
-        </span>
-        <span *ngIf="taskInfo.starttime && taskInfo.deadline">
-            {{ taskInfo.starttime | date:'dd.MM.yyyy HH:mm:ss' }} - {{ taskInfo.deadline | date:'dd.MM.yyyy HH:mm:ss' }}
-        </span>
+      }
+    }
+  </div>
+}
+@if (viewctrl.teacherMode && hasUserChanged() && !loading) {
+  <span i18n>(hover/click to update)</span>
+}
+<!-- <img style="display: inline" src="/static/images/loading.gif" *ngIf="loading"> -->
+</div>
+}
+@if (modelAnswer && !hideModelAnswerPanel) {
+  <div class="modelAnswer" #modelAnswerDiv>
+    @if (showModelAnswerLink()) {
+      <a i18n-title
+        title="Show model answer"
+      (click)="showModelAnswer()">{{getModelAnswerLinkText()}}</a>
+    }
+    @if (!showModelAnswerLink() && modelAnswer.linkTextBeforeCount) {
+      <div>{{modelAnswer.linkTextBeforeCount}}</div>
+    }
+    @if (showClearModelAnswerLockLink()) {
+      <span><span class="delimiter">|</span><a i18n i18n-title (click)="clearModelAnswerLock()" title="Manage model answer locks">Manage model answer locks</a>
     </span>
-    </ng-container>
-        </div>
-        <span i18n *ngIf="viewctrl.teacherMode && hasUserChanged() && !loading">(hover/click to update)</span>
-        <!-- <img style="display: inline" src="/static/images/loading.gif" *ngIf="loading"> -->
+  }
+  @if (modelAnswerVisible) {
+    <div class="modelAnswerContent" [innerHtml]="modelAnswerHtml | purify">
     </div>
-    <div class="modelAnswer" #modelAnswerDiv *ngIf="modelAnswer && !hideModelAnswerPanel">
-        <a i18n-title *ngIf="showModelAnswerLink()"
-           title="Show model answer"
-           (click)="showModelAnswer()">{{getModelAnswerLinkText()}}</a>
-        <div *ngIf="!showModelAnswerLink() && modelAnswer.linkTextBeforeCount">{{modelAnswer.linkTextBeforeCount}}</div>
-        <span *ngIf="showClearModelAnswerLockLink()"><span class="delimiter">|</span><a i18n i18n-title (click)="clearModelAnswerLock()" title="Manage model answer locks">Manage model answer locks</a>
-        </span>
-        <div class="modelAnswerContent" *ngIf="modelAnswerVisible" [innerHtml]="modelAnswerHtml | purify">
-
-        </div>
-    </div>
-    <div *ngIf="feedback">
-        <tim-alert [severity]="'warning'" [closeable]="true" (closing)="showFeedback('')">
-            <div #feedbackDiv [innerHTML]="feedback | purify"></div>
-        </tim-alert>
-    </div>
+  }
+</div>
+}
+@if (feedback) {
+  <div>
+    <tim-alert [severity]="'warning'" [closeable]="true" (closing)="showFeedback('')">
+      <div #feedbackDiv [innerHTML]="feedback | purify"></div>
+    </tim-alert>
+  </div>
+}
 </div>

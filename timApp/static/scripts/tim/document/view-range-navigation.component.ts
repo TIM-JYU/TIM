@@ -13,21 +13,31 @@ import {partitionDocument} from "tim/document/viewRangeInfo";
 @Component({
     selector: "tim-view-range-navigation",
     template: `
-        <div class="view-range-container" *ngIf="ranges && ranges.length > 0 && !isOnly">
+        @if (ranges && ranges.length > 0 && !isOnly) {
+          <div class="view-range-container">
             <div class="view-range-buttons">
-        <span *ngFor="let r of ranges; last as isLast">
-            <span *ngIf="r.disabled">{{r.name}} part</span>
-            <a *ngIf="!r.disabled" (click)="move(r)"
-               tooltip="Navigate to part {{r.b}} - {{r.e}}">{{r.name}} part</a>
-            <span *ngIf="!isLast && r">&ngsp;|</span>&ngsp;
-        </span>
+              @for (r of ranges; track r; let isLast = $last) {
+                <span>
+                  @if (r.disabled) {
+                    <span>{{r.name}} part</span>
+                  }
+                  @if (!r.disabled) {
+                    <a (click)="move(r)"
+                    tooltip="Navigate to part {{r.b}} - {{r.e}}">{{r.name}} part</a>
+                  }
+                  @if (!isLast && r) {
+                    <span>&ngsp;|</span>
+                    }<ng-container>&ngsp; </ng-container>
+                  </span>
+                }
                 <a style="display: inline-block" (click)="openViewRangeMenu()"
-                   tooltip="Open document partitioning settings">
-                    <span class="glyphicon glyphicon-cog"></span>
+                  tooltip="Open document partitioning settings">
+                  <span class="glyphicon glyphicon-cog"></span>
                 </a>
+              </div>
             </div>
-        </div>
-    `,
+          }
+        `,
     standalone: false,
 })
 export class ViewRangeNavigationComponent {

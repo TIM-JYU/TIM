@@ -31,54 +31,70 @@ interface IImportResults {
     selector: "tim-import-answers-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header i18n>
+          <ng-container header i18n>
                 Import answers as JSON
             </ng-container>
-            <ng-container body>
-                <p i18n>Import answers as JSON using the text box below. Use the following format for importing:</p>
-                <pre>
-[
-    {{'{'}}
-        "content": "Content of the answer. Export answers as JSON to see the content format.",
-        "username": "User's username to use for importing. Export answers as JSON to see the username.",
-        "points": 0,
-        "task": "task1",
-        "time": "2020-01-01T00:00:00Z",
-        "valid": true
-    {{'}'}}
-]</pre>
-                <tim-loading *ngIf="loading"></tim-loading>
-                <tim-alert *ngIf="wasSaved" severity="success">
-                    <ng-container i18n>Saved!</ng-container>
-                    <ng-container *ngIf="importResults" i18n> Imported {{importResults.imported}} answers, {{importResults.skipped_duplicates}} duplicates were skipped.</ng-container>
-                </tim-alert>
-                <tim-alert *ngIf="error">{{error}}</tim-alert>
-                <tim-alert *ngIf="htmlError">
-                    <div [innerHTML]="htmlError | purify"></div>
-                </tim-alert>
-                <p class="text-danger" i18n>Note: Answer format depends on plugin type. Export answers as JSON first to see the correct format!</p>
-                <cs-ace-editor [disabled]="loading || !isTeacher" [minRows]="20" [maxRows]="25" languageMode="json"
-                               #editor></cs-ace-editor>
-                <p i18n>Additionally, specify the user group name for which the answers are imported.</p>
-                <div class="form-inline">
-                    <label>
-                        Group for which to import answers:
-                        <input class="form-control" type="text" [(ngModel)]="importGroup">
-                    </label>
-                </div>
-                <p *ngIf="!isTeacher" class="text-danger" i18n>You must be in teacher mode to be able to import
-                    answers!</p>
-            </ng-container>
-            <div footer class="dialog-button-panel">
-                <button class="timButton" (click)="importAnswers()" [disabled]="!isTeacher || loading || !importGroup || !importGroup.trim()" i18n>Import
-                </button>
-                <button class="btn btn-default" [class.btn-danger]="!wasSaved" [disabled]="loading" (click)="close(wasSaved)">
-                    <ng-container *ngIf="wasSaved" i18n>Close and refresh page</ng-container>
-                    <ng-container *ngIf="!wasSaved" i18n>Close without importing</ng-container>
-                </button>
+          <ng-container body>
+            <p i18n>Import answers as JSON using the text box below. Use the following format for importing:</p>
+            <pre>
+              [
+              {{'{'}}
+              "content": "Content of the answer. Export answers as JSON to see the content format.",
+              "username": "User's username to use for importing. Export answers as JSON to see the username.",
+              "points": 0,
+              "task": "task1",
+              "time": "2020-01-01T00:00:00Z",
+              "valid": true
+              {{'}'}}
+            ]</pre>
+            @if (loading) {
+              <tim-loading></tim-loading>
+            }
+            @if (wasSaved) {
+              <tim-alert severity="success">
+                <ng-container i18n>Saved!</ng-container>
+                @if (importResults) {
+                  <ng-container i18n> Imported {{importResults.imported}} answers, {{importResults.skipped_duplicates}} duplicates were skipped.</ng-container>
+                }
+              </tim-alert>
+            }
+            @if (error) {
+              <tim-alert>{{error}}</tim-alert>
+            }
+            @if (htmlError) {
+              <tim-alert>
+                <div [innerHTML]="htmlError | purify"></div>
+              </tim-alert>
+            }
+            <p class="text-danger" i18n>Note: Answer format depends on plugin type. Export answers as JSON first to see the correct format!</p>
+            <cs-ace-editor [disabled]="loading || !isTeacher" [minRows]="20" [maxRows]="25" languageMode="json"
+            #editor></cs-ace-editor>
+            <p i18n>Additionally, specify the user group name for which the answers are imported.</p>
+            <div class="form-inline">
+              <label>
+                Group for which to import answers:
+                <input class="form-control" type="text" [(ngModel)]="importGroup">
+              </label>
             </div>
+            @if (!isTeacher) {
+              <p class="text-danger" i18n>You must be in teacher mode to be able to import
+                    answers!</p>
+            }
+          </ng-container>
+          <div footer class="dialog-button-panel">
+            <button class="timButton" (click)="importAnswers()" [disabled]="!isTeacher || loading || !importGroup || !importGroup.trim()" i18n>Import
+                </button>
+            <button class="btn btn-default" [class.btn-danger]="!wasSaved" [disabled]="loading" (click)="close(wasSaved)">
+              @if (wasSaved) {
+                <ng-container i18n>Close and refresh page</ng-container>
+              }
+              @if (!wasSaved) {
+                <ng-container i18n>Close without importing</ng-container>
+              }
+            </button>
+          </div>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class ImportAnswersDialogComponent extends AngularDialogComponent<

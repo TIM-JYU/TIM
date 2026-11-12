@@ -33,29 +33,39 @@ export interface IQuestionPreviewDialogResult {
     selector: "tim-ask-question-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body *ngIf="questiondata">
-            <span *ngIf="getTimeLimit()">
-            Time limit: {{ getTimeLimit() }} seconds
-            </span>
-                <span *ngIf="!questiondata.markup.timeLimit">
-            No time limit.
-            </span>
-                <p *ngIf="questiondata.markup.randomizedRows !== undefined">
-                    {{printRandomizationInfo()}}
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          @if (questiondata) {
+            <ng-container body>
+              @if (getTimeLimit()) {
+                <span>
+                  Time limit: {{ getTimeLimit() }} seconds
+                </span>
+              }
+              @if (!questiondata.markup.timeLimit) {
+                <span>
+                  No time limit.
+                </span>
+              }
+              @if (questiondata.markup.randomizedRows !== undefined) {
+                <p>
+                  {{printRandomizationInfo()}}
                 </p>
-                <tim-answer-sheet [questiondata]="questiondata"></tim-answer-sheet>
+              }
+              <tim-answer-sheet [questiondata]="questiondata"></tim-answer-sheet>
             </ng-container>
-            <ng-container footer>
-                <!-- <button (click)="deleteQuestion()" class="btn btn-danger pull-left">Delete</button> -->
-                <button *ngIf="showAsk()" (click)="ask()" class="timButton">Ask</button>&nbsp;&nbsp;
-                <button (click)="editQuestion()" class="timButton">Edit</button>
-                <button (click)="dismiss()" class="timButton">Close</button>
+          }
+          <ng-container footer>
+            <!-- <button (click)="deleteQuestion()" class="btn btn-danger pull-left">Delete</button> -->
+            @if (showAsk()) {
+              <button (click)="ask()" class="timButton">Ask</button>
+              }<ng-container>&nbsp;&nbsp; </ng-container>
+              <button (click)="editQuestion()" class="timButton">Edit</button>
+              <button (click)="dismiss()" class="timButton">Close</button>
             </ng-container>
-        </tim-dialog-frame>
-    `,
+          </tim-dialog-frame>
+        `,
     standalone: false,
 })
 export class QuestionPreviewDialogComponent extends AngularDialogComponent<

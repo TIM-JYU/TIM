@@ -1,307 +1,385 @@
 <div class="checkbox">
-    <label>
-        <input [(ngModel)]="showActiveOnly"
-               (ngModelChange)="activeBoxChanged()"
-               type="checkbox"/> Show only active or upcoming rights <tim-loading *ngIf="activeBoxLoading"></tim-loading>
-    </label>
+  <label>
+    <input [(ngModel)]="showActiveOnly"
+      (ngModelChange)="activeBoxChanged()"
+      type="checkbox"/> Show only active or upcoming rights @if (activeBoxLoading) {
+      <tim-loading></tim-loading>
+    }
+  </label>
 </div>
 <div class="checkbox">
-    <label>
-        <input [(ngModel)]="editVelpGroupPermissions" type="checkbox"/> Copy changes to velp groups
-    </label>
+  <label>
+    <input [(ngModel)]="editVelpGroupPermissions" type="checkbox"/> Copy changes to velp groups
+  </label>
 </div>
 <div class="checkbox">
-    <label>
-        <input [(ngModel)]="editTranslationPermissions" type="checkbox"/> Copy changes to translations
-    </label>
+  <label>
+    <input [(ngModel)]="editTranslationPermissions" type="checkbox"/> Copy changes to translations
+  </label>
 </div>
-<div *ngIf="massMode && gridReady" class="rights-item-table">
+@if (massMode && gridReady) {
+  <div class="rights-item-table">
     <table class="table table-condensed table-striped table-hover">
-        <thead>
+      <thead>
         <tr>
-            <th class="select-col">
-                <input type="checkbox"
-                       title="Select or unselect all shown items"
-                       [checked]="allVisibleSelected()"
-                       (change)="toggleSelectAll($any($event.target).checked)">
+          <th class="select-col">
+            <input type="checkbox"
+              title="Select or unselect all shown items"
+              [checked]="allVisibleSelected()"
+              (change)="toggleSelectAll($any($event.target).checked)">
+          </th>
+          @for (col of gridColumns; track col) {
+            <th>
+              <a class="sort-header" (click)="sortBy(col.field)">
+                {{ col.name }}
+                @if (sortField === col.field) {
+                  <i
+                    class="glyphicon"
+                  [ngClass]="sortAscending ? 'glyphicon-triangle-top' : 'glyphicon-triangle-bottom'"></i>
+                }
+              </a>
             </th>
-            <th *ngFor="let col of gridColumns">
-                <a class="sort-header" (click)="sortBy(col.field)">
-                    {{ col.name }}
-                    <i *ngIf="sortField === col.field"
-                       class="glyphicon"
-                       [ngClass]="sortAscending ? 'glyphicon-triangle-top' : 'glyphicon-triangle-bottom'"></i>
-                </a>
-            </th>
+          }
         </tr>
         <tr>
-            <th></th>
-            <th *ngFor="let col of gridColumns">
-                <input type="text"
-                       class="form-control input-xs"
-                       [attr.aria-label]="'Filter by ' + col.name"
-                       [(ngModel)]="gridFilters[col.field]"
-                       (ngModelChange)="updateVisibleItems()">
+          <th></th>
+          @for (col of gridColumns; track col) {
+            <th>
+              <input type="text"
+                class="form-control input-xs"
+                [attr.aria-label]="'Filter by ' + col.name"
+                [(ngModel)]="gridFilters[col.field]"
+                (ngModelChange)="updateVisibleItems()">
             </th>
+          }
         </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let item of visibleItems; trackBy: trackItem"
+      </thead>
+      <tbody>
+        @for (item of visibleItems; track trackItem($index, item)) {
+          <tr
             [class.selected]="selectedIds.has(item.id)"
             (click)="toggleSelected(item)">
             <td class="select-col">
-                <input type="checkbox"
-                       [disabled]="!item.rights.manage"
-                       [checked]="selectedIds.has(item.id)"
-                       (click)="$event.stopPropagation()"
-                       (change)="toggleSelected(item)">
+              <input type="checkbox"
+                [disabled]="!item.rights.manage"
+                [checked]="selectedIds.has(item.id)"
+                (click)="$event.stopPropagation()"
+                (change)="toggleSelected(item)">
             </td>
             <td>{{ item.title }}</td>
             <td>
-                <i *ngIf="item.isFolder" class="glyphicon glyphicon-folder-open"></i>
-                <a href="/manage/{{ item.path }}" (click)="$event.stopPropagation()">{{ item.relPath }}</a>
+              @if (item.isFolder) {
+                <i class="glyphicon glyphicon-folder-open"></i>
+              }
+              <a href="/manage/{{ item.path }}" (click)="$event.stopPropagation()">{{ item.relPath }}</a>
             </td>
             <td [title]="item.rightsStr">{{ item.rightsStr }}</td>
-        </tr>
-        </tbody>
+          </tr>
+        }
+      </tbody>
     </table>
-</div>
-<div class="form" *ngIf="allowSelectAction">
+  </div>
+}
+@if (allowSelectAction) {
+  <div class="form">
     <label>Action:</label>
     <div class="radio">
-        <label>
-            <input type="radio" [(ngModel)]="actionOption" value="add">
-            Add rights
-        </label>
+      <label>
+        <input type="radio" [(ngModel)]="actionOption" value="add">
+        Add rights
+      </label>
     </div>
     <div class="radio">
-        <label>
-            <input type="radio" [(ngModel)]="actionOption" value="remove">
-            Remove rights
-        </label>
+      <label>
+        <input type="radio" [(ngModel)]="actionOption" value="remove">
+        Remove rights
+      </label>
     </div>
-    <div class="radio" *ngIf="!massMode">
+    @if (!massMode) {
+      <div class="radio">
         <label>
-            <input type="radio" [(ngModel)]="actionOption" value="confirm">
-            Confirm rights
+          <input type="radio" [(ngModel)]="actionOption" value="confirm">
+          Confirm rights
         </label>
-    </div>
-    <div class="radio" *ngIf="!massMode">
+      </div>
+    }
+    @if (!massMode) {
+      <div class="radio">
         <label>
-            <input type="radio" [(ngModel)]="actionOption" value="expire">
-            Expire rights
+          <input type="radio" [(ngModel)]="actionOption" value="expire">
+          Expire rights
         </label>
-    </div>
-</div>
-<ng-container *ngIf="!massMode">
-    <div class="margin rights-list" [ngClass]="type.name" *ngFor="let type of accessTypes">
-        <a (click)="showAddRightFn(type, $event)"
-           href="#"
-           title="Click to add {{ type.name }} right to some usergroup">{{ type.name }}</a>
-        <a *ngIf="tips[type.name]" [tooltip]="tips[type.name]"><i class="glyphicon glyphicon-info-sign"></i></a>
-        <ng-container *ngIf="rightsOfType(type) as filtered">
-            <span *ngIf="filtered.length > 0"> ({{ filtered.length }})</span>:
-            <span *ngIf="filtered.length == 0">none</span>
-
-            <ul>
-                <li [class.lastEdited]="right === lastEdited" *ngFor="let right of filtered">
-                    <span class="flex align-center">
-                    <span class="name" [class.obsolete]="isObsolete(right)">
-                        <span *ngIf="!right.usergroup.admin_doc_path">{{ getGroupDesc(right) }}</span>
-                        <a *ngIf="right.usergroup.admin_doc_path" href="/view/{{ right.usergroup.admin_doc_path }}">{{ getGroupDesc(right) }}</a>
-                    </span>
-                    <a title="Send email to this user" *ngIf="right.usergroup.personal_user" href="mailto:{{right.usergroup.personal_user.email}}"><i class="glyphicon glyphicon-envelope"></i><span class="sr-only">Send email to the user</span></a>
+      </div>
+    }
+  </div>
+}
+@if (!massMode) {
+  @for (type of accessTypes; track type) {
+    <div class="margin rights-list" [ngClass]="type.name">
+      <a (click)="showAddRightFn(type, $event)"
+        href="#"
+      title="Click to add {{ type.name }} right to some usergroup">{{ type.name }}</a>
+      @if (tips[type.name]) {
+        <a [tooltip]="tips[type.name]"><i class="glyphicon glyphicon-info-sign"></i></a>
+      }
+      @if (rightsOfType(type); as filtered) {
+        @if (filtered.length > 0) {
+          <span> ({{ filtered.length }})</span>
+          }:
+          @if (filtered.length == 0) {
+            <span>none</span>
+          }
+          <ul>
+            @for (right of filtered; track right) {
+              <li [class.lastEdited]="right === lastEdited">
+                <span class="flex align-center">
+                  <span class="name" [class.obsolete]="isObsolete(right)">
+                    @if (!right.usergroup.admin_doc_path) {
+                      <span>{{ getGroupDesc(right) }}</span>
+                    }
+                    @if (right.usergroup.admin_doc_path) {
+                      <a href="/view/{{ right.usergroup.admin_doc_path }}">{{ getGroupDesc(right) }}</a>
+                    }
+                  </span>
+                  @if (right.usergroup.personal_user) {
+                    <a title="Send email to this user" href="mailto:{{right.usergroup.personal_user.email}}"><i class="glyphicon glyphicon-envelope"></i><span class="sr-only">Send email to the user</span></a>
+                  }
+                  @if (shouldShowBeginTime(right)) {
                     <span class="label label-success"
-                          [tooltip]="formatDate(right.accessible_from)"
-                          *ngIf="shouldShowBeginTime(right)">Begins {{ formatRelative(right.accessible_from) }}</span>
+                      [tooltip]="formatDate(right.accessible_from)"
+                    >Begins {{ formatRelative(right.accessible_from) }}</span>
+                  }
+                  @if (shouldShowDuration(right)) {
                     <span class="label label-info"
-                          *ngIf="shouldShowDuration(right)"
-                          [tooltip]="formatPreciseDuration(right.duration)">Duration: {{ formatDuration(right.duration) }}</span>
+                    [tooltip]="formatPreciseDuration(right.duration)">Duration: {{ formatDuration(right.duration) }}</span>
+                  }
+                  @if (shouldShowEndTime(right)) {
                     <span class="label label-warning"
-                          [tooltip]="formatDate(right.accessible_to)"
-                          *ngIf="shouldShowEndTime(right)">Ends {{ formatRelative(right.accessible_to) }}</span>
+                      [tooltip]="formatDate(right.accessible_to)"
+                    >Ends {{ formatRelative(right.accessible_to) }}</span>
+                  }
+                  @if (shouldShowEndedTime(right)) {
                     <span class="label label-danger"
-                          [tooltip]="formatDate(right.accessible_to)"
-                          *ngIf="shouldShowEndedTime(right)">Ended {{ formatRelative(right.accessible_to) }}</span>
+                      [tooltip]="formatDate(right.accessible_to)"
+                    >Ended {{ formatRelative(right.accessible_to) }}</span>
+                  }
+                  @if (shouldShowUnlockable(right)) {
                     <span class="label label-success"
-                          [tooltip]="formatDate(right.duration_from)"
-                          *ngIf="shouldShowUnlockable(right)">Unlockable {{ formatRelative(right.duration_from) }}</span>
+                      [tooltip]="formatDate(right.duration_from)"
+                    >Unlockable {{ formatRelative(right.duration_from) }}</span>
+                  }
+                  @if (shouldShowNotUnlockable(right)) {
                     <span class="label label-warning"
-                          [tooltip]="formatDate(right.duration_to)"
-                          *ngIf="shouldShowNotUnlockable(right)">No longer unlockable {{ formatRelative(right.duration_to) }}</span>
+                      [tooltip]="formatDate(right.duration_to)"
+                    >No longer unlockable {{ formatRelative(right.duration_to) }}</span>
+                  }
+                  @if (shouldShowNotUnlockableAnymore(right)) {
                     <span class="label label-danger"
-                          [tooltip]="formatDate(right.duration_to)"
-                          *ngIf="shouldShowNotUnlockableAnymore(right)">No longer unlockable since {{ formatRelative(right.duration_to) }}</span>
-
-                    <span class="action-btn remove" *ngIf="!hideRemove">
-                        <button class="btn btn-default btn-xs"
-                                type="button"
-                                (click)="removeConfirm(right)">remove</button>
-                        <tim-loading *ngIf="removingRight === right && loading"></tim-loading>
-                        </span>
-                    <span class="action-btn edit" *ngIf="selectedRight !== right && !hideEdit">
-                        <button class="btn btn-default btn-xs"
-                                type="button"
-                                (click)="editRight(right)">edit</button>
-                        </span>
-                    <span class="action-btn expire" *ngIf="!hideExpire">
-                        <button class="btn btn-default btn-xs"
-                                type="button"
-                                (click)="expireRight(right)">expire</button>
-                        <tim-loading *ngIf="expiringRight === right && loading"></tim-loading>
+                      [tooltip]="formatDate(right.duration_to)"
+                    >No longer unlockable since {{ formatRelative(right.duration_to) }}</span>
+                  }
+                  @if (!hideRemove) {
+                    <span class="action-btn remove">
+                      <button class="btn btn-default btn-xs"
+                        type="button"
+                      (click)="removeConfirm(right)">remove</button>
+                      @if (removingRight === right && loading) {
+                        <tim-loading></tim-loading>
+                      }
                     </span>
-                    <span class="action-btn confirm" *ngIf="right.require_confirm">
-                        <button class="btn btn-success btn-xs" type="button" (click)="confirmRight(right)">confirm</button>
-                        <tim-loading *ngIf="confirmingRight === right && loading"></tim-loading>
+                  }
+                  @if (selectedRight !== right && !hideEdit) {
+                    <span class="action-btn edit">
+                      <button class="btn btn-default btn-xs"
+                        type="button"
+                      (click)="editRight(right)">edit</button>
                     </span>
-                    <span *ngIf="selectedRight === right" class="label label-primary">Editing</span>
+                  }
+                  @if (!hideExpire) {
+                    <span class="action-btn expire">
+                      <button class="btn btn-default btn-xs"
+                        type="button"
+                      (click)="expireRight(right)">expire</button>
+                      @if (expiringRight === right && loading) {
+                        <tim-loading></tim-loading>
+                      }
                     </span>
-                </li>
-            </ul>
-        </ng-container>
-    </div>
-</ng-container>
-<button class="timButton" type="button" *ngIf="!addingRight && !editingRight()" (click)="showAddRightFn(accessType, $event)">{{ actionText() }} right...
-</button>
-<div [hidden]="!(addingRight || editingRight())" class="rights-edit-area" #editArea>
+                  }
+                  @if (right.require_confirm) {
+                    <span class="action-btn confirm">
+                      <button class="btn btn-success btn-xs" type="button" (click)="confirmRight(right)">confirm</button>
+                      @if (confirmingRight === right && loading) {
+                        <tim-loading></tim-loading>
+                      }
+                    </span>
+                  }
+                  @if (selectedRight === right) {
+                    <span class="label label-primary">Editing</span>
+                  }
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+  }
+  @if (!addingRight && !editingRight()) {
+    <button class="timButton" type="button" (click)="showAddRightFn(accessType, $event)">{{ actionText() }} right...
+    </button>
+  }
+  <div [hidden]="!(addingRight || editingRight())" class="rights-edit-area" #editArea>
     <form ngNoForm (submit)="submitForm($event)">
+      <div class="row">
+        <div class="form-group col-md-6 input-group-sm">
+          <label [attr.for]="idPrefix + (listMode ? 'groupNameList' : 'groupName')">Name: </label>
+          <div class="input-group">
+            <input [hidden]="listMode" [attr.id]="idPrefix + 'groupName'" class="form-control groupName" type="text"
+              #groupNameInput
+              [(ngModel)]="groupName"
+              [disabled]="!!selectedRight"
+              (click)="paste()"
+              (focus)="groupNameInput.select()"
+              [placeholder]="getPlaceholder()">
+            <textarea [hidden]="!listMode" [attr.id]="idPrefix + 'groupNameList'" class="form-control groupNameList"
+              #groupNameArea
+              [(ngModel)]="groupName"
+              [disabled]="!!selectedRight"
+            [placeholder]="getPlaceholder()"></textarea>
+            <span class="input-group-addon btn btn-default"
+              (click)="listMode = !listMode"
+              tooltip="Toggle multiline mode"
+              placement="right">
+              <i class="glyphicon glyphicon-align-left"></i>
+            </span>
+          </div>
+          @if (loading) {
+            <tim-loading></tim-loading>
+          }
+          @if (successMsg) {
+            <tim-alert severity="success">
+              {{ successMsg }}
+            </tim-alert>
+          }
+          @if (errMsg) {
+            <tim-alert severity="danger">
+              {{ errMsg }}
+            </tim-alert>
+          }
+        </div>
+        <div class="form-group col-md-6 input-group-sm selectRight">
+          <label [attr.for]="idPrefix + 'accessType'">Right:</label>
+          <select [disabled]="!!selectedRight"
+            [attr.id]="idPrefix + 'accessType'"
+            class="form-control accessType"
+            [(ngModel)]="accessType"
+            [compareWith]="sameAccessType">
+            @for (access of accessTypes; track access) {
+              <option [ngValue]="access">{{ access.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      @if (actionOption === 'add') {
         <div class="row">
-            <div class="form-group col-md-6 input-group-sm">
-                <label [attr.for]="idPrefix + (listMode ? 'groupNameList' : 'groupName')">Name: </label>
-                <div class="input-group">
-                    <input [hidden]="listMode" [attr.id]="idPrefix + 'groupName'" class="form-control groupName" type="text"
-                           #groupNameInput
-                           [(ngModel)]="groupName"
-                           [disabled]="!!selectedRight"
-                           (click)="paste()"
-                           (focus)="groupNameInput.select()"
-                           [placeholder]="getPlaceholder()">
-                    <textarea [hidden]="!listMode" [attr.id]="idPrefix + 'groupNameList'" class="form-control groupNameList"
-                              #groupNameArea
-                              [(ngModel)]="groupName"
-                              [disabled]="!!selectedRight"
-                              [placeholder]="getPlaceholder()"></textarea>
-                    <span class="input-group-addon btn btn-default"
-                          (click)="listMode = !listMode"
-                          tooltip="Toggle multiline mode"
-                          placement="right">
-                        <i class="glyphicon glyphicon-align-left"></i>
-                    </span>
+          <div class="form-group col-md-6 input-group-sm">
+            <fieldset>
+              <label>Time:</label>
+              <div class="radio">
+                <label>
+                  <input [disabled]="!!forceDuration" type="radio" [(ngModel)]="timeOpt.type" value="always">
+                  Always
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input [disabled]="!!forceDuration" type="radio" [(ngModel)]="timeOpt.type" value="range">
+                  Set start and/or end date...
+                </label>
+              </div>
+              <div class="radio">
+                <label>
+                  <input type="radio" [(ngModel)]="timeOpt.type" value="duration">
+                  Set duration...
+                </label>
+              </div>
+              <div class="form-group" [hidden]="timeOpt.type != 'range'">
+                <div class="col-md-12">
+                  <tim-datetime-picker class="time-from"
+                    [(time)]="timeOpt.from"
+                    placeholder="Leave blank for no restriction">
+                  </tim-datetime-picker>
+                  to
+                  <tim-datetime-picker class="time-to"
+                    [(time)]="timeOpt.to"
+                    placeholder="Leave blank for no restriction">
+                  </tim-datetime-picker>
                 </div>
-                <tim-loading *ngIf="loading"></tim-loading>
-                <tim-alert *ngIf="successMsg" severity="success">
-                    {{ successMsg }}
-                </tim-alert>
-                <tim-alert *ngIf="errMsg" severity="danger">
-                    {{ errMsg }}
-                </tim-alert>
+              </div>
+              <tim-duration-picker [(amount)]="durOpt.durationAmount"
+                [disabled]="!!forceDuration"
+                [hidden]="!durationSelected()"
+                [(type)]="durOpt.durationType">
+              </tim-duration-picker>
+              <div class="form-group" [hidden]="!durationSelected()">
+                <div class="col-md-12">Duration unlockable from:
+                  <tim-datetime-picker class="duration-from"
+                    [class.picker-disabled]="!!forceDurationStart"
+                    [(time)]="timeOpt.durationFrom"
+                    placeholder="Leave blank for no restriction">
+                  </tim-datetime-picker>
+                  to
+                  <tim-datetime-picker class="duration-to"
+                    [class.picker-disabled]="!!forceDurationEnd"
+                    [(time)]="timeOpt.durationTo"
+                    placeholder="Leave blank for no restriction">
+                  </tim-datetime-picker>
+                  End access by: <a><i class="glyphicon glyphicon-question-sign"
+                tooltip="If specified, the right will be revoked at this date even if the duration wasn't due yet."></i></a>
+                <tim-datetime-picker class="duration-access-to"
+                  [class.picker-disabled]="!!forceDurationAccessTo"
+                  [(time)]="durOpt.accessTo"
+                  placeholder="Leave blank for no restriction">
+                </tim-datetime-picker>
+              </div>
             </div>
-            <div class="form-group col-md-6 input-group-sm selectRight">
-                <label [attr.for]="idPrefix + 'accessType'">Right:</label>
-                <select [disabled]="!!selectedRight"
-                        [attr.id]="idPrefix + 'accessType'"
-                        class="form-control accessType"
-                        [(ngModel)]="accessType"
-                        [compareWith]="sameAccessType">
-                    <option *ngFor="let access of accessTypes" [ngValue]="access">{{ access.name }}</option>
-                </select>
-            </div>
+          </fieldset>
+          <div [hidden]="!(durationSelected() || rangeSelected())" class="checkbox">
+            <label><input [disabled]="forceConfirm != null"
+              type="checkbox"
+            [(ngModel)]="requireConfirm">Require confirmation</label>
+          </div>
         </div>
-        <div class="row" *ngIf="actionOption === 'add'">
-            <div class="form-group col-md-6 input-group-sm">
-                <fieldset>
-                    <label>Time:</label>
-                    <div class="radio">
-                        <label>
-                            <input [disabled]="!!forceDuration" type="radio" [(ngModel)]="timeOpt.type" value="always">
-                            Always
-                        </label>
-                    </div>
-                    <div class="radio">
-                        <label>
-                            <input [disabled]="!!forceDuration" type="radio" [(ngModel)]="timeOpt.type" value="range">
-                            Set start and/or end date...
-                        </label>
-                    </div>
-                    <div class="radio">
-                        <label>
-                            <input type="radio" [(ngModel)]="timeOpt.type" value="duration">
-                            Set duration...
-                        </label>
-                    </div>
-                    <div class="form-group" [hidden]="timeOpt.type != 'range'">
-                        <div class="col-md-12">
-                            <tim-datetime-picker class="time-from"
-                                                 [(time)]="timeOpt.from"
-                                                 placeholder="Leave blank for no restriction">
-                            </tim-datetime-picker>
-                            to
-                            <tim-datetime-picker class="time-to"
-                                                 [(time)]="timeOpt.to"
-                                                 placeholder="Leave blank for no restriction">
-                            </tim-datetime-picker>
-                        </div>
-                    </div>
-                    <tim-duration-picker [(amount)]="durOpt.durationAmount"
-                                         [disabled]="!!forceDuration"
-                                         [hidden]="!durationSelected()"
-                                         [(type)]="durOpt.durationType">
-                    </tim-duration-picker>
-                    <div class="form-group" [hidden]="!durationSelected()">
-                        <div class="col-md-12">Duration unlockable from:
-                            <tim-datetime-picker class="duration-from"
-                                                 [class.picker-disabled]="!!forceDurationStart"
-                                                 [(time)]="timeOpt.durationFrom"
-                                                 placeholder="Leave blank for no restriction">
-                            </tim-datetime-picker>
-                            to
-                            <tim-datetime-picker class="duration-to"
-                                                 [class.picker-disabled]="!!forceDurationEnd"
-                                                 [(time)]="timeOpt.durationTo"
-                                                 placeholder="Leave blank for no restriction">
-                            </tim-datetime-picker>
-                            End access by: <a><i class="glyphicon glyphicon-question-sign"
-                                                 tooltip="If specified, the right will be revoked at this date even if the duration wasn't due yet."></i></a>
-                            <tim-datetime-picker class="duration-access-to"
-                                                 [class.picker-disabled]="!!forceDurationAccessTo"
-                                                 [(time)]="durOpt.accessTo"
-                                                 placeholder="Leave blank for no restriction">
-                            </tim-datetime-picker>
-                        </div>
-                    </div>
-
-                </fieldset>
-                <div [hidden]="!(durationSelected() || rangeSelected())" class="checkbox">
-                    <label><input [disabled]="forceConfirm != null"
-                                  type="checkbox"
-                                  [(ngModel)]="requireConfirm">Require confirmation</label>
-                </div>
-            </div>
-        </div>
-        <button [hidden]="!addingRight" class="timButton" type="submit" [disabled]="!groupName || addDisabled()">
-            {{ actionText() }}
-        </button>
-        <button [hidden]="!editingRight()" class="timButton" type="submit">Save</button>
-        <button class="btn btn-default" type="button" [disabled]="addDisabled()" *ngIf="!massMode" (click)="cancel()">Cancel</button>
-        <span [hidden]="!(addingRight && !groupName)" class="addRightsButtons">
-        <button class="timButton" type="button" [disabled]="addDisabled()" (click)="addOrEditPermission('Logged-in users', accessType)">
-            {{ actionText() }} logged-in users
-        </button>
-        <button class="timButton" type="button" [disabled]="addDisabled()" (click)="addOrEditPermission('Anonymous users', accessType)">
-            {{ actionText() }} anonymous users
-        </button>
-            <div class="form-inline" style="margin-top: 5px; margin-bottom: 5px">
-                <select class="form-control selectOrg"
-                        [(ngModel)]="selectedOrg">
-                <option [ngValue]="undefined" disabled>Add organization...</option>
-                <option *ngFor="let g of orgs" [ngValue]="g">{{ g.name }}</option>
-            </select>
-            <button class="timButton"
-                    type="button"
-                    [disabled]="addDisabled() || !selectedOrg"
-                    (click)="addOrEditPermission(selectedOrg?.name, accessType)">
-                {{ actionText() }} {{ selectedOrg?.name }}
-            </button></div>
-        </span>
+      </div>
+    }
+    <button [hidden]="!addingRight" class="timButton" type="submit" [disabled]="!groupName || addDisabled()">
+      {{ actionText() }}
+    </button>
+    <button [hidden]="!editingRight()" class="timButton" type="submit">Save</button>
+    @if (!massMode) {
+      <button class="btn btn-default" type="button" [disabled]="addDisabled()" (click)="cancel()">Cancel</button>
+    }
+    <span [hidden]="!(addingRight && !groupName)" class="addRightsButtons">
+      <button class="timButton" type="button" [disabled]="addDisabled()" (click)="addOrEditPermission('Logged-in users', accessType)">
+        {{ actionText() }} logged-in users
+      </button>
+      <button class="timButton" type="button" [disabled]="addDisabled()" (click)="addOrEditPermission('Anonymous users', accessType)">
+        {{ actionText() }} anonymous users
+      </button>
+      <div class="form-inline" style="margin-top: 5px; margin-bottom: 5px">
+        <select class="form-control selectOrg"
+          [(ngModel)]="selectedOrg">
+          <option [ngValue]="undefined" disabled>Add organization...</option>
+          @for (g of orgs; track g) {
+            <option [ngValue]="g">{{ g.name }}</option>
+          }
+        </select>
+        <button class="timButton"
+          type="button"
+          [disabled]="addDisabled() || !selectedOrg"
+          (click)="addOrEditPermission(selectedOrg?.name, accessType)">
+          {{ actionText() }} {{ selectedOrg?.name }}
+        </button></div>
+      </span>
     </form>
-</div>
+  </div>

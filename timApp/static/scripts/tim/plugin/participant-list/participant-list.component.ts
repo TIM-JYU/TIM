@@ -3,13 +3,13 @@ import {Input, NgModule} from "@angular/core";
 import {Component} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
+
 import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
 
 @Component({
     selector: "tim-participant-list",
     styleUrls: ["./participant-list.component.scss"],
-    imports: [CsUtilityModule, FormsModule, CommonModule],
+    imports: [CsUtilityModule, FormsModule],
     template: `
         <div class="tim-user-list-container">
             <div class="heading">

@@ -13,12 +13,16 @@ import {Users} from "tim/user/userService";
 @Component({
     selector: "tim-login-menu",
     template: `
-<button *ngIf="!isLoggedIn()"
-        (click)="openLoginDialog()"
-        type="button"
-        class="btn btn-default" i18n>Log in</button>
-<tim-user-menu *ngIf="isLoggedIn()"></tim-user-menu>
-    `,
+@if (!isLoggedIn()) {
+  <button
+    (click)="openLoginDialog()"
+    type="button"
+  class="btn btn-default" i18n>Log in</button>
+}
+@if (isLoggedIn()) {
+  <tim-user-menu></tim-user-menu>
+}
+`,
     standalone: false,
 })
 export class LoginMenuComponent implements OnInit {

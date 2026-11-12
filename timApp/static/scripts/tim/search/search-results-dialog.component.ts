@@ -31,91 +31,117 @@ enum SortOption {
     selector: "tim-search-results-dialog",
     template: `
         <tim-dialog-frame class="search-result-dialog">
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <div *ngIf="errorMessage" class="alert alert-warning">
-                    <span class="glyphicon glyphicon-exclamation-sign"></span> {{errorMessage}}
-                </div>
-                <div *ngIf="displayResults.length == 0 && !errorMessage">
-                    <h5><ng-container i18n>Your search </ng-container><i>{{searchWord}}</i> <ng-container i18n>did not match any documents in</ng-container> <i>{{folder}}</i></h5>
-                </div>
-                <div *ngIf="displayResults.length > 0">
-                    <h5><ng-container i18n>Your search </ng-container><i>{{searchWord}}</i><ng-container i18n> was found </ng-container>{{totalResults}}
-                        <ng-container
-                                [ngPlural]="totalResults">
-                            <ng-template ngPluralCase="=1" i18n>time</ng-template>
-                            <ng-template ngPluralCase="other" i18n>times</ng-template>
-                        </ng-container>
-                        <ng-container i18n="@@searchResultFrom"> from </ng-container>{{displayResults.length}}
-                        <ng-container
-                                [ngPlural]="displayResults.length">
-                            <ng-template ngPluralCase="=1" i18n>document</ng-template>
-                            <ng-template ngPluralCase="other" i18n>documents</ng-template>
-                        </ng-container>
-                        <ng-container i18n> in </ng-container><i *ngIf="folder">{{folder}}</i>
-                        <i *ngIf="!folder" i18n>root</i>&ngsp;
-                        <a *ngIf="collapsibles && !limitedDisplay" title="Toggle results collapse"
-                           (click)="toggleCollapseAll()" i18n-title>
-                            <i class="glyphicon"
-                               [ngClass]="allClosed ? 'glyphicon-plus-sign' : 'glyphicon-minus-sign'"></i>
-                        </a>
-                    </h5>
-                    <ul class="list-unstyled">
-                        <li *ngFor="let r of displayResults">
-                            <a class="cursor-pointer" (click)="r.closed = !r.closed"
-                               *ngIf="collapsibles && !limitedDisplay && (r.result.num_par_results + r.result.num_tag_results) > 0">
-                                <i class="glyphicon" [ngClass]="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
-                                   title="Toggle preview" style="width:1.3em;" i18n-title></i></a>
-                            <span title="Note: hidden elements can affect the result count" i18n-title>
-                                <a href="/view/{{r.result.doc.path}}" title="Open {{r.result.doc.title}}" i18n-title> {{r.result.doc.title}}</a>
-                                {{r.result.doc.path}}
-                                <i> ({{r.result.num_par_results + r.result.num_title_results + r.result.num_tag_results + r.result.num_path_results}}
-                                    <span *ngIf="r.result.incomplete" i18n>or more matches</span>
-                                    <ng-container *ngIf="!r.result.incomplete"
-                                                  [ngPlural]="r.result.num_par_results + r.result.num_title_results + r.result.num_tag_results + r.result.num_path_results">
-                                    <ng-template ngPluralCase="=1" i18n>match</ng-template>
-                                    <ng-template ngPluralCase="other" i18n>matches</ng-template>
-                                    </ng-container>
-                                    )
-                                </i>
-                            </span>
-                            <ul *ngIf="!r.closed">
-                                <ng-container *ngFor="let p of r.result.par_results">
-                                    <li *ngIf="p.preview">
-                                        <a href="/view/{{r.result.doc.path}}#{{p.par_id}}"
-                                           title="Open paragraph" i18n-title>{{p.preview}}</a>
-                                        <!-- We are not interested in the tags, but the search results -->
-                                        <!--<ng-container *ngFor="let tag of r.tags">
-                                            <span *ngIf="!r.closed"
-                                                  class="btn-xs"
-                                                  [ngClass]="tagClass(tag)">
-                                                {{tag.name}}
-                                            </span>
-                                        </ng-container>-->
-                                    </li>
-                                </ng-container>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </ng-container>
-            <ng-container footer>
-                <div class="pull-left">
-                    <select
-                            class="form-control"
-                            [(ngModel)]="orderByOption"
-                            (ngModelChange)="resortResults()"
-                            title="Select the result sorting order"
-                            name="order-selector" i18n-title>
-                        <option *ngFor="let s of sortingOptions" [ngValue]="s">{{s.name}}</option>
-                    </select>
-                </div>
-                <button class="timButton" (click)="dismiss()">Close</button>
-            </ng-container>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            @if (errorMessage) {
+              <div class="alert alert-warning">
+                <span class="glyphicon glyphicon-exclamation-sign"></span> {{errorMessage}}
+              </div>
+            }
+            @if (displayResults.length == 0 && !errorMessage) {
+              <div>
+                <h5><ng-container i18n>Your search </ng-container><i>{{searchWord}}</i> <ng-container i18n>did not match any documents in</ng-container> <i>{{folder}}</i></h5>
+              </div>
+            }
+            @if (displayResults.length > 0) {
+              <div>
+                <h5><ng-container i18n>Your search </ng-container><i>{{searchWord}}</i><ng-container i18n> was found </ng-container>{{totalResults}}
+                <ng-container
+                  [ngPlural]="totalResults">
+                  <ng-template ngPluralCase="=1" i18n>time</ng-template>
+                  <ng-template ngPluralCase="other" i18n>times</ng-template>
+                </ng-container>
+                <ng-container i18n="@@searchResultFrom"> from </ng-container>{{displayResults.length}}
+                <ng-container
+                  [ngPlural]="displayResults.length">
+                  <ng-template ngPluralCase="=1" i18n>document</ng-template>
+                  <ng-template ngPluralCase="other" i18n>documents</ng-template>
+                </ng-container>
+                <ng-container i18n> in </ng-container>@if (folder) {
+                <i>{{folder}}</i>
+              }
+              @if (!folder) {
+                <i i18n>root</i>
+                }<ng-container>&ngsp; </ng-container>
+                @if (collapsibles && !limitedDisplay) {
+                  <a title="Toggle results collapse"
+                    (click)="toggleCollapseAll()" i18n-title>
+                    <i class="glyphicon"
+                    [ngClass]="allClosed ? 'glyphicon-plus-sign' : 'glyphicon-minus-sign'"></i>
+                  </a>
+                }
+              </h5>
+              <ul class="list-unstyled">
+                @for (r of displayResults; track r) {
+                  <li>
+                    @if (collapsibles && !limitedDisplay && (r.result.num_par_results + r.result.num_tag_results) > 0) {
+                      <a class="cursor-pointer" (click)="r.closed = !r.closed"
+                        >
+                        <i class="glyphicon" [ngClass]="r.closed ? 'glyphicon-plus' : 'glyphicon-minus'"
+                        title="Toggle preview" style="width:1.3em;" i18n-title></i></a>
+                      }
+                      <span title="Note: hidden elements can affect the result count" i18n-title>
+                        <a href="/view/{{r.result.doc.path}}" title="Open {{r.result.doc.title}}" i18n-title> {{r.result.doc.title}}</a>
+                        {{r.result.doc.path}}
+                        <i> ({{r.result.num_par_results + r.result.num_title_results + r.result.num_tag_results + r.result.num_path_results}}
+                          @if (r.result.incomplete) {
+                            <span i18n>or more matches</span>
+                          }
+                          @if (!r.result.incomplete) {
+                            <ng-container
+                              [ngPlural]="r.result.num_par_results + r.result.num_title_results + r.result.num_tag_results + r.result.num_path_results">
+                              <ng-template ngPluralCase="=1" i18n>match</ng-template>
+                              <ng-template ngPluralCase="other" i18n>matches</ng-template>
+                            </ng-container>
+                          }
+                          )
+                        </i>
+                      </span>
+                      @if (!r.closed) {
+                        <ul>
+                          @for (p of r.result.par_results; track p) {
+                            @if (p.preview) {
+                              <li>
+                                <a href="/view/{{r.result.doc.path}}#{{p.par_id}}"
+                                title="Open paragraph" i18n-title>{{p.preview}}</a>
+                                <!-- We are not interested in the tags, but the search results -->
+                                <!--<ng-container *ngFor="let tag of r.tags">
+                                <span *ngIf="!r.closed"
+                                  class="btn-xs"
+                                  [ngClass]="tagClass(tag)">
+                                  {{tag.name}}
+                                </span>
+                              </ng-container>-->
+                            </li>
+                          }
+                        }
+                      </ul>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </ng-container>
+        <ng-container footer>
+          <div class="pull-left">
+            <select
+              class="form-control"
+              [(ngModel)]="orderByOption"
+              (ngModelChange)="resortResults()"
+              title="Select the result sorting order"
+              name="order-selector" i18n-title>
+              @for (s of sortingOptions; track s) {
+                <option [ngValue]="s">{{s.name}}</option>
+              }
+            </select>
+          </div>
+          <button class="timButton" (click)="dismiss()">Close</button>
+        </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     styleUrls: ["search-results-dialog.component.scss"],
     standalone: false,
 })

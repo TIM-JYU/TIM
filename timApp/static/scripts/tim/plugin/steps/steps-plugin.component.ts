@@ -43,46 +43,50 @@ const PluginFields = t.intersection([
     selector: "tim-steps-plugin",
     template: `
         <div class="steps-wrapper">
-            <div class="tim-steps-container">
-                <div class="grid-container">
-                    <div class="profile-heading left-column">
-                        <h2>Step-by-step</h2>
-                    </div>
-                    <div class="right-column flex justify-corner-button">
-                        <!-- <button class="timButton btn-danger corner-button">Remove</button>
-                        <button (click)="onSubmit()" class="timButton btn-success corner-button">Save</button> -->
-                    </div>
-                </div>
-                
-
-                <div class="container">
-                    <div class="step-list">
-                        <div [style.opacity]="active ? '100%' : '50%'"
-                             [style.background-color]="" class="step " *ngFor="let step of steps; index as i">
-                        <span class="step-num"
-                              [ngStyle]="currentStep >= i ? {'background-color': '#0F4096', 'color': '#ffefef'} : {}"
-                              (click)="switchComplete($event, i)">{{ i + 1 }}</span>
-                            <h3>{{ step.name }}</h3>
-                            <div class="step-content"
-                                 [style.border-left-style]="currentStep >= i ? 'solid' : 'dashed'">
-                                <p [innerHTML]="step.description | purify"></p>
-                            </div>
-                        </div>
-                        <div class="step"
-                             [style.opacity]="active ? '100%' : '50%'">
-                        <span class="step-num last-step-num glyphicon glyphicon-ok"
-                        [ngStyle]="currentStep >= steps.length ? {'background-color': '#00AA00', 'color': '#ffefef'} : {}"
-                              (click)="switchComplete($event, steps.length)">
-                        </span>
-                            <h3>{{ lastStep?.name }}</h3>
-                            <p *ngIf="lastStep?.description" [innerHTML]="lastStep?.description | purify"></p>
-                        </div>
-                    </div>
-                </div>
-                <ng-content></ng-content>
+          <div class="tim-steps-container">
+            <div class="grid-container">
+              <div class="profile-heading left-column">
+                <h2>Step-by-step</h2>
+              </div>
+              <div class="right-column flex justify-corner-button">
+                <!-- <button class="timButton btn-danger corner-button">Remove</button>
+                <button (click)="onSubmit()" class="timButton btn-success corner-button">Save</button> -->
+              </div>
             </div>
+        
+        
+            <div class="container">
+              <div class="step-list">
+                @for (step of steps; track step; let i = $index) {
+                  <div [style.opacity]="active ? '100%' : '50%'"
+                    [style.background-color]="" class="step ">
+                    <span class="step-num"
+                      [ngStyle]="currentStep >= i ? {'background-color': '#0F4096', 'color': '#ffefef'} : {}"
+                    (click)="switchComplete($event, i)">{{ i + 1 }}</span>
+                    <h3>{{ step.name }}</h3>
+                    <div class="step-content"
+                      [style.border-left-style]="currentStep >= i ? 'solid' : 'dashed'">
+                      <p [innerHTML]="step.description | purify"></p>
+                    </div>
+                  </div>
+                }
+                <div class="step"
+                  [style.opacity]="active ? '100%' : '50%'">
+                  <span class="step-num last-step-num glyphicon glyphicon-ok"
+                    [ngStyle]="currentStep >= steps.length ? {'background-color': '#00AA00', 'color': '#ffefef'} : {}"
+                    (click)="switchComplete($event, steps.length)">
+                  </span>
+                  <h3>{{ lastStep?.name }}</h3>
+                  @if (lastStep?.description) {
+                    <p [innerHTML]="lastStep?.description | purify"></p>
+                  }
+                </div>
+              </div>
+            </div>
+            <ng-content></ng-content>
+          </div>
         </div>
-    `,
+        `,
     styleUrls: ["./steps.component.scss"],
     standalone: false,
 })

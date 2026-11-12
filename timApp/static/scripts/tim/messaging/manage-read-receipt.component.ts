@@ -12,42 +12,58 @@ import {CommonModule} from "@angular/common";
     selector: "manage-read-receipt",
     template: `
         <hr>
-        <p class="small" *ngIf="expires">
-            <ng-container *ngIf="!messageExpired">Note: this message expires on {{expires}}</ng-container>
-            <ng-container *ngIf="messageExpired">Note: this message was expired on {{expires}}. Users will not see the message.</ng-container>
-        </p>
-        <div class="copy-query-panel" *ngIf="canManage">
-            <span>Copy TableForm user query to clipboard:</span>
-            <button class="timButton btn-sm" title="Copy read users as TableForm query" (click)="copyReceiptQuery(true, false)">Read users</button>
-            <button class="timButton btn-sm" title="Copy unread users as TableForm query" (click)="copyReceiptQuery(false, true)">Unread users</button>
-            <button class="timButton btn-sm" title="Copy all users as TableForm query" (click)="copyReceiptQuery(true, true)">All users</button>
-            <span [hidden]="!copied">Copied!</span>
-        </div>
-        <ng-container *ngIf="canMarkAsRead">
-            <tim-alert *ngIf="errorMessage">
+          @if (expires) {
+            <p class="small">
+              @if (!messageExpired) {
+                Note: this message expires on {{expires}}
+              }
+              @if (messageExpired) {
+                Note: this message was expired on {{expires}}. Users will not see the message.
+              }
+            </p>
+          }
+          @if (canManage) {
+            <div class="copy-query-panel">
+              <span>Copy TableForm user query to clipboard:</span>
+              <button class="timButton btn-sm" title="Copy read users as TableForm query" (click)="copyReceiptQuery(true, false)">Read users</button>
+              <button class="timButton btn-sm" title="Copy unread users as TableForm query" (click)="copyReceiptQuery(false, true)">Unread users</button>
+              <button class="timButton btn-sm" title="Copy all users as TableForm query" (click)="copyReceiptQuery(true, true)">All users</button>
+              <span [hidden]="!copied">Copied!</span>
+            </div>
+          }
+          @if (canMarkAsRead) {
+            @if (errorMessage) {
+              <tim-alert>
                 {{errorMessage}}
-            </tim-alert>
+              </tim-alert>
+            }
             <div class="manageReadReceipt">
-                <button class="timButton" title="Mark as Read" *ngIf="!markedAsRead" (click)="markAsRead()" i18n>
+              @if (!markedAsRead) {
+                <button class="timButton" title="Mark as Read" (click)="markAsRead()" i18n>
                     Mark as Read
                 </button>
-                <div class="cancelReadReceipt" *ngIf="markedAsRead">
-                    <button class="timButton" title="Cancel Read Receipt" (click)="cancelReadReceipt()" i18n>
+              }
+              @if (markedAsRead) {
+                <div class="cancelReadReceipt">
+                  <button class="timButton" title="Cancel Read Receipt" (click)="cancelReadReceipt()" i18n>
                         Cancel Read Receipt
                     </button>
-                    <p i18n>Cancelling the read receipt re-displays the message on designated TIM pages</p>
+                  <p i18n>Cancelling the read receipt re-displays the message on designated TIM pages</p>
                 </div>
+              }
             </div>
-        </ng-container>
-        <div *ngIf="canManage">
-            <button class="btn btn-danger"
-                    title="Expire message"
-                    [disabled]="messageExpired"
-                    (click)="expireMessage()">
+          }
+          @if (canManage) {
+            <div>
+              <button class="btn btn-danger"
+                title="Expire message"
+                [disabled]="messageExpired"
+                (click)="expireMessage()">
                 Expire message
-            </button>
-        </div>
-    `,
+              </button>
+            </div>
+          }
+        `,
     styleUrls: ["manage-read-receipt.component.scss"],
     standalone: false,
 })

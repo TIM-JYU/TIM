@@ -66,7 +66,7 @@ export abstract class AngularDialogComponent<Params, Result>
     private posStorage?: TimStorage<[number, number]>;
 
     @HostListener("keydown.esc", ["$event"])
-    escPressed(e: KeyboardEvent) {
+    escPressed(e: Event) {
         this.dismiss();
         e.stopPropagation();
     }

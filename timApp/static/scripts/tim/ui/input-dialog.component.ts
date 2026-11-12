@@ -65,89 +65,107 @@ export type InputDialogParams<T> = {
         <div class="modal-bg">
         </div>
         <tim-dialog-frame class="input-dialog" [minimizable]="false" [mightBeAsync]=asyncContent [showCloseIcon]="!loading">
-            <ng-container header>
-                {{getTitle()}}
-            </ng-container>
-            <ng-container body>
-                <p tabindex="-1" #textEl [innerHtml]="text()" class="content"></p>
-                <textarea
-                       class="form-control"
-                       focusMe
-                       [disabled]="loading"
-                       type="text"
-                       *ngIf="isInput && (data.inputType === 'textarea')"
-                       [(ngModel)]="value" 
-                          (ngModelChange)="clearError()"></textarea>
-                <input (keydown.enter)="ok()"
-                       class="form-control"
-                       focusMe
-                       [disabled]="loading"
-                       type="text"
-                       *ngIf="isInput && (data.inputType === 'text' || data.inputType === undefined)"
-                       [(ngModel)]="value"
-                          (ngModelChange)="clearError()" />
-                <div [ngSwitch]="data.inputType">
-                  <!-- select -->
-                  <select *ngSwitchCase="'select'" 
+          <ng-container header>
+            {{getTitle()}}
+          </ng-container>
+          <ng-container body>
+            <p tabindex="-1" #textEl [innerHtml]="text()" class="content"></p>
+            @if (isInput && (data.inputType === 'textarea')) {
+              <textarea
+                class="form-control"
+                focusMe
+                [disabled]="loading"
+                type="text"
+                [(ngModel)]="value"
+              (ngModelChange)="clearError()"></textarea>
+            }
+            @if (isInput && (data.inputType === 'text' || data.inputType === undefined)) {
+              <input (keydown.enter)="ok()"
+                class="form-control"
+                focusMe
+                [disabled]="loading"
+                type="text"
+                [(ngModel)]="value"
+                (ngModelChange)="clearError()" />
+            }
+            <div>
+              @switch (data.inputType) {
+                <!-- select -->
+                @case ('select') {
+                  <select
                     (keydown.enter)="ok()"
                     class="option"
                     focusMe
                     [disabled]="loading"
                     [(ngModel)]="value"
                     (ngModelChange)="clearError()">
-                     <option *ngFor="let option of selectOptions" [value]="option">{{ option }}</option>
+                    @for (option of selectOptions; track option) {
+                      <option [value]="option">{{ option }}</option>
+                    }
                   </select>
-            
-                  <!-- radio -->
-                  <div *ngSwitchCase="'radio'">
-                    <label class="option" *ngFor="let option of selectOptions">
-                      <input
-                        type="radio"
-                        name="inputRadio"
-                        focusMe
-                        [value]="option"
-                        [(ngModel)]="value"
-                      />
-                      {{ option }}<br>
-                    </label>
+                }
+                <!-- radio -->
+                @case ('radio') {
+                  <div>
+                    @for (option of selectOptions; track option) {
+                      <label class="option">
+                        <input
+                          type="radio"
+                          name="inputRadio"
+                          focusMe
+                          [value]="option"
+                          [(ngModel)]="value"
+                          />
+                        {{ option }}<br>
+                      </label>
+                    }
                   </div>
-            
-                  <!-- checkbox (multi-select) -->
-                  <div *ngSwitchCase="'checkbox'">
-                    <label class="option"  *ngFor="let option of selectOptions">
-                      <input
-                        type="checkbox"
-                        focusMe
-                        [checked]="selectedCheckboxes.includes(option)"
-                        (change)="onCheckboxChange(option, $event)"
-                      />
-                      {{ option }}<br>
-                    </label>
+                }
+                <!-- checkbox (multi-select) -->
+                @case ('checkbox') {
+                  <div>
+                    @for (option of selectOptions; track option) {
+                      <label class="option" >
+                        <input
+                          type="checkbox"
+                          focusMe
+                          [checked]="selectedCheckboxes.includes(option)"
+                          (change)="onCheckboxChange(option, $event)"
+                          />
+                        {{ option }}<br>
+                      </label>
+                    }
                   </div>
-                </div>
-                <!---
-                <select (keydown.enter)="ok()"
-                        class="form-control"
-                        focusMe
-                        [disabled]="loading"
-                        *ngIf="isInput && data.inputType === 'select'"
-                        [(ngModel)]="value"
-                        (ngModelChange)="clearError()">
-                    <option *ngFor="let option of selectOptions" [value]="option">{{option}}</option>
-                </select> -->
-                <tim-alert *ngIf="error" severity="danger">
-                    {{ error }}
-                </tim-alert>
-            </ng-container>
-            <ng-container footer>
-                <tim-loading *ngIf="loading"></tim-loading>
-                <button [disabled]="!value || loading"
-                        class="timButton" type="button" (click)="ok()">{{ okText() }}
-                </button>
-                <button [disabled]="loading" class="btn btn-default" type="button" (click)="dismiss()">{{ cancelText() }}</button>
-            </ng-container>
+                }
+              }
+            </div>
+            <!---
+            <select (keydown.enter)="ok()"
+              class="form-control"
+              focusMe
+              [disabled]="loading"
+              *ngIf="isInput && data.inputType === 'select'"
+              [(ngModel)]="value"
+              (ngModelChange)="clearError()">
+              <option *ngFor="let option of selectOptions" [value]="option">{{option}}</option>
+            </select> -->
+            @if (error) {
+              <tim-alert severity="danger">
+                {{ error }}
+              </tim-alert>
+            }
+          </ng-container>
+          <ng-container footer>
+            @if (loading) {
+              <tim-loading></tim-loading>
+            }
+            <button [disabled]="!value || loading"
+              class="timButton" type="button" (click)="ok()">{{ okText() }}
+            </button>
+            <button [disabled]="loading" class="btn btn-default" type="button" (click)="dismiss()">{{ cancelText() }}</button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     styleUrls: ["./input-dialog.component.scss"],
     standalone: false,
 })
@@ -168,7 +186,7 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     @ViewChild("textEl") textEl!: ElementRef<HTMLElement>;
 
     @HostListener("keydown.enter", ["$event"])
-    enterPressed(e: KeyboardEvent) {
+    enterPressed(e: Event) {
         // Textarea is multiline, we cannot just skip the enter key
         if (this.data.inputType === "textarea") {
             return;

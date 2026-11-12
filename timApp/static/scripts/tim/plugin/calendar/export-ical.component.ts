@@ -12,41 +12,45 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
     selector: "export-ical-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header i18n>
+          <ng-container header i18n>
                 Export calendar as iCal
             </ng-container>
-            <ng-container body>
-                <h3 i18n>Export options</h3>
-                <form>
-                    <fieldset [disabled]="exportingICal">
-                        <section>
-                            <div class="flex align-center export-options">
-                                <input id="min-booked-by" type="checkbox" name="min-booked-by" [(ngModel)]="exportOwnedMinByToggle">
-                                <label for="min-booked-by" i18n>
+          <ng-container body>
+            <h3 i18n>Export options</h3>
+            <form>
+              <fieldset [disabled]="exportingICal">
+                <section>
+                  <div class="flex align-center export-options">
+                    <input id="min-booked-by" type="checkbox" name="min-booked-by" [(ngModel)]="exportOwnedMinByToggle">
+                    <label for="min-booked-by" i18n>
                                     Include events booked by at least
                                 </label>
-                                <input [disabled]="!exportOwnedMinByToggle" [(ngModel)]="ownedMinBy" id="min-booked-by-value" class="form-control short-box" type="number" name="min-booked-by-value" min="0">
-                                <label for="min-booked-by-value" i18n>people.</label>
-                            </div>
-                        </section>
-                    </fieldset>
-                </form>
-                
-                <div *ngIf="icsURL" class="ics-url-results">
-                    <p i18n>
+                    <input [disabled]="!exportOwnedMinByToggle" [(ngModel)]="ownedMinBy" id="min-booked-by-value" class="form-control short-box" type="number" name="min-booked-by-value" min="0">
+                    <label for="min-booked-by-value" i18n>people.</label>
+                  </div>
+                </section>
+              </fieldset>
+            </form>
+        
+            @if (icsURL) {
+              <div class="ics-url-results">
+                <p i18n>
                         Copy the following URL to import the calendar into your calendar application:
                     </p>
-                    <input class="form-control" [value]="icsURL" readonly (click)="copyAndSelectUrl(icalUrlInput)" #icalUrlInput>
-                </div>
-            </ng-container>
-            <ng-container footer>
-                <tim-loading *ngIf="exportingICal"></tim-loading>
-                <button [disabled]="exportingICal" class="timButton" type="button" (click)="doExport()" i18n>
+                <input class="form-control" [value]="icsURL" readonly (click)="copyAndSelectUrl(icalUrlInput)" #icalUrlInput>
+              </div>
+            }
+          </ng-container>
+          <ng-container footer>
+            @if (exportingICal) {
+              <tim-loading></tim-loading>
+            }
+            <button [disabled]="exportingICal" class="timButton" type="button" (click)="doExport()" i18n>
                     Export calendar
                 </button>
-            </ng-container>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     styleUrls: ["export-ical.component.scss"],
     standalone: false,
 })

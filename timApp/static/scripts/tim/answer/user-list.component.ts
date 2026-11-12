@@ -118,80 +118,96 @@ function csvCell(value: CellValue) {
     selector: "tim-user-list",
     template: `
         <div class="userFixed"
-             tim-draggable-fixed
-             save="%%PAGEID%%studentList"
-             [click]="true"
-             [caption]="viewctrl.users.length + ' users with answers'">
-            <div class="draggable-content user-list-content">
-        <div class="userlist">
-            <div class="user-list-menu">
+          tim-draggable-fixed
+          save="%%PAGEID%%studentList"
+          [click]="true"
+          [caption]="viewctrl.users.length + ' users with answers'">
+          <div class="draggable-content user-list-content">
+            <div class="userlist">
+              <div class="user-list-menu">
                 <button type="button"
-                        class="user-list-menu-button"
-                        title="Menu"
-                        [attr.aria-expanded]="menuOpen"
-                        (click)="menuOpen = !menuOpen">
-                    <i class="glyphicon glyphicon-menu-hamburger"></i>
+                  class="user-list-menu-button"
+                  title="Menu"
+                  [attr.aria-expanded]="menuOpen"
+                  (click)="menuOpen = !menuOpen">
+                  <i class="glyphicon glyphicon-menu-hamburger"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-right user-list-menu-items" *ngIf="menuOpen">
-                    <ng-container *ngFor="let item of menuItems">
-                        <li *ngIf="!item.shown || item.shown()">
-                            <a (click)="runMenuItem(item)">{{ item.title }}</a>
+                @if (menuOpen) {
+                  <ul class="dropdown-menu dropdown-menu-right user-list-menu-items">
+                    @for (item of menuItems; track item) {
+                      @if (!item.shown || item.shown()) {
+                        <li>
+                          <a (click)="runMenuItem(item)">{{ item.title }}</a>
                         </li>
-                    </ng-container>
+                      }
+                    }
                     <li role="separator" class="divider"></li>
                     <li class="dropdown-header">Columns:</li>
-                    <li *ngFor="let col of columns">
+                    @for (col of columns; track col) {
+                      <li>
                         <a (click)="toggleColumn(col)">
-                            <i class="glyphicon"
-                               [ngClass]="col.visible ? 'glyphicon-ok' : 'glyphicon-remove'"></i>
-                            {{ col.name }}
+                          <i class="glyphicon"
+                          [ngClass]="col.visible ? 'glyphicon-ok' : 'glyphicon-remove'"></i>
+                          {{ col.name }}
                         </a>
-                    </li>
-                </ul>
-            </div>
-            <div class="user-list-table" tabindex="0" (keydown)="onKeyDown($event)">
+                      </li>
+                    }
+                  </ul>
+                }
+              </div>
+              <div class="user-list-table" tabindex="0" (keydown)="onKeyDown($event)">
                 <table>
-                    <thead>
+                  <thead>
                     <tr class="user-list-header-row">
-                        <th *ngFor="let col of visibleColumns"
-                            [ngClass]="'col-' + col.field"
-                            [class.narrow]="col.narrow"
-                            [title]="col.name">
-                            <a class="sort-header" (click)="sortBy(col)">
-                                <span>{{ col.name }}</span>
-                                <i *ngIf="sortColumn === col"
-                                   class="glyphicon"
-                                   [ngClass]="sortDirection === 'asc' ? 'glyphicon-triangle-top' : 'glyphicon-triangle-bottom'"></i>
-                            </a>
+                      @for (col of visibleColumns; track col) {
+                        <th
+                          [ngClass]="'col-' + col.field"
+                          [class.narrow]="col.narrow"
+                          [title]="col.name">
+                          <a class="sort-header" (click)="sortBy(col)">
+                            <span>{{ col.name }}</span>
+                            @if (sortColumn === col) {
+                              <i
+                                class="glyphicon"
+                              [ngClass]="sortDirection === 'asc' ? 'glyphicon-triangle-top' : 'glyphicon-triangle-bottom'"></i>
+                            }
+                          </a>
                         </th>
+                      }
                     </tr>
                     <tr class="user-list-filter-row">
-                        <th *ngFor="let col of visibleColumns" [class.narrow]="col.narrow">
-                            <input type="text"
-                                   [attr.aria-label]="'Filter for column ' + col.name"
-                                   [(ngModel)]="filters[col.field]"
-                                   (ngModelChange)="updateVisibleRows()">
+                      @for (col of visibleColumns; track col) {
+                        <th [class.narrow]="col.narrow">
+                          <input type="text"
+                            [attr.aria-label]="'Filter for column ' + col.name"
+                            [(ngModel)]="filters[col.field]"
+                            (ngModelChange)="updateVisibleRows()">
                         </th>
+                      }
                     </tr>
-                    </thead>
-                    <tbody>
-                    <tr *ngFor="let row of visibleRows; trackBy: trackRow"
+                  </thead>
+                  <tbody>
+                    @for (row of visibleRows; track trackRow($index, row)) {
+                      <tr
                         class="user-list-row"
                         [class.selected]="row === selected"
                         (click)="tryChangeUser(row)"
                         (dblclick)="fireUserChange(row)">
-                        <td *ngFor="let col of visibleColumns"
+                        @for (col of visibleColumns; track col) {
+                          <td
                             [ngClass]="'col-' + col.field"
                             [class.narrow]="col.narrow"
-                            [title]="col.value(row) ?? ''">{{ col.value(row) }}</td>
-                    </tr>
-                    </tbody>
+                          [title]="col.value(row) ?? ''">{{ col.value(row) }}</td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
                 </table>
+              </div>
             </div>
+          </div>
         </div>
-            </div>
-        </div>
-    `,
+        `,
     styleUrls: ["./user-list.component.scss"],
     standalone: false,
 })

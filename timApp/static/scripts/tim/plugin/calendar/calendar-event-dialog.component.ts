@@ -36,297 +36,321 @@ import {PurifyModule} from "tim/util/purify.module";
     selector: "tim-calendar-event-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container i18n header>
+          <ng-container i18n header>
                 Edit event
             </ng-container>
-            <ng-container body>
-                <form #form="ngForm" class="form-horizontal" timCalDateTimeValidator>
-                    <fieldset [disabled]="loadingEvent">
-                        <div class="form-group"
-                             [ngClass]="{'has-error': ngModelTitle.invalid && ngModelTitle.dirty}">
-
-                            <label i18n for="title" class="col-sm-3 control-label">Title</label>
-                            <div class="col-sm-8">
-                                <input i18n type="text" required
-                                       maxlength="280"
-                                       [(ngModel)]="title" #ngModelTitle="ngModel"
-                                       (ngModelChange)="setMessage()"
-                                       pattern="[^/]*"
-                                       id="title" name="title"
-                                       class="form-control"
-                                       placeholder="Set title"
-                                       [disabled]="!isEditEnabled()"/>
-                            </div>
-                            <div class="col-sm-3 control-label">
-                                <label i18n for="owner">Owner</label>
-                                <a class="mail-icon" href="mailto:{{ownerEmail}}"><i
-                                        class="glyphicon glyphicon-envelope"></i></a>
-                            </div>
-                            <div class="col-sm-8">
-                                <input i18n type="text"
-                                       [(ngModel)]="ownerName"
-                                       id="owner" name="owner"
-                                       class="form-control"
-                                       [disabled]="true"/>
-                            </div>
-                            <label i18n for="location" class="col-sm-3 control-label">Location</label>
-                            <div class="col-sm-8">
-                                <input type="text"
-                                       maxlength="120"
-                                       [(ngModel)]="location" #ngModelLocation="ngModel"
-                                       (ngModelChange)="setMessage()"
-                                       id="location"
-                                       placeholder="Set location" i18n-placeholder
-                                       name="location"
-                                       class="form-control"
-                                       [disabled]="!isEditEnabled()"/>
-                            </div>
-                            <label i18n for="maxSize" class="col-sm-3 control-label">Capacity</label>
-                            <div class="col-sm-8">
-                                <input type="number"
-                                       min="0" max="2000" [(ngModel)]="maxSize"
-                                       #ngModelMaxSize="ngModel"
-                                       (ngModelChange)="setMessage()"
-                                       id="maxSize" name="maxSize" class="form-control"
-                                       [disabled]="!isEditEnabled()">
-                            </div>
-                            <label i18n for="sendNotifications" class="col-sm-3 control-label">Notifications</label>
-                            <div class="col-sm-8">
-                                <input type="checkbox"
-                                       [(ngModel)]="sendNotifications"
-                                       (ngModelChange)="setMessage()"
-                                       id="sendNotifications" name="sendNotifications" class="form-control checkbox"
-                                       [disabled]="!isEditEnabled()">
-                            </div>
-                            <label i18n for="important" class="col-sm-3 control-label">Important</label>
-                            <div class="col-sm-8">
-                                <input type="checkbox"
-                                       [(ngModel)]="important"
-                                       (ngModelChange)="setMessage()"
-                                       id="important" name="important" class="form-control checkbox"
-                                       [disabled]="!isEditEnabled()">
-                            </div>
+          <ng-container body>
+            <form #form="ngForm" class="form-horizontal" timCalDateTimeValidator>
+              <fieldset [disabled]="loadingEvent">
+                <div class="form-group"
+                  [ngClass]="{'has-error': ngModelTitle.invalid && ngModelTitle.dirty}">
+        
+                  <label i18n for="title" class="col-sm-3 control-label">Title</label>
+                  <div class="col-sm-8">
+                    <input i18n type="text" required
+                      maxlength="280"
+                      [(ngModel)]="title" #ngModelTitle="ngModel"
+                      (ngModelChange)="setMessage()"
+                      pattern="[^/]*"
+                      id="title" name="title"
+                      class="form-control"
+                      placeholder="Set title"
+                      [disabled]="!isEditEnabled()"/>
+                  </div>
+                  <div class="col-sm-3 control-label">
+                    <label i18n for="owner">Owner</label>
+                      <a class="mail-icon" href="mailto:{{ownerEmail}}"><i
+                      class="glyphicon glyphicon-envelope"></i></a>
+                    </div>
+                    <div class="col-sm-8">
+                      <input i18n type="text"
+                        [(ngModel)]="ownerName"
+                        id="owner" name="owner"
+                        class="form-control"
+                        [disabled]="true"/>
+                    </div>
+                    <label i18n for="location" class="col-sm-3 control-label">Location</label>
+                      <div class="col-sm-8">
+                        <input type="text"
+                          maxlength="120"
+                          [(ngModel)]="location" #ngModelLocation="ngModel"
+                          (ngModelChange)="setMessage()"
+                          id="location"
+                          placeholder="Set location" i18n-placeholder
+                          name="location"
+                          class="form-control"
+                          [disabled]="!isEditEnabled()"/>
+                      </div>
+                      <label i18n for="maxSize" class="col-sm-3 control-label">Capacity</label>
+                        <div class="col-sm-8">
+                          <input type="number"
+                            min="0" max="2000" [(ngModel)]="maxSize"
+                            #ngModelMaxSize="ngModel"
+                            (ngModelChange)="setMessage()"
+                            id="maxSize" name="maxSize" class="form-control"
+                            [disabled]="!isEditEnabled()">
                         </div>
-                        <div class="form-group" [hidden]="isPersonalEvent()">
+                        <label i18n for="sendNotifications" class="col-sm-3 control-label">Notifications</label>
+                          <div class="col-sm-8">
+                            <input type="checkbox"
+                              [(ngModel)]="sendNotifications"
+                              (ngModelChange)="setMessage()"
+                              id="sendNotifications" name="sendNotifications" class="form-control checkbox"
+                              [disabled]="!isEditEnabled()">
+                          </div>
+                          <label i18n for="important" class="col-sm-3 control-label">Important</label>
+                            <div class="col-sm-8">
+                              <input type="checkbox"
+                                [(ngModel)]="important"
+                                (ngModelChange)="setMessage()"
+                                id="important" name="important" class="form-control checkbox"
+                                [disabled]="!isEditEnabled()">
+                            </div>
+                          </div>
+                          <div class="form-group" [hidden]="isPersonalEvent()">
                             <label i18n for="capacity" class="col-sm-3 control-label">Capacity</label>
-                            <div class="col-sm-8">
+                              <div class="col-sm-8">
                                 <b><abbr title="Amount of enrolled users">{{getEventEnrollments()}}</abbr> / <abbr
-                                        title="Maximum capacity of the event">{{getEventCapacity()}}</abbr></b>
+                              title="Maximum capacity of the event">{{getEventCapacity()}}</abbr></b>
                             </div>
-                        </div>
-                        <div [hidden]="multipleBookers()">
+                          </div>
+                          <div [hidden]="multipleBookers()">
                             <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
-                                <label i18n for="booker" class="col-sm-3 control-label">Booker</label>
+                              <label i18n for="booker" class="col-sm-3 control-label">Booker</label>
                                 <div class="col-sm-8">
-                                    <input type="text"
-                                           [(ngModel)]="booker"
-                                           (ngModelChange)="setMessage()"
-                                           id="booker" name="booker"
-                                           class="form-control"
-                                           placeholder=""
-                                           disabled="true"/>
+                                  <input type="text"
+                                    [(ngModel)]="booker"
+                                    (ngModelChange)="setMessage()"
+                                    id="booker" name="booker"
+                                    class="form-control"
+                                    placeholder=""
+                                    disabled="true"/>
                                 </div>
-                            </div>
-                            <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
+                              </div>
+                              <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
                                 <label i18n for="bookerEmail" class="col-sm-3 control-label">Booker email</label>
-                                <div class="col-sm-8">
+                                  <div class="col-sm-8">
                                     <input type="text"
-                                           [(ngModel)]="bookerEmail"
-                                           (ngModelChange)="setMessage()"
-                                           id="bookerEmail" name="bookerEmail"
-                                           class="form-control"
-                                           placeholder=""
-                                           disabled="true"/>
+                                      [(ngModel)]="bookerEmail"
+                                      (ngModelChange)="setMessage()"
+                                      id="bookerEmail" name="bookerEmail"
+                                      class="form-control"
+                                      placeholder=""
+                                      disabled="true"/>
+                                  </div>
                                 </div>
-                            </div>
-                        </div>
-                        <div [hidden]="hideBookerListLink()" class="form-group">
-                            <label i18n for="bookers" class="col-sm-3 control-label">Bookers</label>
-                            <a i18n href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-9">Show
+                              </div>
+                              <div [hidden]="hideBookerListLink()" class="form-group">
+                                <label i18n for="bookers" class="col-sm-3 control-label">Bookers</label>
+                                  <a i18n href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-9">Show
                                 list
                                 of all bookers</a>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="col-sm-4">
-                                <label i18n for="startDate" class="dialog-label col-sm-8 control-label">From</label>
-
-                                <div class="input-group">
-                                    <input type="date"
-                                           required
-                                           [(ngModel)]="startDate"
-                                           (ngModelChange)="setMessage()"
-                                           id="startDate" name="startDate"
-                                           class="form-control"
-                                           [disabled]="!isEditEnabled()"
-                                    >
-
-                                    <input type="time"
-                                           required
-                                           [(ngModel)]="startTime"
-                                           (ngModelChange)="setMessage()"
-                                           id="startTime" name="startTime"
-                                           class="form-control"
-                                           [disabled]="!isEditEnabled()"
-                                    >
                                 </div>
-                            </div>
-                            <div class="col-sm-4">
-                                <label i18n for="endDate" class="dialog-label col-sm-6 control-label">To</label>
-                                <div class="input-group">
-                                    <input type="date"
-                                           required
-                                           [(ngModel)]="endDate"
-                                           (ngModelChange)="setMessage()"
-                                           id="endDate" name="endDate"
-                                           class="form-control"
-                                           [disabled]="!isEditEnabled()"
-                                    >
-                                    <input type="time"
-                                           required
-                                           [(ngModel)]="endTime"
-                                           (ngModelChange)="setMessage()"
-                                           id="endTime" name="endTime"
-                                           class="form-control"
-                                           [disabled]="!isEditEnabled()">
-                                </div>
-                            </div>
-                            <div class="col-sm-4" [hidden]="!isEditEnabled() || isPersonalEvent()">
-                                <label i18n for="bookingStopDate" class="dialog-label col-sm-12 control-label">Book
+        
+                                <div class="form-group">
+                                  <div class="col-sm-4">
+                                    <label i18n for="startDate" class="dialog-label col-sm-8 control-label">From</label>
+        
+                                      <div class="input-group">
+                                        <input type="date"
+                                          required
+                                          [(ngModel)]="startDate"
+                                          (ngModelChange)="setMessage()"
+                                          id="startDate" name="startDate"
+                                          class="form-control"
+                                          [disabled]="!isEditEnabled()"
+                                          >
+        
+                                        <input type="time"
+                                          required
+                                          [(ngModel)]="startTime"
+                                          (ngModelChange)="setMessage()"
+                                          id="startTime" name="startTime"
+                                          class="form-control"
+                                          [disabled]="!isEditEnabled()"
+                                          >
+                                      </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                      <label i18n for="endDate" class="dialog-label col-sm-6 control-label">To</label>
+                                        <div class="input-group">
+                                          <input type="date"
+                                            required
+                                            [(ngModel)]="endDate"
+                                            (ngModelChange)="setMessage()"
+                                            id="endDate" name="endDate"
+                                            class="form-control"
+                                            [disabled]="!isEditEnabled()"
+                                            >
+                                          <input type="time"
+                                            required
+                                            [(ngModel)]="endTime"
+                                            (ngModelChange)="setMessage()"
+                                            id="endTime" name="endTime"
+                                            class="form-control"
+                                            [disabled]="!isEditEnabled()">
+                                        </div>
+                                      </div>
+                                      <div class="col-sm-4" [hidden]="!isEditEnabled() || isPersonalEvent()">
+                                        <label i18n for="bookingStopDate" class="dialog-label col-sm-12 control-label">Book
                                     before</label>
-                                <div class="input-group">
-
-                                    <input type="date"
-                                           required
-                                           [(ngModel)]="bookingStopDate"
-                                           (ngModelChange)="setMessage()"
-                                           id="bookingStopDate" name="bookingStopDate"
-                                           class="form-control"
-                                           [disabled]="!isEditEnabled()"
-                                    >
-
-                                    <input type="time"
-                                           required
-                                           [(ngModel)]="bookingStopTime"
-                                           (ngModelChange)="setMessage()"
-                                           id="bookingStopTime" name="bookingStopTime"
-                                           class="form-control"
-                                           [disabled]="!isEditEnabled()"
-                                    >
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <div class="input-group">
-                                <div class="col-sm-12" *ngIf="description.length > 0 || description_html.length > 0 || isEditEnabled()">
-                                    <label i18n class="col-sm-12 control-label" for="description">Event
-                                        description</label>
-                                    <ng-container *ngIf="isEditEnabled(); else viewMode">
-                                        <textarea  maxlength="1020" id="description"
-                                              [(ngModel)]="description" #ngModelDescription="ngModel"
+                                          <div class="input-group">
+        
+                                            <input type="date"
+                                              required
+                                              [(ngModel)]="bookingStopDate"
                                               (ngModelChange)="setMessage()"
-                                              name="description"
+                                              id="bookingStopDate" name="bookingStopDate"
                                               class="form-control"
-                                              [disabled]="!isEditEnabled()"></textarea>
-                                    </ng-container>
-                                    <ng-template #viewMode>
-                                        <div [innerHTML]="description_html | purify"></div>
-                                    </ng-template>
-                                </div>
-                                <div class="col-sm-12" [hidden]="hideBookerMessage()">
-                                    <label i18n for="bookerMessage" class="col-sm-12 control-label">Message
+                                              [disabled]="!isEditEnabled()"
+                                              >
+        
+                                            <input type="time"
+                                              required
+                                              [(ngModel)]="bookingStopTime"
+                                              (ngModelChange)="setMessage()"
+                                              id="bookingStopTime" name="bookingStopTime"
+                                              class="form-control"
+                                              [disabled]="!isEditEnabled()"
+                                              >
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div class="form-group">
+                                        <div class="input-group">
+                                          @if (description.length > 0 || description_html.length > 0 || isEditEnabled()) {
+                                            <div class="col-sm-12">
+                                              <label i18n class="col-sm-12 control-label" for="description">Event
+                                        description</label>
+                                                @if (isEditEnabled()) {
+                                                  <textarea  maxlength="1020" id="description"
+                                                    [(ngModel)]="description" #ngModelDescription="ngModel"
+                                                    (ngModelChange)="setMessage()"
+                                                    name="description"
+                                                    class="form-control"
+                                                  [disabled]="!isEditEnabled()"></textarea>
+                                                } @else {
+                                                  <div [innerHTML]="description_html | purify"></div>
+                                                }
+                                              </div>
+                                            }
+                                            <div class="col-sm-12" [hidden]="hideBookerMessage()">
+                                              <label i18n for="bookerMessage" class="col-sm-12 control-label">Message
                                         (optional)</label>
-                                    <input type="text" [disabled]="hideBookerMessage()"
-                                           [(ngModel)]="messageText"
-                                           (ngModelChange)="setMessage()"
-                                           name="messageText"
-                                           class="form-control">
-
-                                    <button i18n class="btn timButton message-btn" type="button"
-                                            [disabled]="messageText.length<1"
-
-                                            (click)="updateBookMessage()">Send message
+                                                <input type="text" [disabled]="hideBookerMessage()"
+                                                  [(ngModel)]="messageText"
+                                                  (ngModelChange)="setMessage()"
+                                                  name="messageText"
+                                                  class="form-control">
+        
+                                                <button i18n class="btn timButton message-btn" type="button"
+                                                  [disabled]="messageText.length<1"
+        
+                                                  (click)="updateBookMessage()">Send message
                                     </button>
-                                </div>
-                            </div>
-                            <div [(ngModel)]="bookerMessage" [hidden]="hideBookerMessage()" name="bookerMessage"
-                                 ngDefaultControl class="col-sm-12" style="white-space: pre-line">{{bookerMessage}}
-                            </div>
-                        </div>
-                    </fieldset>
-                </form>
-                <tim-alert *ngIf="loadingEventError">
-                    <ng-container i18n>Could not load latest event data, is there internet connection? Please close the dialog and try again.</ng-container>
-                </tim-alert>
-                <tim-alert *ngIf="(maxSize>2000 || maxSize<0) && ngModelMaxSize.dirty">
-                    <ng-container i18n>Event capacity must be 0-2000</ng-container>
-                </tim-alert>
-                <tim-alert *ngIf="form.invalid" severity="danger" [hidden]="!form.errors?.['bookingEndInvalid']">
-                    <ng-container i18n *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the
+                                                </div>
+                                              </div>
+                                              <div [(ngModel)]="bookerMessage" [hidden]="hideBookerMessage()" name="bookerMessage"
+                                                ngDefaultControl class="col-sm-12" style="white-space: pre-line">{{bookerMessage}}
+                                              </div>
+                                            </div>
+                                          </fieldset>
+                                        </form>
+                                        @if (loadingEventError) {
+                                          <tim-alert>
+                                            <ng-container i18n>Could not load latest event data, is there internet connection? Please close the dialog and try again.</ng-container>
+                                            </tim-alert>
+                                          }
+                                          @if ((maxSize>2000 || maxSize<0) && ngModelMaxSize.dirty) {
+                                            <tim-alert>
+                                              <ng-container i18n>Event capacity must be 0-2000</ng-container>
+                                              </tim-alert>
+                                            }
+                                            @if (form.invalid) {
+                                              <tim-alert severity="danger" [hidden]="!form.errors?.['bookingEndInvalid']">
+                                                @if (form.errors?.['bookingEndInvalid']) {
+                                                  <ng-container i18n>Booking must be done before the
                         event
                     </ng-container>
-                </tim-alert>
-                <tim-alert *ngIf="form.invalid" severity="danger" [hidden]="!form.errors?.['dateInvalid']">
-                    <ng-container i18n *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.
+                                                  }
+                                                </tim-alert>
+                                              }
+                                              @if (form.invalid) {
+                                                <tim-alert severity="danger" [hidden]="!form.errors?.['dateInvalid']">
+                                                  @if (form.errors?.['dateInvalid']) {
+                                                    <ng-container i18n>Start of the event must be before end.
                     </ng-container>
-                </tim-alert>
-                <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
-                    <ng-container i18n *ngIf="ngModelTitle.errors?.['required']">
-                        Title is required.
+                                                    }
+                                                  </tim-alert>
+                                                }
+                                                @if (ngModelTitle.invalid && ngModelTitle.dirty) {
+                                                  <tim-alert severity="danger">
+                                                    @if (ngModelTitle.errors?.['required']) {
+                                                      <ng-container i18n>
+                                                                             Title is required.
                     </ng-container>
-
-                    <ng-container i18n *ngIf="ngModelTitle.errors?.['pattern']">
-                        Title should not contain the slash character.
+                                                      }
+                                                      @if (ngModelTitle.errors?.['pattern']) {
+                                                        <ng-container i18n>
+                                                                               Title should not contain the slash character.
                     </ng-container>
-                </tim-alert>
-                <tim-alert *ngIf="message" severity="danger">
-                    <ng-container *ngIf="message">
-                        {{message}}
-                    </ng-container>
-                </tim-alert>
-            </ng-container>
-            <ng-container class="col-sm-12" footer>
-                <div class="col-sm-12 row">
-                <span [hidden]="hideEventFullSpan()" style="float: left; margin-left: 10px">
-                    <span i18n>The event is full</span>
-                    <span *ngIf="data.meta?.isExtra" i18n> (you can still book as extra)</span>
-                </span>
-                    <span [hidden]="!userHasBooked()" style="float: left">
-                    <b i18n>You have booked this event.</b>
-                </span>
-                </div>
-                <div class="col-sm-12 row">
-                    <button i18n class="btn timButton btn-danger col-sm-4" type="button"
-                            [hidden]="!userHasBooked() || isEditEnabled()" (click)="cancelBooking()"
-                            [disabled]="loadingEvent"
-                            style="float: left">
-                        Cancel Booking
+                                                        }
+                                                      </tim-alert>
+                                                    }
+                                                    @if (message) {
+                                                      <tim-alert severity="danger">
+                                                        @if (message) {
+                                                          {{message}}
+                                                        }
+                                                      </tim-alert>
+                                                    }
+                                                  </ng-container>
+                                                  <ng-container class="col-sm-12" footer>
+                                                    <div class="col-sm-12 row">
+                                                      <span [hidden]="hideEventFullSpan()" style="float: left; margin-left: 10px">
+                                                        <span i18n>The event is full</span>
+                                                          @if (data.meta?.isExtra) {
+                                                            <span i18n> (you can still book as extra)</span>
+                                                            }
+                                                          </span>
+                                                          <span [hidden]="!userHasBooked()" style="float: left">
+                                                            <b i18n>You have booked this event.</b>
+                                                          </span>
+                                                        </div>
+                                                        <div class="col-sm-12 row">
+                                                          <button i18n class="btn timButton btn-danger col-sm-4" type="button"
+                                                            [hidden]="!userHasBooked() || isEditEnabled()" (click)="cancelBooking()"
+                                                            [disabled]="loadingEvent"
+                                                            style="float: left">
+                                                                                 Cancel Booking
                     </button>
-                    <button i18n class="btn timButton btn-danger col-sm-2" type="button" style="float: left"
-                            (click)="deleteEvent()" [disabled]="form.invalid || loadingEvent" [hidden]="!isEditEnabled()">
-                        Delete
+                                                            <button i18n class="btn timButton btn-danger col-sm-2" type="button" style="float: left"
+                                                              (click)="deleteEvent()" [disabled]="form.invalid || loadingEvent" [hidden]="!isEditEnabled()">
+                                                                                   Delete
                     </button>
-                    <span *ngIf="showBookingButton()" [tooltip]="eventBookState.reason" class="booking-button"
-                          container="body">
-                        <button i18n
-                                class="btn timButton" type="button"
-                                (click)="bookEvent()"
-                                [disabled]="!eventBookState.canBook || loadingEvent">
-                            Book event
+                                                              @if (showBookingButton()) {
+                                                                <span [tooltip]="eventBookState.reason" class="booking-button"
+                                                                  container="body">
+                                                                  <button i18n
+                                                                    class="btn timButton" type="button"
+                                                                    (click)="bookEvent()"
+                                                                    [disabled]="!eventBookState.canBook || loadingEvent">
+                                                                                             Book event
                         </button>    
-                    </span>
-                    <button i18n class="btn btn-default col-sm-2" type="button" style="float:right" (click)="dismiss()">
-                        Cancel
+                                                                  </span>
+                                                                }
+                                                                <button i18n class="btn btn-default col-sm-2" type="button" style="float:right" (click)="dismiss()">
+                                                                                       Cancel
                     </button>
-                    <button i18n class="btn timButton col-sm-2" type="submit" style="float:right"
-                            (click)="saveChanges()" [disabled]="form.invalid || loadingEvent"
-                            [hidden]="!isEditEnabled()">
-                        Save
+                                                                  <button i18n class="btn timButton col-sm-2" type="submit" style="float:right"
+                                                                    (click)="saveChanges()" [disabled]="form.invalid || loadingEvent"
+                                                                    [hidden]="!isEditEnabled()">
+                                                                                         Save
                     </button>
-                </div>
-            </ng-container>
-        </tim-dialog-frame>
-    `,
+                                                                  </div>
+                                                                </ng-container>
+                                                              </tim-dialog-frame>
+        `,
     styleUrls: ["./calendar-event-dialog.component.scss"],
     standalone: false,
 })
@@ -901,7 +925,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         TimUtilityModule,
         CommonModule,
         TimCalendarModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
         PurifyModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],

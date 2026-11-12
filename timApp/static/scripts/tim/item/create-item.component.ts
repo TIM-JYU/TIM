@@ -12,57 +12,67 @@ import {NgModel} from "@angular/forms";
     selector: "create-item",
     template: `
         <form name="itemForm" #form #f="ngForm">
-            <tim-alert severity="warning" *ngIf="tagsWithExpirations">
-                The source document has tags with expiration dates which may need to be updated manually.
+          @if (tagsWithExpirations) {
+            <tim-alert severity="warning">
+              The source document has tags with expiration dates which may need to be updated manually.
             </tim-alert>
-            <div *ngIf="params?.copy">
-                <p>Only document contents will be copied. Default rights of the destination folder will be applied. No original history or rights will be preserved. </p>
-                <p>If you need to have the same document to appear in multiple folders, define multiple short names instead.</p>
+          }
+          @if (params?.copy) {
+            <div>
+              <p>Only document contents will be copied. Default rights of the destination folder will be applied. No original history or rights will be preserved. </p>
+              <p>If you need to have the same document to appear in multiple folders, define multiple short names instead.</p>
             </div>
-            <div class="form-group title" timErrorState>
-                <label>
-                    {{itemType | titlecase}} title:
-                    <input class="form-control" required [(ngModel)]="itemTitle" name="itemTitle"
-                           type="text" (input)="titleChanged()" focusMe [enable]="enable" (keydown.enter)="!(f.invalid || creating || !canCopy) ? createItem() : null">
+          }
+          <div class="form-group title" timErrorState>
+            <label>
+              {{itemType | titlecase}} title:
+              <input class="form-control" required [(ngModel)]="itemTitle" name="itemTitle"
+                type="text" (input)="titleChanged()" focusMe [enable]="enable" (keydown.enter)="!(f.invalid || creating || !canCopy) ? createItem() : null">
+            </label>
+            <tim-error-message></tim-error-message>
+          </div>
+          <div class="form-group shortname" timErrorState>
+            <label>
+              Short name:
+              <input [disabled]="force" class="form-control" timShortName required
+                [(ngModel)]="itemName"
+                (ngModelChange)="checkCopyValidity()"
+                type="text" name="itemName"
+                placeholder="Type title first"
+                (keyup)="nameChanged()">
+            </label>
+            <div class="checkbox">
+              <label>
+                <input [disabled]="force" type="checkbox" [(ngModel)]="automaticShortName"
+                  name="automaticShortName"> Set automatically
+                  based on title
                 </label>
-                <tim-error-message></tim-error-message>
-            </div>
-            <div class="form-group shortname" timErrorState>
-                <label>
-                    Short name:
-                    <input [disabled]="force" class="form-control" timShortName required
-                           [(ngModel)]="itemName"
-                           (ngModelChange)="checkCopyValidity()"
-                           type="text" name="itemName"
-                           placeholder="Type title first"
-                           (keyup)="nameChanged()">
-                </label>
-                <div class="checkbox">
-                    <label>
-                        <input [disabled]="force" type="checkbox" [(ngModel)]="automaticShortName"
-                               name="automaticShortName"> Set automatically
-                        based on title
-                    </label>
-                </div>
-                <tim-error-message></tim-error-message>
+              </div>
+              <tim-error-message></tim-error-message>
             </div>
             <div class="form-group location" timErrorState>
-                <label>
-                    {{itemType | titlecase}} location: <input size="50" [disabled]="force" class="form-control" type="text"
-                                     timLocation [(ngModel)]="itemLocation" name="itemLocation"
-                                     (ngModelChange)="checkCopyValidity()">
-                </label>
-                <tim-error-message></tim-error-message>
-            </div>
-            <tim-alert *ngFor="let alert of alerts" [severity]="alert.type">
-                {{ alert.msg }}
+              <label>
+                {{itemType | titlecase}} location: <input size="50" [disabled]="force" class="form-control" type="text"
+                timLocation [(ngModel)]="itemLocation" name="itemLocation"
+                (ngModelChange)="checkCopyValidity()">
+            </label>
+            <tim-error-message></tim-error-message>
+          </div>
+          @for (alert of alerts; track alert) {
+            <tim-alert [severity]="alert.type">
+              {{ alert.msg }}
             </tim-alert>
-            <button class="timButton" *ngIf="showButton" [disabled]="f.invalid || creating || !canCopy" (click)="createItem()" type="button">
-                Create {{ itemType }}
+          }
+          @if (showButton) {
+            <button class="timButton" [disabled]="f.invalid || creating || !canCopy" (click)="createItem()" type="button">
+              Create {{ itemType }}
             </button>
-            <span *ngIf="creating">Creating...</span>
+          }
+          @if (creating) {
+            <span>Creating...</span>
+          }
         </form>
-    `,
+        `,
     standalone: false,
 })
 export class CreateItemComponent implements OnInit {

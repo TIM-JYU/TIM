@@ -1267,85 +1267,117 @@ interface IAnswerResponse {
     // changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div class="csRunDiv no-popup-menu" [class.cs-has-header]="header">
-            <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
-            <div class="pluginError" *ngIf="imageLoadError" [textContent]="imageLoadError"></div>
-            <h4 *ngIf="header" [innerHtml]="header"></h4>
-            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
-            <div class="imagex-content" [style.height.px]="canvasheight">
-                <canvas class="canvas no-popup-menu"
-                        tabindex="1"
-                        [width]="canvaswidth"
-                        [height]="canvasheight"></canvas>
-                <canvas class="canvas no-popup-menu"
-                        tabindex="1"
-                        [width]="canvaswidth"
-                        [height]=canvasheight></canvas>
-                <div class="content"></div>
-            </div>
-            <p class="csRunMenu"><span *ngIf="button" class="save">&nbsp;<button
-                                               class="timButton"
-                                               [disabled]="(disableUnchanged && !isUnSaved()) || isRunning"
-                                               (click)="save()">{{button}}
+          @if (markupError) {
+            <tim-markup-error [data]="markupError!"></tim-markup-error>
+          }
+          @if (imageLoadError) {
+            <div class="pluginError" [textContent]="imageLoadError"></div>
+          }
+          @if (header) {
+            <h4 [innerHtml]="header"></h4>
+          }
+          @if (stem) {
+            <p class="stem" [innerHtml]="stem"></p>
+          }
+          <div class="imagex-content" [style.height.px]="canvasheight">
+            <canvas class="canvas no-popup-menu"
+              tabindex="1"
+              [width]="canvaswidth"
+            [height]="canvasheight"></canvas>
+            <canvas class="canvas no-popup-menu"
+              tabindex="1"
+              [width]="canvaswidth"
+            [height]=canvasheight></canvas>
+            <div class="content"></div>
+          </div>
+          <p class="csRunMenu">@if (button) {
+            <span class="save">&nbsp;<button
+              class="timButton"
+              [disabled]="(disableUnchanged && !isUnSaved()) || isRunning"
+              (click)="save()">{{button}}
             </button></span>
-                <span  *ngIf="buttonPlay" class="videoPlay">
-                &nbsp;&nbsp;
-                <button
-                        [disabled]="isRunning"
-                        (click)="videoPlay()">{{buttonPlay}}
-                </button>
-                </span>
-                <span *ngIf="buttonRevert" class="videoBeginning">
-                &nbsp;&nbsp;
-                <button
-                        [disabled]="isRunning"
-                        (click)="videoBeginning()">{{buttonRevert}}
-                </button>
-                    </span>
-                <span [hidden]="!(finalanswer && userHasAnswered)" class="showAnswer">
-                &nbsp;&nbsp;
-                <button class="timButton"
-                        [disabled]="isRunning"
-                        (click)="showAnswer()">
-                    Show correct answer
-                </button>
-                    </span>
-                <span *ngIf="undoButton && isUnSaved() && undoButton">
-                    &nbsp;
-                    <a href="" title="{{undoTitle}}"
-                        (click)="tryResetChanges($event);">{{undoButton}}</a>
-                </span>
-                <span *ngIf="button" class="resetExercise">
-                    &nbsp;
-                    <a (click)="resetExercise()">{{resetText}}</a>
-                </span>
-                <span *ngIf="muokattu" class="initCode">
-                &nbsp;&nbsp;<a
-                        href="" (click)="initCode()">{{resetText}}</a>
-                    </span>
-                &nbsp;&nbsp;
-                <draw-toolbar *ngIf="isFreeHandInUse" [drawSettings]="drawSettings" [undo]="passUndo"
-                              [drawVisibleOptions]="drawVisibleOptions"></draw-toolbar>
-            </p>
-            <div class="plgfooter"></div>
-            <div [hidden]="!preview"><span><span [ngStyle]="{'background-color': previewColor}"
-                                                 style="display: table-cell; text-align: center; width: 30px;"
-                                                 (click)="getPColor()">&lt;-</span>
+          }
+          @if (buttonPlay) {
+            <span  class="videoPlay">
+              &nbsp;&nbsp;
+              <button
+                [disabled]="isRunning"
+                (click)="videoPlay()">{{buttonPlay}}
+              </button>
+            </span>
+          }
+          @if (buttonRevert) {
+            <span class="videoBeginning">
+              &nbsp;&nbsp;
+              <button
+                [disabled]="isRunning"
+                (click)="videoBeginning()">{{buttonRevert}}
+              </button>
+            </span>
+          }
+          <span [hidden]="!(finalanswer && userHasAnswered)" class="showAnswer">
+            &nbsp;&nbsp;
+            <button class="timButton"
+              [disabled]="isRunning"
+              (click)="showAnswer()">
+              Show correct answer
+            </button>
+          </span>
+          @if (undoButton && isUnSaved() && undoButton) {
+            <span>
+              &nbsp;
+              <a href="" title="{{undoTitle}}"
+              (click)="tryResetChanges($event);">{{undoButton}}</a>
+            </span>
+          }
+          @if (button) {
+            <span class="resetExercise">
+              &nbsp;
+              <a (click)="resetExercise()">{{resetText}}</a>
+            </span>
+          }
+          @if (muokattu) {
+            <span class="initCode">
+              &nbsp;&nbsp;<a
+            href="" (click)="initCode()">{{resetText}}</a>
+          </span>
+        }
+        <ng-container> &nbsp;&nbsp; </ng-container>
+        @if (isFreeHandInUse) {
+          <draw-toolbar [drawSettings]="drawSettings" [undo]="passUndo"
+          [drawVisibleOptions]="drawVisibleOptions"></draw-toolbar>
+        }
+        </p>
+        <div class="plgfooter"></div>
+        <div [hidden]="!preview"><span><span [ngStyle]="{'background-color': previewColor}"
+          style="display: table-cell; text-align: center; width: 30px;"
+        (click)="getPColor()">&lt;-</span>
         <input [(ngModel)]="previewColor"
-               colorpicker="hex"
-               type="text"
-               (click)="getPColor()"
-               size="10"/> <label> Coord:
-            <input [(ngModel)]="coords" (click)="getPColor()" size="10"/></label></span></div>
-            <pre class="" *ngIf="error && preview">{{error}}</pre>
-            <pre class="" [hidden]="!result">{{result}}</pre>
-            <div class="replyHTML" *ngIf="replyHTML"><span [innerHtml]="svgImageSnippet()"></span></div>
-            <img *ngIf="replyImage" class="grconsole" [src]="replyImage" alt=""/>
-            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
+          colorpicker="hex"
+          type="text"
+          (click)="getPColor()"
+          size="10"/> <label> Coord:
+        <input [(ngModel)]="coords" (click)="getPColor()" size="10"/></label></span></div>
+        @if (error && preview) {
+          <pre class="">{{error}}</pre>
+        }
+        <pre class="" [hidden]="!result">{{result}}</pre>
+        @if (replyHTML) {
+          <div class="replyHTML"><span [innerHtml]="svgImageSnippet()"></span></div>
+        }
+        @if (replyImage) {
+          <img class="grconsole" [src]="replyImage" alt=""/>
+        }
+        @if (footer) {
+          <p class="plgfooter" [innerHtml]="footer"></p>
+        }
         </div>
-        <div *ngIf="error" class="weberror" #webDiv>
+        @if (error) {
+          <div class="weberror" #webDiv>
             <pre class="csRunError">{{error}}</pre>
-        </div>
-    `,
+          </div>
+        }
+        `,
     styleUrls: ["./imagex.component.scss"],
     standalone: false,
 })

@@ -15,23 +15,27 @@ interface IParInfo {
     selector: "tim-par-ref",
     template: `
         <ng-template #tooltipHtml>
-            <tim-loading color="white" *ngIf="loading"></tim-loading>
-            <div *ngIf="data !== undefined" style="text-align: left; white-space: nowrap;">
-                This paragraph references another document.
-                <ul class="list-unstyled">
-                    <li><b>Title:</b> {{title}}</li>
-                    <li><b>Authors:</b> {{owners}}</li>
-                    <li><b>Paragraph:</b> {{par}}</li>
-                </ul>
+          @if (loading) {
+            <tim-loading color="white"></tim-loading>
+          }
+          @if (data !== undefined) {
+            <div style="text-align: left; white-space: nowrap;">
+              This paragraph references another document.
+              <ul class="list-unstyled">
+                <li><b>Title:</b> {{title}}</li>
+                <li><b>Authors:</b> {{owners}}</li>
+                <li><b>Paragraph:</b> {{par}}</li>
+              </ul>
             </div>
+          }
         </ng-template>
         <a href="{{url}}">
-            <i class="glyphicon glyphicon-share-alt"
-               (mouseover)="loadData()"
-               [tooltip]="tooltipHtml"
-            ></i>
+          <i class="glyphicon glyphicon-share-alt"
+            (mouseover)="loadData()"
+            [tooltip]="tooltipHtml"
+          ></i>
         </a>
-    `,
+        `,
     standalone: false,
 })
 export class ParRefComponent {

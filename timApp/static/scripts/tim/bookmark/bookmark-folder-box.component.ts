@@ -22,48 +22,54 @@ export interface ITaggedBookmarkedItem {
 @Component({
     selector: "tim-bookmark-folder-box",
     template: `
-        <div *ngIf="bookmarkFolder && bookmarkFolder.items.length > 0">
+        @if (bookmarkFolder && bookmarkFolder.items.length > 0) {
+          <div>
             <h3>{{displayName || bookmarkFolder.name}}<a class="font-medium margin-4">
-                <i class="glyphicon glyphicon-pencil"
-                   title="Toggle editing"
-                   i18n-title
-                   (click)="editOn = !editOn"></i></a></h3>
-            <ul class="list-unstyled">
-                <li class="h5" *ngFor="let d of documents">
+              <i class="glyphicon glyphicon-pencil"
+                title="Toggle editing"
+                i18n-title
+              (click)="editOn = !editOn"></i></a></h3>
+              <ul class="list-unstyled">
+                @for (d of documents; track d) {
+                  <li class="h5">
                     <a href="/view/{{d.doc.path}}">
-                        {{getLinkText(d)}}</a>&nbsp;
-                    <ng-container *ngIf="editOn">
-                        <a><i class="glyphicon glyphicon-pencil"
-                              title="Edit bookmark"
-                              i18n-title
-                              (click)="editFromList(d.bookmark)"></i></a>
-                        <a><i class="glyphicon"
-                              [class.glyphicon-remove]="!hideMode"
-                              [class.glyphicon-eye-close]="hideMode"
-                              [title]="removeText"
-                              (click)="removeFromList(d.bookmark)"></i>
-                        </a>
-                    </ng-container>
+                    {{getLinkText(d)}}</a>&nbsp;
+                    @if (editOn) {
+                      <a><i class="glyphicon glyphicon-pencil"
+                        title="Edit bookmark"
+                        i18n-title
+                      (click)="editFromList(d.bookmark)"></i></a>
+                      <a><i class="glyphicon"
+                        [class.glyphicon-remove]="!hideMode"
+                        [class.glyphicon-eye-close]="hideMode"
+                        [title]="removeText"
+                      (click)="removeFromList(d.bookmark)"></i>
+                    </a>
+                  }
                 </li>
-                <li class="h5" *ngFor="let b of orphanBookmarks">
-                    <a href="{{b.link}}">
-                        {{b.name}}</a>&nbsp;
-                    <ng-container *ngIf="editOn">
-                        <a><i class="glyphicon glyphicon-pencil"
-                              title="Edit bookmark"
-                              i18n-title
-                              (click)="editFromList(b)"></i></a>
-                        <a><i class="glyphicon"
-                              [class.glyphicon-remove]="!hideMode"
-                              [class.glyphicon-eye-close]="hideMode"
-                              [title]="removeText"
-                              (click)="removeFromList(b)"></i>
-                        </a>
-                    </ng-container>
-                </li>
-            </ul>
+              }
+              @for (b of orphanBookmarks; track b) {
+                <li class="h5">
+                  <a href="{{b.link}}">
+                  {{b.name}}</a>&nbsp;
+                  @if (editOn) {
+                    <a><i class="glyphicon glyphicon-pencil"
+                      title="Edit bookmark"
+                      i18n-title
+                    (click)="editFromList(b)"></i></a>
+                    <a><i class="glyphicon"
+                      [class.glyphicon-remove]="!hideMode"
+                      [class.glyphicon-eye-close]="hideMode"
+                      [title]="removeText"
+                    (click)="removeFromList(b)"></i>
+                  </a>
+                }
+              </li>
+            }
+          </ul>
         </div>
-    `,
+        }
+        `,
     standalone: false,
 })
 export class BookmarkFolderBoxComponent implements OnInit {

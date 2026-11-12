@@ -35,60 +35,70 @@ export interface IGroupedCourses {
     selector: "tim-course-list-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <h5>Listing available courses
-                    <a>
-                        <i (click)="toggleAll()"
-                           class="glyphicon"
-                           [ngClass]="toggleCollapseAll ? 'glyphicon-minus-sign' : 'glyphicon-plus-sign'"></i>
-                    </a>
-                </h5>
-                <div class="input-group">
-                    <input class="form-control"
-                           [(ngModel)]="filterText"
-                           placeholder="Input filter word"
-                           title="Filter by course code and title"
-                           (keydown.enter)="enterPressed()">
-                    <span class="input-group-addon btn" (click)="refresh()" title="Filter courses">
-            <i class="glyphicon glyphicon-search"></i></span>
-                </div>
-                <div>
-                    <ul class="list-unstyled" *ngIf="grouped.length > 0" id="courses">
-                        <ng-container *ngFor="let subject of grouped">
-                            <li *ngIf="subject.docs.length > 0"><span class="cursor-pointer"
-                                                                      (click)="subject.closed = !subject.closed">
-                    <a><span style="width: 1.3em;" class="glyphicon"
-                             [ngClass]="subject.closed ? 'glyphicon-plus' : 'glyphicon-minus'"></span></a>
-                    <span>{{subject.subject | capitalize}} <i>({{subject.docs.length}}
-                        <ng-container
-                                [ngPlural]="subject.docs.length">
-                            <ng-template ngPluralCase="=1">course</ng-template>
-                            <ng-template ngPluralCase="other">courses</ng-template>
-                        </ng-container>)</i></span>
-                </span>
-                                <ul class="list-unstyled" *ngIf="!subject.closed">
-                                    <ng-container *ngFor="let course of subject.docs">
-                                        <li *ngIf="courseCode(course)">
-                                            <a href="/view/{{course.path}}" title="Open {{course.title}}">
-                                                <span class="btn-xs btn-primary">{{courseCode(course)}}</span>
-                                                {{course.title}}
-                                            </a></li>
-                                    </ng-container>
-                                </ul>
-                            </li>
-                        </ng-container>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            <h5>Listing available courses
+              <a>
+                <i (click)="toggleAll()"
+                  class="glyphicon"
+                [ngClass]="toggleCollapseAll ? 'glyphicon-minus-sign' : 'glyphicon-plus-sign'"></i>
+              </a>
+            </h5>
+            <div class="input-group">
+              <input class="form-control"
+                [(ngModel)]="filterText"
+                placeholder="Input filter word"
+                title="Filter by course code and title"
+                (keydown.enter)="enterPressed()">
+              <span class="input-group-addon btn" (click)="refresh()" title="Filter courses">
+                <i class="glyphicon glyphicon-search"></i></span>
+              </div>
+              <div>
+                @if (grouped.length > 0) {
+                  <ul class="list-unstyled" id="courses">
+                    @for (subject of grouped; track subject) {
+                      @if (subject.docs.length > 0) {
+                        <li><span class="cursor-pointer"
+                          (click)="subject.closed = !subject.closed">
+                          <a><span style="width: 1.3em;" class="glyphicon"
+                          [ngClass]="subject.closed ? 'glyphicon-plus' : 'glyphicon-minus'"></span></a>
+                          <span>{{subject.subject | capitalize}} <i>({{subject.docs.length}}
+                            <ng-container
+                              [ngPlural]="subject.docs.length">
+                              <ng-template ngPluralCase="=1">course</ng-template>
+                              <ng-template ngPluralCase="other">courses</ng-template>
+                            </ng-container>)</i></span>
+                          </span>
+                          @if (!subject.closed) {
+                            <ul class="list-unstyled">
+                              @for (course of subject.docs; track course) {
+                                @if (courseCode(course)) {
+                                  <li>
+                                    <a href="/view/{{course.path}}" title="Open {{course.title}}">
+                                      <span class="btn-xs btn-primary">{{courseCode(course)}}</span>
+                                      {{course.title}}
+                                    </a></li>
+                                  }
+                                }
+                              </ul>
+                            }
+                          </li>
+                        }
+                      }
                     </ul>
-                    <span *ngIf="grouped.length == 0">No documents found!</span>
+                  }
+                  @if (grouped.length == 0) {
+                    <span>No documents found!</span>
+                  }
                 </div>
-            </ng-container>
-            <ng-container footer>
+              </ng-container>
+              <ng-container footer>
                 <button class="timButton" (click)="dismiss()">Close</button>
-            </ng-container>
-        </tim-dialog-frame>
-    `,
+              </ng-container>
+            </tim-dialog-frame>
+        `,
     standalone: false,
 })
 export class CourseListDialogComponent extends AngularDialogComponent<

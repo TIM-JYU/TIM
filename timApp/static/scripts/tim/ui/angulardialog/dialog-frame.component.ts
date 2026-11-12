@@ -58,47 +58,53 @@ class ResizableDraggableWrapper {
     selector: "tim-dialog-frame",
     template: `
         <div class="modal no-pointer-events in" role="dialog"
-             [ngStyle]="{'z-index': 1050 + index*10, display: 'block', position: anchor}" tabindex="-1" #bounds>
-            <div [ngDraggable]
-                 [ngResizable]="canResize && !areaMinimized"
-                 [inBounds]="true"
-                 [bounds]="bounds"
-                 #resizable="ngResizable"
-                 #draggable="ngDraggable"
-                 #dragelem
-                 [preventDefaultEvent]="true"
-                 [handle]="draghandle"
-                 [position]="position"
-                 (stopped)="onPosChange($event)"
-                 (rzStop)="onSizeChange($event)"
-                 class="modal-dialog modal-{{size}}"
-                 style="pointer-events: auto">
-                <div class="draghandle"
-                     [ngClass]="{attached: !canDrag()}">
-                    <p #draghandle>
-                        <ng-content select="[header]"></ng-content>
-                    </p>
-                    <i *ngIf="detachable" (click)="toggleDetach()" title="Attach"
-                       class="glyphicon glyphicon-arrow-left"></i>
-                    <i *ngIf="minimizable" title="Minimize dialog" (click)="toggleMinimize()"
-                       class="glyphicon"
-                       [class.glyphicon-minus]="!areaMinimized"
-                       [class.glyphicon-unchecked]="areaMinimized"
-                    ></i>
-                    <tim-close-button *ngIf="showCloseIcon && closeFn" (click)="closeFn!()">
-                    </tim-close-button>
-                </div>
-                <div class="draggable-content modal-content" [class.minimized]="areaMinimized">
-                    <div #body id="modal-body" class="modal-body">
-                        <ng-content select="[body]"></ng-content>
-                    </div>
-                    <div class="modal-footer">
-                        <ng-content select="[footer]"></ng-content>
-                    </div>
-                </div>
+          [ngStyle]="{'z-index': 1050 + index*10, display: 'block', position: anchor}" tabindex="-1" #bounds>
+          <div [ngDraggable]
+            [ngResizable]="canResize && !areaMinimized"
+            [inBounds]="true"
+            [bounds]="bounds"
+            #resizable="ngResizable"
+            #draggable="ngDraggable"
+            #dragelem
+            [preventDefaultEvent]="true"
+            [handle]="draghandle"
+            [position]="position"
+            (stopped)="onPosChange($event)"
+            (rzStop)="onSizeChange($event)"
+            class="modal-dialog modal-{{size}}"
+            style="pointer-events: auto">
+            <div class="draghandle"
+              [ngClass]="{attached: !canDrag()}">
+              <p #draghandle>
+                <ng-content select="[header]"></ng-content>
+              </p>
+              @if (detachable) {
+                <i (click)="toggleDetach()" title="Attach"
+                class="glyphicon glyphicon-arrow-left"></i>
+              }
+              @if (minimizable) {
+                <i title="Minimize dialog" (click)="toggleMinimize()"
+                  class="glyphicon"
+                  [class.glyphicon-minus]="!areaMinimized"
+                  [class.glyphicon-unchecked]="areaMinimized"
+                ></i>
+              }
+              @if (showCloseIcon && closeFn) {
+                <tim-close-button (click)="closeFn!()">
+                </tim-close-button>
+              }
             </div>
+            <div class="draggable-content modal-content" [class.minimized]="areaMinimized">
+              <div #body id="modal-body" class="modal-body">
+                <ng-content select="[body]"></ng-content>
+              </div>
+              <div class="modal-footer">
+                <ng-content select="[footer]"></ng-content>
+              </div>
+            </div>
+          </div>
         </div>
-    `,
+        `,
     styleUrls: [
         "../../../../../node_modules/angular2-draggable/css/resizable.min.css",
         "./dialog-frame.component.scss",

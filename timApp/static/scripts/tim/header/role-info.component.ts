@@ -13,27 +13,29 @@ import * as t from "io-ts";
 @Component({
     selector: "tim-role-info",
     template: `
-        <tim-alert severity="info"
-                    *ngIf="activeGroups !== undefined && activeGroups != null && !hideActiveGroupLockAlert"
-                   (closing)="hideActiveGroupLockAlertMessage()"
-                   [closeable]="true">
+        @if (activeGroups !== undefined && activeGroups != null && !hideActiveGroupLockAlert) {
+          <tim-alert severity="info"
+            (closing)="hideActiveGroupLockAlertMessage()"
+            [closeable]="true">
             <p i18n>You are previewing the page with limited group memberships. This affects your active permissions.</p>
             <p>
-                <strong><a (click)="disableActiveGroupsLock()" i18n>Reset group lock</a></strong>
+              <strong><a (click)="disableActiveGroupsLock()" i18n>Reset group lock</a></strong>
             </p>
-        </tim-alert>
-        <tim-alert severity="info"
-                   *ngIf="lockedAccess && !hideAccessLockAlert"
-                   (closing)="hideAccessLockAlertMessage()"
-                   [closeable]="true">
+          </tim-alert>
+        }
+        @if (lockedAccess && !hideAccessLockAlert) {
+          <tim-alert severity="info"
+            (closing)="hideAccessLockAlertMessage()"
+            [closeable]="true">
             <p i18n>
                 You are previewing the page with access limited to level "<strong>{{lockedAccessName}}</strong>".
             </p>
             <p>
-                <strong><a (click)="disableAccessLock()" i18n>Turn off access limit</a></strong>
+              <strong><a (click)="disableAccessLock()" i18n>Turn off access limit</a></strong>
             </p>
-        </tim-alert>
-    `,
+          </tim-alert>
+        }
+        `,
     styleUrls: ["./role-info.component.scss"],
     standalone: false,
 })

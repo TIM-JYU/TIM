@@ -4,12 +4,20 @@ import {CsBase} from "./csPlugin";
 @Component({
     selector: "cs-error",
     template: `
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <div *ngIf="!markupError" class="error">
+    @if (markupError) {
+      <tim-markup-error [data]="markupError"></tim-markup-error>
+    }
+    @if (!markupError) {
+      <div class="error">
         <p>Error(s) initializing csPlugin:</p>
-        <pre *ngIf="error">{{error}}</pre>
-        <pre *ngIf="own_error">{{own_error}}</pre>
-    </div>`,
+        @if (error) {
+          <pre>{{error}}</pre>
+        }
+        @if (own_error) {
+          <pre>{{own_error}}</pre>
+        }
+      </div>
+    }`,
     standalone: false,
 })
 export class CsErrorComponent extends CsBase {

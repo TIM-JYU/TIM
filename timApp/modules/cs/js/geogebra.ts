@@ -60,48 +60,66 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
     selector: "tim-geogebra",
     template: `
         <div [class.csRunDiv]="markup.borders" [class.cs-has-header]="header" class="math que geogebra no-popup-menu">
-            <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-            <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
-            <p *ngIf="!isOpen" class="stem" [innerHtml]="markup.beforeOpen | purify"></p>
-
+          @if (header) {
+            <h4 [innerHtml]="header | purify"></h4>
+          }
+          @if (stem) {
+            <p class="stem" [innerHtml]="stem | purify"></p>
+          }
+          @if (!isOpen) {
+            <p class="stem" [innerHtml]="markup.beforeOpen | purify"></p>
+          }
+        
+          @if (isOpen && iframesettings) {
             <iframe
-                    *ngIf="isOpen && iframesettings"
-                    #frame
-                    class="showGeoGebra"
-                    style="border: none"
-                    [timIframeSettings]="iframesettings"
-                    [style.width.px]="iframesettings.width"
-                    [style.height.px]="iframesettings.height"
-            >
+              #frame
+              class="showGeoGebra"
+              style="border: none"
+              [timIframeSettings]="iframesettings"
+              [style.width.px]="iframesettings.width"
+              [style.height.px]="iframesettings.height"
+              >
             </iframe>
-            <p class="csRunMenu">
-                <button *ngIf="!isOpen"
-                        class="timButton btn-sm"
-                        (click)="runShowTask()"
-                        [innerHtml]="showButton() | purify"></button>
-                <button *ngIf="isOpen && hideButton"
-                        class="timButton btn-sm margin-5-right"
-                        (click)="hideShowTask()"
-                        [innerHtml]="hideButton | purify"></button>
-                <button *ngIf="isOpen && !markup.norun"
-                        [disabled]="isRunning"
-                        title="(Ctrl-S)"
-                        (click)="getData()"
-                        class="timButton btn-sm"
-                        [innerHtml]="button | purify"></button>
-                <span class="geogebra message"
-                      *ngIf="message"
-                      [innerHtml]="message | purify"></span>
-                <span class="geogebra message"
-                      *ngIf="console"
-                      [innerHtml]="console | purify"></span>
-            </p>
+          }
+          <p class="csRunMenu">
+            @if (!isOpen) {
+              <button
+                class="timButton btn-sm"
+                (click)="runShowTask()"
+              [innerHtml]="showButton() | purify"></button>
+            }
+            @if (isOpen && hideButton) {
+              <button
+                class="timButton btn-sm margin-5-right"
+                (click)="hideShowTask()"
+              [innerHtml]="hideButton | purify"></button>
+            }
+            @if (isOpen && !markup.norun) {
+              <button
+                [disabled]="isRunning"
+                title="(Ctrl-S)"
+                (click)="getData()"
+                class="timButton btn-sm"
+              [innerHtml]="button | purify"></button>
+            }
+            @if (message) {
+              <span class="geogebra message"
+              [innerHtml]="message | purify"></span>
+            }
+            @if (console) {
+              <span class="geogebra message"
+              [innerHtml]="console | purify"></span>
+            }
+          </p>
+          @if (error) {
             <span class="csRunError"
-                  *ngIf="error"
-                  [innerHtml]="error | purify"></span>
-            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
+            [innerHtml]="error | purify"></span>
+          }
+          @if (footer) {
+            <p class="plgfooter" [innerHtml]="footer | purify"></p>
+          }
         </div>
-    `,
+        `,
     standalone: false,
 })
 export class GeogebraComponent extends AngularPluginBase<

@@ -20,34 +20,51 @@ import {
 @Component({
     selector: "tim-code-scanner",
     template: `
-        <a role="button" class="camera-settings-toggle" (click)="showSettings = !showSettings" *ngIf="availableCameras.length > 1 || (hasCameras && supportsConstraint('torch'))">
+        @if (availableCameras.length > 1 || (hasCameras && supportsConstraint('torch'))) {
+          <a role="button" class="camera-settings-toggle" (click)="showSettings = !showSettings">
             <i class="glyphicon" [class.glyphicon-menu-right]="!showSettings" [class.glyphicon-menu-down]="showSettings"></i>
             <span i18n>Camera settings</span>
-        </a>
+          </a>
+        }
         <div class="camera-settings" [class.hidden]="!showSettings">
-            <div class="input-group camera-select" *ngIf="availableCameras.length > 1">
-                <span class="input-group-addon" i18n>Selected camera</span>
-                <select class="form-control" [(ngModel)]="selectedCamera" (ngModelChange)="cameraSelected()">
-                    <option *ngFor="let camera of availableCameras" [ngValue]="camera.id">{{camera.name}}</option>
-                </select>
+          @if (availableCameras.length > 1) {
+            <div class="input-group camera-select">
+              <span class="input-group-addon" i18n>Selected camera</span>
+              <select class="form-control" [(ngModel)]="selectedCamera" (ngModelChange)="cameraSelected()">
+                @for (camera of availableCameras; track camera) {
+                  <option [ngValue]="camera.id">{{camera.name}}</option>
+                }
+              </select>
             </div>
+          }
+          @if (hasCameras && supportsConstraint('torch')) {
             <button class="btn btn-sm" [class.btn-default]="!enableTorch" [class.btn-warning]="enableTorch"
-                    *ngIf="hasCameras && supportsConstraint('torch')" (click)="toggleFlashlight()">
-                <ng-container *ngIf="!enableTorch; else disableFlashlight" i18n>
+              (click)="toggleFlashlight()">
+              @if (!enableTorch) {
+                <ng-container i18n>
                     Enable flashlight
                 </ng-container>
-                <ng-template #disableFlashlight i18n>
+              } @else {
+                <ng-container i18n>
                     Disable flashlight
-                </ng-template>
+                </ng-container>
+              }
             </button>
+          }
         </div>
         <div class="info-messages">
-            <span *ngIf="!hasCameras" class="label label-danger not-supported" i18n>No cameras found</span>
-            <span *ngIf="hasCameras && !supportsConstraint('torch')" class="label label-default not-supported" i18n>Flashlight is not supported</span>
+          @if (!hasCameras) {
+            <span class="label label-danger not-supported" i18n>No cameras found</span>
+          }
+          @if (hasCameras && !supportsConstraint('torch')) {
+            <span class="label label-default not-supported" i18n>Flashlight is not supported</span>
+          }
         </div>
-        <tim-loading *ngIf="loadingCamera"></tim-loading>
+        @if (loadingCamera) {
+          <tim-loading></tim-loading>
+        }
         <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
-    `,
+        `,
     styleUrls: ["./code-scanner.component.scss"],
     standalone: false,
 })

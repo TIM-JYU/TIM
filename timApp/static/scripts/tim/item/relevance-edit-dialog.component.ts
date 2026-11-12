@@ -46,7 +46,7 @@ export class RelevanceEditDialogComponent extends AngularDialogComponent<
         CommonModule,
         DialogModule,
         FormsModule,
-        TypeaheadModule.forRoot(),
+        TypeaheadModule,
         TimUtilityModule,
     ],
     exports: [RelevanceEditComponent],

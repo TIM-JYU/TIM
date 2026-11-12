@@ -11,7 +11,7 @@ import {BrowserModule} from "@angular/platform-browser";
 
 @NgModule({
     declarations: [TimArchiveHeaderComponent, TimArchiveFooterComponent],
-    imports: [BrowserModule, TooltipModule.forRoot(), TimUtilityModule],
+    imports: [BrowserModule, TooltipModule, TimUtilityModule],
     providers: [
         ArchivedMessageStateService,
         provideHttpClient(withInterceptorsFromDi()),

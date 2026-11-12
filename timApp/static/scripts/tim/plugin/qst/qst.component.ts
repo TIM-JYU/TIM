@@ -63,53 +63,78 @@ const PluginFields = t.intersection([
 @Component({
     selector: "tim-qst",
     template: `
-        <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
-        <div class="csRunDiv qst no-popup-menu" [class.cs-has-header]="getHeader()" *ngIf="isTask()">
-            <h4 *ngIf="getHeader()" [innerHtml]="getHeader() | purify"></h4>
-            <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
+        @if (markupError) {
+          <tim-markup-error [data]="markupError!"></tim-markup-error>
+        }
+        @if (isTask()) {
+          <div class="csRunDiv qst no-popup-menu" [class.cs-has-header]="getHeader()">
+            @if (getHeader()) {
+              <h4 [innerHtml]="getHeader() | purify"></h4>
+            }
+            @if (stem) {
+              <p class="stem" [innerHtml]="stem | purify"></p>
+            }
             <tim-answer-sheet
-                [questiondata]="preview"
-                [customHeader]="markup['customHeader']"
-                (onAnswerChange)="updateAnswer($event)">
+              [questiondata]="preview"
+              [customHeader]="markup['customHeader']"
+              (onAnswerChange)="updateAnswer($event)">
             </tim-answer-sheet>
             <div class="csRunMenuArea">
-                <div class="csRunMenu">
-                    <button class="timButton"
-                            [innerHtml]="button"
-                            *ngIf="(button && !isAutosave) || saveFailed"
-                            [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
-                            (click)="saveText()"></button>
-                    <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}"
-                       (click)="tryResetChanges($event)">
-                        &nbsp;{{ undoButton }}
-                    </a>
-                    <ng-container *ngIf="invalidMarker">&nbsp;&nbsp;&nbsp;&nbsp;</ng-container>
-                    <span *ngIf="invalidMarker" [tooltip]="poptemplate" placement="bottom"
-                          class="glyphicon glyphicon-lock text-warning"></span>
-                    <ng-template #poptemplate>
-                        <div *ngFor="let ttip of invalidMarkerTooltip">
-                            <span [innerText]="ttip"></span>
-                        </div>
-                    </ng-template>
-                    &nbsp;&nbsp;
-                    <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
-                        <span class="glyphicon glyphicon-question-sign" i18n-title title="Ask question"></span>
-                    </a>
-                    &ngsp;
-                    <span class="qstResult" *ngIf="result">{{ result }}</span>
-                </div>
+              <div class="csRunMenu">
+                @if ((button && !isAutosave) || saveFailed) {
+                  <button class="timButton"
+                    [innerHtml]="button"
+                    [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
+                  (click)="saveText()"></button>
+                }
+                @if (undoButton && isUnSaved()) {
+                  <a href="" title="{{undoTitle}}"
+                    (click)="tryResetChanges($event)">
+                    &nbsp;{{ undoButton }}
+                  </a>
+                }
+                @if (invalidMarker) {&nbsp;&nbsp;&nbsp;&nbsp;}
+                @if (invalidMarker) {
+                  <span [tooltip]="poptemplate" placement="bottom"
+                  class="glyphicon glyphicon-lock text-warning"></span>
+                }
+                <ng-template #poptemplate>
+                  @for (ttip of invalidMarkerTooltip; track ttip) {
+                    <div>
+                      <span [innerText]="ttip"></span>
+                    </div>
+                  }
+                </ng-template>
+                &nbsp;&nbsp;
+                @if (hasTeacherRight() && !isInvalid()) {
+                  <a class="questionAddedNew" (click)="questionClicked()">
+                    <span class="glyphicon glyphicon-question-sign" i18n-title title="Ask question"></span>
+                  </a>
+                }
+                <ng-container> &ngsp; </ng-container>
+                @if (result) {
+                  <span class="qstResult">{{ result }}</span>
+                }
+              </div>
             </div>
             <p class="plgfooter" [innerHtml]="getFooter() | purify"></p>
-            <div *ngIf="error" class="error" style="font-size: 12px" [innerHtml]="error"></div>
-        </div>
-        <div *ngIf="!isTask()">
+            @if (error) {
+              <div class="error" style="font-size: 12px" [innerHtml]="error"></div>
+            }
+          </div>
+        }
+        @if (!isTask()) {
+          <div>
             <a class="questionAddedNew" (click)="questionClicked()">
-                <span class="glyphicon glyphicon-question-sign" title="{{getQuestionTitle()}}"></span>
+              <span class="glyphicon glyphicon-question-sign" title="{{getQuestionTitle()}}"></span>
             </a>
             <p class="questionNumber" [innerText]="getQuestionTitleShort()"></p>
-        </div>
-        <div *ngIf="log" class="qstLog" [innerHtml]="log"></div>
-    `,
+          </div>
+        }
+        @if (log) {
+          <div class="qstLog" [innerHtml]="log"></div>
+        }
+        `,
     standalone: false,
 })
 export class QstComponent

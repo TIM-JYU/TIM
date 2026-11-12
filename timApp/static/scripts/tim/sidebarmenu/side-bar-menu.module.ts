@@ -1,4 +1,3 @@
-import type {ModuleWithProviders} from "@angular/core";
 import {NgModule} from "@angular/core";
 import {TabsModule} from "ngx-bootstrap/tabs";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -38,14 +37,10 @@ import {CommonModule} from "@angular/common";
     imports: [
         CommonModule,
         FormsModule,
-        TabsModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
-        TooltipModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
-        BsDropdownModule.forRoot() as ModuleWithProviders<
-            Record<string, unknown>
-        >,
-        CollapseModule.forRoot() as ModuleWithProviders<
-            Record<string, unknown>
-        >,
+        TabsModule,
+        TooltipModule,
+        BsDropdownModule,
+        CollapseModule,
         TimUtilityModule,
         TabsModule,
     ],

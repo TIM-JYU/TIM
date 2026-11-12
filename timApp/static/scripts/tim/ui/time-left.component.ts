@@ -21,19 +21,21 @@ const TIME_LEFT_DEFAULTS: ITimeLeftSettings = {
     selector: "tim-time-left",
     template: `
         <span class="label label-default" [class.low-time]="isLowTime" [class.glow]="isGlowing">
-            <ng-container i18n>Time left:</ng-container> <tim-countdown [displayUnits]="['d', 'h', 'm', 's']" [endTime]="endTimeMoment"
-                                      [lowTimeThreshold]="settings.low_time_threshold"
-                                      [syncInterval]="syncInterval"
-                                      [syncIntervalDeviation]="syncIntervalDeviation"
-                                      (onFinish)="onTimeUp()"
-                                      (onLowTime)="onLowTime()"></tim-countdown>
+          <ng-container i18n>Time left:</ng-container> <tim-countdown [displayUnits]="['d', 'h', 'm', 's']" [endTime]="endTimeMoment"
+          [lowTimeThreshold]="settings.low_time_threshold"
+          [syncInterval]="syncInterval"
+          [syncIntervalDeviation]="syncIntervalDeviation"
+          (onFinish)="onTimeUp()"
+        (onLowTime)="onLowTime()"></tim-countdown>
         </span>
-        <div class="low-time-warn alert alert-danger" *ngIf="isLowTime && showLowTimeMessage">
+        @if (isLowTime && showLowTimeMessage) {
+          <div class="low-time-warn alert alert-danger">
             <button type="button" class="close" aria-label="Close" (click)="showLowTimeMessage = false"><span
-                    aria-hidden="true">&times;</span></button>
+            aria-hidden="true">&times;</span></button>
             <ng-container i18n>The time is about to run out, remember to save your answers.</ng-container>
-        </div>
-    `,
+          </div>
+        }
+        `,
     styleUrls: ["./time-left.component.scss"],
     standalone: false,
 })

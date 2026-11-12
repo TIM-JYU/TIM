@@ -38,25 +38,26 @@ export class OAuthButtonComponent {
     host: {class: "flex justify-center"},
     template: `
         <div>
-            <h1 i18n>Authenticate to {{data.oauthClientName}} with TIM</h1>
-            <p i18n>You are attempting to authenticate to <strong>{{data.oauthClientName}}</strong> with TIM.</p>
-            <p i18n><strong>{{data.oauthClientName}}</strong> will be able to</p>
-            <ul>
-                <li *ngFor="let scopeName of data.oauthScopes">{{scopeDescriptions[scopeName]}}</li>
-            </ul>
-            <ng-container *ngIf="loggedIn; else notLoggedIn">
-                <p i18n>Do you want to proceed?</p>
-                <div class="flex space-between pt-1">
-                    <tim-oauth-button [confirm]="false" type="danger" name="Cancel" i18n-name></tim-oauth-button>
-                    <tim-oauth-button [confirm]="true" type="default" name="Authenticate to {{data.oauthClientName}}"
-                                      i18n-name></tim-oauth-button>
-                </div>
-            </ng-container>
-            <ng-template #notLoggedIn>
-                <strong i18n>Log in with the button above in order to authenticate</strong>
-            </ng-template>
+          <h1 i18n>Authenticate to {{data.oauthClientName}} with TIM</h1>
+          <p i18n>You are attempting to authenticate to <strong>{{data.oauthClientName}}</strong> with TIM.</p>
+          <p i18n><strong>{{data.oauthClientName}}</strong> will be able to</p>
+          <ul>
+            @for (scopeName of data.oauthScopes; track scopeName) {
+              <li>{{scopeDescriptions[scopeName]}}</li>
+            }
+          </ul>
+          @if (loggedIn) {
+            <p i18n>Do you want to proceed?</p>
+            <div class="flex space-between pt-1">
+              <tim-oauth-button [confirm]="false" type="danger" name="Cancel" i18n-name></tim-oauth-button>
+              <tim-oauth-button [confirm]="true" type="default" name="Authenticate to {{data.oauthClientName}}"
+              i18n-name></tim-oauth-button>
+            </div>
+          } @else {
+            <strong i18n>Log in with the button above in order to authenticate</strong>
+          }
         </div>
-    `,
+        `,
     standalone: false,
 })
 export class OAuthAuthorizeComponent {

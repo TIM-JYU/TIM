@@ -151,240 +151,307 @@ const ShowFileAll = t.type({
     selector: "tim-video",
     template: `
         <div [class]="videoClass"
-             [class.videoOn]="videoOn"
-             tabindex="0"
-             (keydown.-)="speed(1.0/1.2, $event)"
-             (keydown.1)="speed(0, $event)"
-             (keydown.+)="speed(1.2, $event)"
-             (keydown.x)="zoom(1.0/1.4, $event)"
-             (keydown.r)="zoom(0, $event)"
-             (keydown.z)="zoom(1.4, $event)"
-             (keydown.s)="markStart($event)"
-             (keydown.e)="markEnd($event)"
-             (keydown.c)="copyStartEnd($event)"
-             (keydown.arrowLeft)="jump(-1, $event)"
-             (keydown.arrowRight)="jump(1, $event)"
-             (keydown.control.arrowLeft)="jump(-10, $event)"
-             (keydown.control.arrowRight)="jump(10, $event)"
-             (keydown.shift.control.arrowLeft)="jump(-60, $event)"
-             (keydown.shift.control.arrowRight)="jump(60, $event)"
-             (keydown.f)="jump(-10, $event)"
-             (keydown.g)="jump(-1, $event)"
-             (keydown.h)="jump(1, $event)"
-             (keydown.j)="jump(10, $event)"
-             (keydown.control.f)="openTranscriptSearch($event)"
-             (keydown.meta.f)="openTranscriptSearch($event)"
-        >
-            <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
-            <p *ngIf="header" [innerHtml]="header | purify"></p>
-            <p *ngIf="stem && isNormalSize" class="stem" [innerHtml]="stem | purify"></p>
-
-            <div *ngIf="!isNormalSize" class="videoInfo">
-                <span class="stem" [innerHtml]="stem | purify"></span>&ngsp;
-                <a *ngIf="videoName" class="videoname"
-                   (click)="toggleVideo()">
-                        <i *ngIf="markup.videoicon && !markup.audio" class="glyphicon glyphicon-play-circle"
-                           title="Click here to show the video"></i>
-                        <i *ngIf="markup.videoicon && markup.audio" class="glyphicon glyphicon-volume-up"
-                           title="Click here to play the audio"></i>
-                    {{videoName}}
-                    <ng-container *ngIf="mtype === 'list' && startt && !markup.audio">
-                        {{startt}}
-                    </ng-container>
-                    {{duration}} {{span}}</a>
-                &ngsp;
+          [class.videoOn]="videoOn"
+          tabindex="0"
+          (keydown.-)="speed(1.0/1.2, $event)"
+          (keydown.1)="speed(0, $event)"
+          (keydown.+)="speed(1.2, $event)"
+          (keydown.x)="zoom(1.0/1.4, $event)"
+          (keydown.r)="zoom(0, $event)"
+          (keydown.z)="zoom(1.4, $event)"
+          (keydown.s)="markStart($event)"
+          (keydown.e)="markEnd($event)"
+          (keydown.c)="copyStartEnd($event)"
+          (keydown.arrowLeft)="jump(-1, $event)"
+          (keydown.arrowRight)="jump(1, $event)"
+          (keydown.control.arrowLeft)="jump(-10, $event)"
+          (keydown.control.arrowRight)="jump(10, $event)"
+          (keydown.shift.control.arrowLeft)="jump(-60, $event)"
+          (keydown.shift.control.arrowRight)="jump(60, $event)"
+          (keydown.f)="jump(-10, $event)"
+          (keydown.g)="jump(-1, $event)"
+          (keydown.h)="jump(1, $event)"
+          (keydown.j)="jump(10, $event)"
+          (keydown.control.f)="openTranscriptSearch($event)"
+          (keydown.meta.f)="openTranscriptSearch($event)"
+          >
+          @if (markupError) {
+            <tim-markup-error [data]="markupError!"></tim-markup-error>
+          }
+          @if (header) {
+            <p [innerHtml]="header | purify"></p>
+          }
+          @if (stem && isNormalSize) {
+            <p class="stem" [innerHtml]="stem | purify"></p>
+          }
+        
+          @if (!isNormalSize) {
+            <div class="videoInfo">
+              <span class="stem" [innerHtml]="stem | purify"></span>&ngsp;
+              @if (videoName) {
+                <a class="videoname"
+                  (click)="toggleVideo()">
+                  @if (markup.videoicon && !markup.audio) {
+                    <i class="glyphicon glyphicon-play-circle"
+                    title="Click here to show the video"></i>
+                  }
+                  @if (markup.videoicon && markup.audio) {
+                    <i class="glyphicon glyphicon-volume-up"
+                    title="Click here to play the audio"></i>
+                  }
+                  {{videoName}}
+                  @if (mtype === 'list' && startt && !markup.audio) {
+                    {{startt}}
+                  }
+                {{duration}} {{span}}</a>
+              }
+              <ng-container> &ngsp; </ng-container>
+              @if (markup.doctext) {
                 <tim-video-link
-                        *ngIf="markup.doctext"
-                        [doclink]="markup.doclink ?? markup.file"
-                        [doctext]="doctext"
-                        [target]="markup.target"
+                  [doclink]="markup.doclink ?? markup.file"
+                  [doctext]="doctext"
+                  [target]="markup.target"
                 ></tim-video-link>
+              }
             </div>
-
-            <ng-container *ngIf="videoOn">
-               <div *ngIf="iframesettings as iframesettings" class="iframeContainer"> 
-                <iframe *ngIf="iframesettings && isPdf"
-                        class="showVideo"
-                        allowfullscreen
-                        [timIframeSettings]="iframesettings"
-                        [timIframeSandbox]="false"
-                        [style.width.px]="width"
-                        [style.height.px]="height"
-                >
-                </iframe>
-                <span class="videoRow" *ngIf="iframesettings && !isPdf">
-                    <iframe 
-                            class="showVideo"
-                            allowfullscreen
-                            [timIframeSettings]="iframesettings"
-                            [style.width.px]="width"
-                            [style.height.px]="height"
+          }
+        
+          @if (videoOn) {
+            @if (iframesettings; as iframesettings) {
+              <div class="iframeContainer">
+                @if (iframesettings && isPdf) {
+                  <iframe
+                    class="showVideo"
+                    allowfullscreen
+                    [timIframeSettings]="iframesettings"
+                    [timIframeSandbox]="false"
+                    [style.width.px]="width"
+                    [style.height.px]="height"
                     >
+                  </iframe>
+                }
+                @if (iframesettings && !isPdf) {
+                  <span class="videoRow">
+                    <iframe
+                      class="showVideo"
+                      allowfullscreen
+                      [timIframeSettings]="iframesettings"
+                      [style.width.px]="width"
+                      [style.height.px]="height"
+                      >
                     </iframe>
-                  <!-- <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button> -->
-                </span>            
-                    <span class="margin-5-right zoom-controls iframe-setting-label" >
-                        <span class="zoom-label">Zoom:</span>
-                        <a class="zoom-minus" (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
-                        <a class="zoom-reset" (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
-                        <a class="zoom-plus" (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
-                        <a class="hide-text" (click)="hideVideo()">{{hidetext}}</a>
-                    </span>
-               </div> 
-                <span class="videoRow" *ngIf="videosettings as videosettings">
-                    <video 
-                           #video
-                           class="showVideo"
-                           controls
-                           (loadedmetadata)="metadataloaded()"
-                           (timeupdate)="timeupdate()"
-                           (pause)="handlePause()"
-                           (ended)="handleEnded()"
-                           [style.width.px]="width"
-                           [style.height.px]="height"
-                           [src]="videosettings.src"
-                           [crossOrigin]="videosettings.crossOrigin"
-                           [autoplay]="videoAutoPlay"
-                    >
-                            <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" [srclang]="getVTTSrcLang(subtitle.file)"/>
-                    </video>
-                    <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button>
-                </span> 
-                <span class="audioRow" *ngIf="audiosettings as audiosettings">
-                    <audio
-                           #video
-                           class="showAudio"
-                           controls
-                           (loadedmetadata)="metadataloaded()"
-                           (timeupdate)="timeupdate()"
-                           (pause)="handlePause()"
-                           (ended)="handleEnded()"
-                           [style.width.px]="width"
-                           [style.height.px]="height"
-                           [src]="audiosettings.src"
-                           [crossOrigin]="audiosettings.crossOrigin"
-                           [autoplay]="videoAutoPlay"
-                    >
-                  </audio>
-                  <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button>
+                    <!-- <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button> -->
+                  </span>
+                }
+                <span class="margin-5-right zoom-controls iframe-setting-label" >
+                  <span class="zoom-label">Zoom:</span>
+                  <a class="zoom-minus" (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
+                  <a class="zoom-reset" (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
+                  <a class="zoom-plus" (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
+                  <a class="hide-text" (click)="hideVideo()">{{hidetext}}</a>
                 </span>
-            </ng-container>
-            <ng-container *ngIf="isNormalSize">
-                <div *ngIf="!videoOn" class="no-popup-menu play">
-                    <a (click)="toggleVideo()" [class.video-thumbnail]="markup.thumbnailFile">
-                        <img *ngIf="markup.thumbnailFile" alt="thumbnail" class="video-thumbnail-image" [src]="markup.thumbnailFile">
-                        <i *ngIf="markup.videoicon && !markup.audio" class="glyphicon glyphicon-play-circle video-icon"
-                           title="Click here to show the video"></i>
-                        <i *ngIf="markup.videoicon && markup.audio" class="glyphicon glyphicon-volume-up video-icon"
-                           title="Click here to play the audio"></i>
-                    </a>
-                </div>
-                <tim-video-link
-                        *ngIf="markup.doctext"
-                        [doclink]="markup.doclink ?? markup.file"
-                        [doctext]="doctext"
-                        [target]="markup.target"
-                ></tim-video-link>
-            </ng-container>
-            <div class="flex video-settings" *ngIf="videoOn" >
-                <div class="settings-popover" *ngIf="showSettings">
-                    <button class="close-btn" (click)="closeSettings()" title="Close">×</button>
-                    <div *ngIf="videosettings || audiosettings" class="margin-5-right speed-controls">
-                        <span class="video-setting-label">Speed:
-                            <span class="text-smaller speed-rate">
-                                {{playbackRateString}}
-                            </span>
-                        </span>        
-                        <a class="speed-minus" (click)="speed(1.0/1.2)" title="Slower speed (-)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
-                        <a class="speed-reset" (click)="speed(0)" title="Normal speed (1)">1x</a>&ngsp;
-                        <a class="speed-plus" (click)="speed(1.2)" title="Faster speed (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
-                    </div>
-                    <div *ngIf="videosettings || iframesettings" class="margin-5-right zoom-controls" >
-                        <span class="video-setting-label">Zoom:</span>
-                        <a class="zoom-minus" (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
-                        <a class="zoom-reset" (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
-                        <a class="zoom-plus" (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
-                    </div>
-                   <div class="video-toggles"> 
-                       <label *ngIf="videosettings && transcriptLoaded" class="normalLabel video-setting-label" title="Show transcript search"><input type="checkbox" [(ngModel)]="transcriptSearch" (ngModelChange)="onTranscriptSearchStateChange($any($event))" /> Transcript search</label>
-                       <label *ngIf="!iframesettings" class="normalLabel video-setting-label" title="Advanced media controls"><input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($any($event))" /> Advanced</label>
-                   </div>    
-                   <a class="hide-text video-setting-label" (click)="hideVideo()">{{hidetext}}</a>
-                </div>    
-            </div>
-            <div *ngIf="advVideo && videoOn && !iframesettings" class="advanced-controls">
-                <span>Jump sec: </span>
-                <a (click)="jump(-10)" title="Jump -10s (ctrl <- or f)">-10</a>
-                <a (click)="jump(-2)" title="Jump -2s">-2</a>
-                <a (click)="jump(-1)" title="Jump -1s (<- or g)">-1</a>
-                <a (click)="jump(1)" title="Jump  +1s (-> or h)">+1</a>
-                <a (click)="jump(2)" title="Jump  +2s">+2</a>
-                <a (click)="jump(10)" title="Jump +10s (ctrl -> or j)">+10</a>
-                <span>&nbsp;&nbsp;</span>
-                <a (click)="markStart()" title="Mark start (s)">Start: </a>
-                <a (click)="jumpTo(0)" [innerHtml]="startTime" title="Jump to start time"> </a>
-                <span>&nbsp;&nbsp;</span>
-                <a (click)="markEnd()" title="Mark end (e)">End: </a>
-                <a (click)="jumpTo(1)" [innerHtml]="endTime" title="Jump to end time"> </a>
-                <span>&nbsp;&nbsp;</span>
-                <a (click)="copyStartEnd()" title="Copy start/end to clipboard (c)">Copy</a>
-            </div>
-            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
-            <div *ngIf="transcriptLoaded && videoOn" class="transcript-search">
-                <a *ngIf="transcriptSearch" class="transcript-toggle" (click)="transcriptOpen = !transcriptOpen">
-                    <i class="glyphicon"
-                       [class.glyphicon-chevron-right]="!transcriptOpen"
-                       [class.glyphicon-chevron-down]="transcriptOpen"></i>
-                    Transcript Search
+              </div>
+            }
+            @if (videosettings; as videosettings) {
+              <span class="videoRow">
+                <video
+                  #video
+                  class="showVideo"
+                  controls
+                  (loadedmetadata)="metadataloaded()"
+                  (timeupdate)="timeupdate()"
+                  (pause)="handlePause()"
+                  (ended)="handleEnded()"
+                  [style.width.px]="width"
+                  [style.height.px]="height"
+                  [src]="videosettings.src"
+                  [crossOrigin]="videosettings.crossOrigin"
+                  [autoplay]="videoAutoPlay"
+                  >
+                  @for (subtitle of markup.subtitles; track subtitle) {
+                    <track [src]="subtitle.file" [label]="subtitle.name" [srclang]="getVTTSrcLang(subtitle.file)"/>
+                  }
+                </video>
+                <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button>
+              </span>
+            }
+            @if (audiosettings; as audiosettings) {
+              <span class="audioRow">
+                <audio
+                  #video
+                  class="showAudio"
+                  controls
+                  (loadedmetadata)="metadataloaded()"
+                  (timeupdate)="timeupdate()"
+                  (pause)="handlePause()"
+                  (ended)="handleEnded()"
+                  [style.width.px]="width"
+                  [style.height.px]="height"
+                  [src]="audiosettings.src"
+                  [crossOrigin]="audiosettings.crossOrigin"
+                  [autoplay]="videoAutoPlay"
+                  >
+                </audio>
+                <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button>
+              </span>
+            }
+          }
+          @if (isNormalSize) {
+            @if (!videoOn) {
+              <div class="no-popup-menu play">
+                <a (click)="toggleVideo()" [class.video-thumbnail]="markup.thumbnailFile">
+                  @if (markup.thumbnailFile) {
+                    <img alt="thumbnail" class="video-thumbnail-image" [src]="markup.thumbnailFile">
+                  }
+                  @if (markup.videoicon && !markup.audio) {
+                    <i class="glyphicon glyphicon-play-circle video-icon"
+                    title="Click here to show the video"></i>
+                  }
+                  @if (markup.videoicon && markup.audio) {
+                    <i class="glyphicon glyphicon-volume-up video-icon"
+                    title="Click here to play the audio"></i>
+                  }
                 </a>
-                <div *ngIf="transcriptOpen" class="transcript-search-panel">
-                    <div class="transcript-search-row">
-                        <div class="transcript-search-input-wrapper">
-                            <input
-                                class="form-control transcript-search-input"
-                                id="transcript-search-input"
-                                #transcriptSearchInput
-                                type="text"
-                                [(ngModel)]="transcriptQuery"
-                                (ngModelChange)="onTranscriptSearch()"
-                                (keydown)="$event.stopPropagation()"
-                                [attr.placeholder]="markup.transcriptPlaceholder ?? 'Search transcript...'"
-                            />
-                        
-                            <button
-                                *ngIf="transcriptQuery"
-                                type="button"
-                                class="clear-transcript-input-btn"
-                                (click)="transcriptQuery = ''; transcriptSearchInput.focus(); onTranscriptSearch()"
-                                aria-label="Clear search"
-                                title="Clear search"
-                            >
-                                ×
-                            </button>
-                        </div>
-                        <select *ngIf="transcriptSubtitleNames.length > 1"
-                                class="form-control transcript-subtitle-select"
-                                [(ngModel)]="selectedTranscriptName"
-                                (ngModelChange)="onTranscriptSubtitleChange()"
-                                (keydown)="$event.stopPropagation()">
-                            <option *ngFor="let name of transcriptSubtitleNames" [value]="name">{{name}}</option>
-                        </select>
+              </div>
+            }
+            @if (markup.doctext) {
+              <tim-video-link
+                [doclink]="markup.doclink ?? markup.file"
+                [doctext]="doctext"
+                [target]="markup.target"
+              ></tim-video-link>
+            }
+          }
+          @if (videoOn) {
+            <div class="flex video-settings" >
+              @if (showSettings) {
+                <div class="settings-popover">
+                  <button class="close-btn" (click)="closeSettings()" title="Close">×</button>
+                  @if (videosettings || audiosettings) {
+                    <div class="margin-5-right speed-controls">
+                      <span class="video-setting-label">Speed:
+                        <span class="text-smaller speed-rate">
+                          {{playbackRateString}}
+                        </span>
+                      </span>
+                      <a class="speed-minus" (click)="speed(1.0/1.2)" title="Slower speed (-)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
+                      <a class="speed-reset" (click)="speed(0)" title="Normal speed (1)">1x</a>&ngsp;
+                      <a class="speed-plus" (click)="speed(1.2)" title="Faster speed (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
                     </div>
-                    <div class="transcript-search-results" *ngIf="filteredCues.length > 0">
-                        <div class="transcript-result-item"
-                             *ngFor="let cue of filteredCues"
-                             (click)="seekTo(cue.startSeconds)">
-                            <span class="timestamp">{{cue.startTime}}</span>
-                            <span [innerHTML]="cue.highlightedText | purify"></span>
-                        </div>
+                  }
+                  @if (videosettings || iframesettings) {
+                    <div class="margin-5-right zoom-controls" >
+                      <span class="video-setting-label">Zoom:</span>
+                      <a class="zoom-minus" (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
+                      <a class="zoom-reset" (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
+                      <a class="zoom-plus" (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
                     </div>
-                    <div *ngIf="transcriptQuery && filteredCues.length === 0" class="transcript-no-results">
-                        No results found.
-                    </div>
+                  }
+                  <div class="video-toggles">
+                    @if (videosettings && transcriptLoaded) {
+                      <label class="normalLabel video-setting-label" title="Show transcript search"><input type="checkbox" [(ngModel)]="transcriptSearch" (ngModelChange)="onTranscriptSearchStateChange($any($event))" /> Transcript search</label>
+                    }
+                    @if (!iframesettings) {
+                      <label class="normalLabel video-setting-label" title="Advanced media controls"><input type="checkbox" [(ngModel)]="advVideo" (ngModelChange)="onAdvVideoStateChange($any($event))" /> Advanced</label>
+                    }
+                  </div>
+                  <a class="hide-text video-setting-label" (click)="hideVideo()">{{hidetext}}</a>
                 </div>
+              }
             </div>
+          }
+          @if (advVideo && videoOn && !iframesettings) {
+            <div class="advanced-controls">
+              <span>Jump sec: </span>
+              <a (click)="jump(-10)" title="Jump -10s (ctrl <- or f)">-10</a>
+              <a (click)="jump(-2)" title="Jump -2s">-2</a>
+              <a (click)="jump(-1)" title="Jump -1s (<- or g)">-1</a>
+              <a (click)="jump(1)" title="Jump  +1s (-> or h)">+1</a>
+              <a (click)="jump(2)" title="Jump  +2s">+2</a>
+              <a (click)="jump(10)" title="Jump +10s (ctrl -> or j)">+10</a>
+              <span>&nbsp;&nbsp;</span>
+              <a (click)="markStart()" title="Mark start (s)">Start: </a>
+              <a (click)="jumpTo(0)" [innerHtml]="startTime" title="Jump to start time"> </a>
+              <span>&nbsp;&nbsp;</span>
+              <a (click)="markEnd()" title="Mark end (e)">End: </a>
+              <a (click)="jumpTo(1)" [innerHtml]="endTime" title="Jump to end time"> </a>
+              <span>&nbsp;&nbsp;</span>
+              <a (click)="copyStartEnd()" title="Copy start/end to clipboard (c)">Copy</a>
+            </div>
+          }
+          @if (footer) {
+            <p class="plgfooter" [innerHtml]="footer | purify"></p>
+          }
+          @if (transcriptLoaded && videoOn) {
+            <div class="transcript-search">
+              @if (transcriptSearch) {
+                <a class="transcript-toggle" (click)="transcriptOpen = !transcriptOpen">
+                  <i class="glyphicon"
+                    [class.glyphicon-chevron-right]="!transcriptOpen"
+                  [class.glyphicon-chevron-down]="transcriptOpen"></i>
+                  Transcript Search
+                </a>
+              }
+              @if (transcriptOpen) {
+                <div class="transcript-search-panel">
+                  <div class="transcript-search-row">
+                    <div class="transcript-search-input-wrapper">
+                      <input
+                        class="form-control transcript-search-input"
+                        id="transcript-search-input"
+                        #transcriptSearchInput
+                        type="text"
+                        [(ngModel)]="transcriptQuery"
+                        (ngModelChange)="onTranscriptSearch()"
+                        (keydown)="$event.stopPropagation()"
+                        [attr.placeholder]="markup.transcriptPlaceholder ?? 'Search transcript...'"
+                        />
+                      @if (transcriptQuery) {
+                        <button
+                          type="button"
+                          class="clear-transcript-input-btn"
+                          (click)="transcriptQuery = ''; transcriptSearchInput.focus(); onTranscriptSearch()"
+                          aria-label="Clear search"
+                          title="Clear search"
+                          >
+                          ×
+                        </button>
+                      }
+                    </div>
+                    @if (transcriptSubtitleNames.length > 1) {
+                      <select
+                        class="form-control transcript-subtitle-select"
+                        [(ngModel)]="selectedTranscriptName"
+                        (ngModelChange)="onTranscriptSubtitleChange()"
+                        (keydown)="$event.stopPropagation()">
+                        @for (name of transcriptSubtitleNames; track name) {
+                          <option [value]="name">{{name}}</option>
+                        }
+                      </select>
+                    }
+                  </div>
+                  @if (filteredCues.length > 0) {
+                    <div class="transcript-search-results">
+                      @for (cue of filteredCues; track cue) {
+                        <div class="transcript-result-item"
+                          (click)="seekTo(cue.startSeconds)">
+                          <span class="timestamp">{{cue.startTime}}</span>
+                          <span [innerHTML]="cue.highlightedText | purify"></span>
+                        </div>
+                      }
+                    </div>
+                  }
+                  @if (transcriptQuery && filteredCues.length === 0) {
+                    <div class="transcript-no-results">
+                      No results found.
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
         </div>
-    `,
+        `,
     styleUrls: ["./video.component.scss"],
     standalone: false,
 })

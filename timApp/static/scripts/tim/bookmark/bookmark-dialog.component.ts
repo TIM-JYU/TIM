@@ -10,68 +10,72 @@ import {CommonModule} from "@angular/common";
     selector: "tim-bookmark-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                Create bookmark
-            </ng-container>
-            <ng-container body>
-                <form #f="ngForm" class="form-horizontal">
-                    <div class="form-group"
-                         [ngClass]="{'has-error': name.touched && name.errors?.required}">
-                        <label for="name" class="col-sm-2 control-label">Name</label>
-                        <div class="col-sm-10">
-                            <input required focusMe [(ngModel)]="bookmark.name" #name="ngModel" name="name"
-                                   type="text"
-                                   class="form-control" id="name" placeholder="Bookmark name">
-                        </div>
+          <ng-container header>
+            Create bookmark
+          </ng-container>
+          <ng-container body>
+            <form #f="ngForm" class="form-horizontal">
+              <div class="form-group"
+                [ngClass]="{'has-error': name.touched && name.errors?.required}">
+                <label for="name" class="col-sm-2 control-label">Name</label>
+                <div class="col-sm-10">
+                  <input required focusMe [(ngModel)]="bookmark.name" #name="ngModel" name="name"
+                    type="text"
+                    class="form-control" id="name" placeholder="Bookmark name">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="group" class="col-sm-2 control-label">Folder</label>
+                <div class="col-sm-10">
+                  <input [(ngModel)]="bookmark.group" name="group"
+                    type="text"
+                    class="form-control" id="group"
+                    placeholder="Folder name or blank to make a top-level bookmark">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="link" class="col-sm-2 control-label">Link</label>
+                <div class="col-sm-10">
+                  <input [(ngModel)]="bookmark.link" type="text" class="form-control" name="linkField"
+                    id="link"
+                    placeholder="Leave blank to add current page">
+                </div>
+              </div>
+              @if (showParamsCheckbox) {
+                <div class="form-group">
+                  <div class="col-sm-offset-2 col-sm-10">
+                    <div class="checkbox">
+                      <label>
+                        <input [(ngModel)]="includeParams" [disabled]="bookmark.link.length > 0" name="includeParams"
+                        type="checkbox">
+                        Include URL parameters in link
+                      </label>
                     </div>
-                    <div class="form-group">
-                        <label for="group" class="col-sm-2 control-label">Folder</label>
-                        <div class="col-sm-10">
-                            <input [(ngModel)]="bookmark.group" name="group"
-                                   type="text"
-                                   class="form-control" id="group"
-                                   placeholder="Folder name or blank to make a top-level bookmark">
-                        </div>
+                  </div>
+                </div>
+              }
+              @if (showHashCheckbox) {
+                <div class="form-group">
+                  <div class="col-sm-offset-2 col-sm-10">
+                    <div class="checkbox">
+                      <label>
+                        <input [(ngModel)]="includeHash" [disabled]="bookmark.link.length > 0" name="includeHash"
+                        type="checkbox">
+                        Include URL hash in link
+                      </label>
                     </div>
-                    <div class="form-group">
-                        <label for="link" class="col-sm-2 control-label">Link</label>
-                        <div class="col-sm-10">
-                            <input [(ngModel)]="bookmark.link" type="text" class="form-control" name="linkField"
-                                   id="link"
-                                   placeholder="Leave blank to add current page">
-                        </div>
-                    </div>
-                    <div *ngIf="showParamsCheckbox" class="form-group">
-                        <div class="col-sm-offset-2 col-sm-10">
-                            <div class="checkbox">
-                                <label>
-                                    <input [(ngModel)]="includeParams" [disabled]="bookmark.link.length > 0" name="includeParams"
-                                           type="checkbox">
-                                    Include URL parameters in link
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div *ngIf="showHashCheckbox" class="form-group">
-                        <div class="col-sm-offset-2 col-sm-10">
-                            <div class="checkbox">
-                                <label>
-                                    <input [(ngModel)]="includeHash" [disabled]="bookmark.link.length > 0" name="includeHash"
-                                           type="checkbox">
-                                    Include URL hash in link
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </ng-container>
-            <ng-container footer>
-                <button [disabled]="!f.valid" class="timButton" type="button" (click)="ok()">Save
-                </button>
-                <button class="btn btn-default" type="button" (click)="cancel()">Cancel</button>
-            </ng-container>
+                  </div>
+                </div>
+              }
+            </form>
+          </ng-container>
+          <ng-container footer>
+            <button [disabled]="!f.valid" class="timButton" type="button" (click)="ok()">Save
+            </button>
+            <button class="btn btn-default" type="button" (click)="cancel()">Cancel</button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class BookmarkDialogComponent extends AngularDialogComponent<

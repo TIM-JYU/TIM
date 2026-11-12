@@ -64,60 +64,79 @@ export type IAnswerQuestionResult =
     selector: "tim-answer-question-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <tim-answer-sheet
-                        [questiondata]="preview"
-                        (onAnswerChange)="updateAnswer($event)">
-                </tim-answer-sheet>
-                <div class="flex cl align-center">
-                    <tim-countdown (onTick)="timerTick($event)"
-                                   [endTime]="endTime"
-                                   [displayUnits]="['s']"
-                                   [autoStart]="autoStart"
-                                   template="{0} s"
-                    ></tim-countdown>
-                    <progressbar
-                            *ngIf="progressMax"
-                            [max]="progressMax"
-                            [value]="barFilled">
-                        <ng-container *ngIf="questionEnded">Time's up</ng-container>
-                    </progressbar>
-                </div>
-            </ng-container>
-            <ng-container footer>
-                <button *ngIf="isLecturer && questionEnded" class="timButton" (click)="edit()">
-                    Edit points
-                </button>
-                <button *ngIf="isLecturer && questionEnded" class="timButton" (click)="askAsNew()">
-                    Ask as new
-                </button>
-                <button *ngIf="isLecturer && questionEnded" class="timButton" (click)="reAsk()">
-                    Reask
-                </button>
-                <button *ngIf="!questionEnded && !answered && !gotResult && answer"
-                        class="answerButton timButton"
-                        (click)="answerToQuestion()">
-                    Answer
-                </button>
-
-                <br/>
-
-                <button *ngIf="isLecturer" class="timButton" (click)="showAnswers()">Show answers</button>
-                <button *ngIf="isLecturer && questionEnded" class="timButton" (click)="showPoints()">
-                    Show points
-                </button>
-                <button *ngIf="(isLecturer && questionEnded) || gotResult" class="timButton"
-                        (click)="close()">Close
-                </button>
-                <button *ngIf="isLecturer && !questionEnded" class="timButton" (click)="stopQuestion()">
-                    End question
-                </button>
-            </ng-container>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            <tim-answer-sheet
+              [questiondata]="preview"
+              (onAnswerChange)="updateAnswer($event)">
+            </tim-answer-sheet>
+            <div class="flex cl align-center">
+              <tim-countdown (onTick)="timerTick($event)"
+                [endTime]="endTime"
+                [displayUnits]="['s']"
+                [autoStart]="autoStart"
+                template="{0} s"
+              ></tim-countdown>
+              @if (progressMax) {
+                <progressbar
+                  [max]="progressMax"
+                  [value]="barFilled">
+                  @if (questionEnded) {
+                    Time's up
+                  }
+                </progressbar>
+              }
+            </div>
+          </ng-container>
+          <ng-container footer>
+            @if (isLecturer && questionEnded) {
+              <button class="timButton" (click)="edit()">
+                Edit points
+              </button>
+            }
+            @if (isLecturer && questionEnded) {
+              <button class="timButton" (click)="askAsNew()">
+                Ask as new
+              </button>
+            }
+            @if (isLecturer && questionEnded) {
+              <button class="timButton" (click)="reAsk()">
+                Reask
+              </button>
+            }
+            @if (!questionEnded && !answered && !gotResult && answer) {
+              <button
+                class="answerButton timButton"
+                (click)="answerToQuestion()">
+                Answer
+              </button>
+            }
+        
+            <br/>
+        
+            @if (isLecturer) {
+              <button class="timButton" (click)="showAnswers()">Show answers</button>
+            }
+            @if (isLecturer && questionEnded) {
+              <button class="timButton" (click)="showPoints()">
+                Show points
+              </button>
+            }
+            @if ((isLecturer && questionEnded) || gotResult) {
+              <button class="timButton"
+                (click)="close()">Close
+              </button>
+            }
+            @if (isLecturer && !questionEnded) {
+              <button class="timButton" (click)="stopQuestion()">
+                End question
+              </button>
+            }
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class AnswerToQuestionDialogComponent
@@ -403,7 +422,7 @@ export class AnswerToQuestionDialogComponent
         TimUtilityModule,
         DialogModule,
         AnswerSheetModule,
-        ProgressbarModule.forRoot(),
+        ProgressbarModule,
     ],
 })
 export class AnswerToQuestionDialogModule {}

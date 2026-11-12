@@ -174,31 +174,30 @@ class FormatLoginCodePipe implements PipeTransform {
     selector: "tim-toggle",
     template: `
         <div class="btn-group" [class.btn-group-xs]="!enabledButton || !disabledButton">
-            <ng-container *ngIf="!enabledButton || !disabledButton; else customButtons">
-                <button [disabled]="disabled" type="button" class="btn"
-                        [class.btn-default]="value" [class.btn-danger]="!value"
-                        (click)="toggle()"
-                >
-                    <code>O</code>
-                </button>
-                <button [disabled]="disabled" type="button" class="btn"
-                        [class.btn-default]="!value" [class.btn-success]="value"
-                        (click)="toggle()"
-                >
-                    <code>I</code>
-                </button>
-            </ng-container>
-            <ng-template #customButtons>
-                <button [disabled]="disabled" type="button" 
-                        class="btn" 
-                        [class.btn-success]="!value" 
-                        [class.btn-danger]="value" 
-                        (click)="toggle()">
-                    {{!value ? enabledButton : disabledButton}}
-                </button>
-            </ng-template>
+          @if (!enabledButton || !disabledButton) {
+            <button [disabled]="disabled" type="button" class="btn"
+              [class.btn-default]="value" [class.btn-danger]="!value"
+              (click)="toggle()"
+              >
+              <code>O</code>
+            </button>
+            <button [disabled]="disabled" type="button" class="btn"
+              [class.btn-default]="!value" [class.btn-success]="value"
+              (click)="toggle()"
+              >
+              <code>I</code>
+            </button>
+          } @else {
+            <button [disabled]="disabled" type="button"
+              class="btn"
+              [class.btn-success]="!value"
+              [class.btn-danger]="value"
+              (click)="toggle()">
+              {{!value ? enabledButton : disabledButton}}
+            </button>
+          }
         </div>
-    `,
+        `,
     styles: [
         `
             code {
@@ -237,572 +236,679 @@ export class ToggleComponent {
     selector: "tim-exam-group-manager",
     template: `
         <form>
-            <div class="info-box">
-                <tim-alert *ngIf="error">
-                    <div [innerHTML]="error | purify"></div>
-                </tim-alert>
-                <span [class.invisible]="!loading" class="loading-spinner">
-                    <tim-loading></tim-loading> 
-                    <ng-container i18n>Loading, please wait...</ng-container>
-                </span>
-            </div>
-            <fieldset [disabled]="loading">
-                <bootstrap-panel id="groups-panel" title="1. Manage exam groups" i18n-title>
-                    <div id="list-all-groups-setting">
-                        <label for="showAllGroups">
-                            <input type="checkbox" id="showAllGroups" name="showAllGroups" [(ngModel)]="showAllGroups"
-                                   (ngModelChange)="refreshVisibleGroups()" />
-                            <span i18n>Show all school's exam groups</span>
-                        </label>
-                    </div>
-                    <div id="groups-list">
-                        <!-- List groups here, include checkboxes for selecting groups to manage -->
-
-                        <!-- Mock groups list -->
+          <div class="info-box">
+            @if (error) {
+              <tim-alert>
+                <div [innerHTML]="error | purify"></div>
+              </tim-alert>
+            }
+            <span [class.invisible]="!loading" class="loading-spinner">
+              <tim-loading></tim-loading>
+              <ng-container i18n>Loading, please wait...</ng-container>
+            </span>
+          </div>
+          <fieldset [disabled]="loading">
+            <bootstrap-panel id="groups-panel" title="1. Manage exam groups" i18n-title>
+              <div id="list-all-groups-setting">
+                <label for="showAllGroups">
+                  <input type="checkbox" id="showAllGroups" name="showAllGroups" [(ngModel)]="showAllGroups"
+                    (ngModelChange)="refreshVisibleGroups()" />
+                  <span i18n>Show all school's exam groups</span>
+                </label>
+              </div>
+              <div id="groups-list">
+                <!-- List groups here, include checkboxes for selecting groups to manage -->
+        
+                <!-- Mock groups list -->
+                <!-- TODO: Implement as TimTable -->
+                <!-- TODO: Event and Timeslot should be combined in the future,
+                so that we can list multiple events for a specific group
+                in a sensible way. -->
+                <table class="group-table">
+                  <thead>
+                    <tr class="member-table-row">
+                      @if (this.viewOptions?.groups?.name) {
+                        <th i18n>Group name</th>
+                      }
+                      @if (isAdmin() && this.viewOptions?.groups?.document) {
+                        <th i18n>Group document</th>
+                      }
+                      @if (this.viewOptions?.groups?.memberCount) {
+                        <th i18n>Number of students</th>
+                      }
+                      @if (this.viewOptions?.groups?.exam) {
+                        <th i18n>Exam</th>
+                      }
+                      @if (this.viewOptions?.groups?.timeslot) {
+                        <th i18n>Timeslot</th>
+                      }
+                      <th i18n>Actions</th>
+                      <th i18n>Delete</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (group of visibleGroups; track group) {
+                      <tr class="member-table-row">
+                        @if (this.viewOptions?.groups?.name) {
+                          <td>{{ group.readableName }}</td>
+                        }
+                        @if (isAdmin() && this.viewOptions?.groups?.document) {
+                          <td>
+                            <a href="/view/{{group.admin_doc_path}}">{{ getGroupDocPath(group) }}</a>
+                          </td>
+                        }
+                        @if (this.viewOptions?.groups?.memberCount) {
+                          <td>{{ group.memberCount }}</td>
+                        }
+                        @if (this.viewOptions?.groups?.exam) {
+                          <td>{{ examByDocId.get(group.examDocId ?? -1)?.name ?? "-" }}</td>
+                        }
+                        @if (this.viewOptions?.groups?.timeslot) {
+                          <td> -</td>
+                        }
+                        <td>
+                          <button
+                            class="btn btn-primary btn-xs"
+                            title="Duplicate group"
+                            i18n-title
+                            (click)="copyGroup(group)"
+                            >
+                            <i class="glyphicon glyphicon-duplicate"></i>
+                          </button>
+                        </td>
+                        <td>
+                          <button
+                            class="btn btn-danger btn-xs"
+                            title="Delete group"
+                            i18n-title
+                            (click)="deleteGroup(group)"
+                            >
+                            <i class="glyphicon glyphicon-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+                <!-- END groups list-->
+              </div>
+              <div class="button-controls">
+                <button class="timButton" (click)="createNewGroup()" i18n>Create a new exam group</button>
+              </div>
+            </bootstrap-panel>
+            <bootstrap-panel title="2. Manage students" i18n-title>
+              <tabset class="merged">
+                <!-- Create a new tab for each group that is visible to the current user -->
+                @for (group of visibleGroups; track group) {
+                  <tab
+                    heading="{{group.readableName}}"
+                    [active]="group.selected ?? false"
+                    [id]="group.name"
+                    class="grid-tab tab-form"
+                    (selectTab)="group.selected = true; onGroupTabSelected($event)"
+                    (deselect)="group.selected = false">
+                    <ng-container>
+                      <!-- Member list, with sort and selection controls -->
+                      <div>
+                        <h4 i18n>Exam group members</h4>
                         <!-- TODO: Implement as TimTable -->
-                        <!-- TODO: Event and Timeslot should be combined in the future,
-                                   so that we can list multiple events for a specific group
-                                   in a sensible way. -->
                         <table class="group-table">
-                            <thead>
+                          <thead>
                             <tr class="member-table-row">
-                                <th i18n *ngIf="this.viewOptions?.groups?.name">Group name</th>
-                                <th *ngIf="isAdmin() && this.viewOptions?.groups?.document" i18n>Group document</th>
-                                <th i18n *ngIf="this.viewOptions?.groups?.memberCount">Number of students</th>
-                                <th i18n *ngIf="this.viewOptions?.groups?.exam">Exam</th>
-                                <th i18n *ngIf="this.viewOptions?.groups?.timeslot">Timeslot</th>
-                                <th i18n>Actions</th>
+                              @if (this.viewOptions?.members?.selectionControls) {
+                                <th>
+                                  <input type="checkbox" name="selectAllMembers_{{group.id}}"
+                                    [(ngModel)]="group.allMembersSelected"
+                                  (change)="toggleAllMembersSelected(group)" /></th>
+                                }
+                                @if (this.viewOptions?.members?.name) {
+                                  <th i18n>Name</th>
+                                }
+                                @if (this.viewOptions?.members?.username) {
+                                  <th i18n>Username</th>
+                                }
+                                @if (this.viewOptions?.members?.extraInfo) {
+                                  <th>
+                                    @if (this.markup['extraInfoTitle']) {
+                                      {{ this.markup['extraInfoTitle'] }}
+                                    } @else {
+                                      <ng-container i18n>Extra</ng-container>
+                                    }
+                                  </th>
+                                }
+                                @if (this.viewOptions?.members?.extraTime) {
+                                  <th i18n>Extra time?</th>
+                                }
+                                @if (this.viewOptions?.members?.email) {
+                                  <th i18n>Email</th>
+                                }
+                                @if (this.viewOptions?.members?.loginCode) {
+                                  <th i18n>Login code</th>
+                                }
                                 <th i18n>Delete</th>
-                            </tr>
+                              </tr>
                             </thead>
                             <tbody>
-                            <tr class="member-table-row" *ngFor="let group of visibleGroups">
-                                <td *ngIf="this.viewOptions?.groups?.name">{{ group.readableName }}</td>
-                                <td *ngIf="isAdmin() && this.viewOptions?.groups?.document">
-                                    <a href="/view/{{group.admin_doc_path}}">{{ getGroupDocPath(group) }}</a>
-                                </td>
-                                <td *ngIf="this.viewOptions?.groups?.memberCount">{{ group.memberCount }}</td>
-                                <td *ngIf="this.viewOptions?.groups?.exam">{{ examByDocId.get(group.examDocId ?? -1)?.name ?? "-" }}</td>
-                                <td *ngIf="this.viewOptions?.groups?.timeslot"> -</td>
-                                <td>
+                              @for (member of members[group.name]; track member) {
+                                <tr class="member-table-row">
+                                  @if (this.viewOptions?.members?.selectionControls) {
+                                    <td>
+                                      <input type="checkbox" name="toggleSelection_{{member.id}}"
+                                        [(ngModel)]="member.selected"
+                                        (change)="toggleMemberSelection(group)" />
+                                    </td>
+                                  }
+                                  @if (this.viewOptions?.members?.name) {
+                                    <td>{{ member.real_name }}</td>
+                                  }
+                                  @if (this.viewOptions?.members?.username) {
+                                    <td>{{ member.name }}</td>
+                                  }
+                                  @if (this.viewOptions?.members?.extraInfo) {
+                                    <td>{{ member.extraInfo }}</td>
+                                  }
+                                  @if (this.viewOptions?.members?.extraTime) {
+                                    <td class="text-center">
+                                      <input id="user-extra-time-{{member.id}}"
+                                        name="user-extra-time-{{member.id}}"
+                                        type="checkbox"
+                                        [ngModel]="member.extraTime"
+                                        (ngModelChange)="toggleExtraTime(group, member, $event)"
+                                        />
+                                    </td>
+                                  }
+                                  @if (this.viewOptions?.members?.email) {
+                                    <td>{{ member.email }}</td>
+                                  }
+                                  @if (this.viewOptions?.members?.loginCode) {
+                                    <td>
+                                      <code>{{ member.login_code | formatLoginCode }}</code>
+                                    </td>
+                                  }
+                                  <td>
                                     <button
-                                        class="btn btn-primary btn-xs"
-                                        title="Duplicate group"
-                                        i18n-title
-                                        (click)="copyGroup(group)"
-                                    >
-                                        <i class="glyphicon glyphicon-duplicate"></i>
+                                      class="btn btn-danger btn-xs"
+                                      title="Delete member"
+                                      i18n-title
+                                      (click)="removeMember(group, member)"
+                                      >
+                                      <i class="glyphicon glyphicon-trash"></i>
                                     </button>
-                                </td>
-                                <td>
-                                    <button
-                                        class="btn btn-danger btn-xs"
-                                        title="Delete group"
-                                        i18n-title
-                                        (click)="deleteGroup(group)"
-                                    >
-                                        <i class="glyphicon glyphicon-trash"></i>
-                                    </button>
-                                </td>
-                            </tr>
+                                  </td>
+                                </tr>
+                              }
                             </tbody>
-                        </table>
-                        <!-- END groups list-->
-                    </div>
-                    <div class="button-controls">
-                        <button class="timButton" (click)="createNewGroup()" i18n>Create a new exam group</button>
-                    </div>
-                </bootstrap-panel>
-                <bootstrap-panel title="2. Manage students" i18n-title>
-                    <tabset class="merged">
-                        <!-- Create a new tab for each group that is visible to the current user -->
-                        <tab *ngFor="let group of visibleGroups"
-                             heading="{{group.readableName}}"
-                             [active]="group.selected ?? false"
-                             [id]="group.name"
-                             class="grid-tab tab-form"
-                             (selectTab)="group.selected = true; onGroupTabSelected($event)"
-                             (deselect)="group.selected = false">
-                            <ng-container>
-                                <!-- Member list, with sort and selection controls -->
-                                <div>
-                                    <h4 i18n>Exam group members</h4>
-                                    <!-- TODO: Implement as TimTable -->
-                                    <table class="group-table">
-                                        <thead>
-                                        <tr class="member-table-row">
-                                            <th *ngIf="this.viewOptions?.members?.selectionControls">
-                                                <input type="checkbox" name="selectAllMembers_{{group.id}}"
-                                                       [(ngModel)]="group.allMembersSelected"
-                                                       (change)="toggleAllMembersSelected(group)" /></th>
-                                            <th i18n *ngIf="this.viewOptions?.members?.name">Name</th>
-                                            <th i18n *ngIf="this.viewOptions?.members?.username">Username</th>
-                                            <th *ngIf="this.viewOptions?.members?.extraInfo">
-                                                <ng-container
-                                                    *ngIf="this.markup['extraInfoTitle']; else defaultExtraTitle">{{ this.markup['extraInfoTitle'] }}
-                                                </ng-container>
-                                                <ng-template #defaultExtraTitle>
-                                                    <ng-container i18n>Extra</ng-container>
-                                                </ng-template>
-                                            </th>
-                                            <th i18n *ngIf="this.viewOptions?.members?.extraTime">Extra time?</th>
-                                            <th i18n *ngIf="this.viewOptions?.members?.email">Email</th>
-                                            <th i18n *ngIf="this.viewOptions?.members?.loginCode">Login code</th>
-                                            <th i18n>Delete</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr class="member-table-row" *ngFor="let member of members[group.name]">
-                                            <td *ngIf="this.viewOptions?.members?.selectionControls">
-                                                <input type="checkbox" name="toggleSelection_{{member.id}}"
-                                                       [(ngModel)]="member.selected"
-                                                       (change)="toggleMemberSelection(group)" />
-                                            </td>
-                                            <td *ngIf="this.viewOptions?.members?.name">{{ member.real_name }}</td>
-                                            <td *ngIf="this.viewOptions?.members?.username">{{ member.name }}</td>
-                                            <td *ngIf="this.viewOptions?.members?.extraInfo">{{ member.extraInfo }}</td>
-                                            <td *ngIf="this.viewOptions?.members?.extraTime" class="text-center">
-                                                <input id="user-extra-time-{{member.id}}"
-                                                       name="user-extra-time-{{member.id}}"
-                                                       type="checkbox"
-                                                       [ngModel]="member.extraTime"
-                                                       (ngModelChange)="toggleExtraTime(group, member, $event)"
-                                                />
-                                            </td>
-                                            <td *ngIf="this.viewOptions?.members?.email">{{ member.email }}</td>
-                                            <td *ngIf="this.viewOptions?.members?.loginCode">
-                                                <code>{{ member.login_code | formatLoginCode }}</code>
-                                            </td>
-                                            <td>
-                                                <button
-                                                    class="btn btn-danger btn-xs"
-                                                    title="Delete member"
-                                                    i18n-title
-                                                    (click)="removeMember(group, member)"
-                                                >
-                                                    <i class="glyphicon glyphicon-trash"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <!-- END members list-->
-
-                            </ng-container>
-                            <ng-container>
-                                <div class="button-controls">
-                                    <button class="timButton" (click)="addMembers(group)" i18n>
+                          </table>
+                        </div>
+                        <!-- END members list-->
+                      </ng-container>
+                      <ng-container>
+                        <div class="button-controls">
+                          <button class="timButton" (click)="addMembers(group)" i18n>
                                         Add new student
                                     </button>
-                                    <button class="timButton" (click)="importUsers(group)" i18n>
+                          <button class="timButton" (click)="importUsers(group)" i18n>
                                         Import students from Wilma
                                     </button>
-                                    <!--                                    <button class="timButton btn-danger" (click)="removeMembers(group)"-->
-                                    <!--                                            [disabled]="!anySelected(this.members[group.name])" i18n>-->
-                                    <!--                                        Remove selected-->
-                                    <!--                                    </button>-->
-                                </div>
-                                <h4 i18n>Login codes</h4>
-                                <div class="button-controls">
-                                    <button class="timButton" *ngIf="this.getSelectedMembers(group).length > 0 && !group.allMembersSelected" (click)="generateLoginCodes(group)" i18n>
+                          <!--                                    <button class="timButton btn-danger" (click)="removeMembers(group)"-->
+                          <!--                                            [disabled]="!anySelected(this.members[group.name])" i18n>-->
+                          <!--                                        Remove selected-->
+                        <!--                                    </button>-->
+                      </div>
+                      <h4 i18n>Login codes</h4>
+                      <div class="button-controls">
+                        @if (this.getSelectedMembers(group).length > 0 && !group.allMembersSelected) {
+                          <button class="timButton" (click)="generateLoginCodes(group)" i18n>
                                         Generate new login codes for selected students
                                     </button>
-                                    <button class="timButton" *ngIf="group.allMembersSelected || this.getSelectedMembers(group).length == 0" (click)="generateLoginCodes(group)" i18n>
+                        }
+                        @if (group.allMembersSelected || this.getSelectedMembers(group).length == 0) {
+                          <button class="timButton" (click)="generateLoginCodes(group)" i18n>
                                         Generate new login codes for all students
                                     </button>
-                                    <button class="timButton" *ngIf="group.examDocId" (click)="printLoginCodes(group)"
-                                            i18n>
+                        }
+                        @if (group.examDocId) {
+                          <button class="timButton" (click)="printLoginCodes(group)"
+                            i18n>
                                         Print login codes (Main exam)
                                     </button>
-                                    <button class="timButton"
-                                            *ngIf="examByDocId.get(group.examDocId ?? -1)?.practice ?? markup['practiceExam']"
-                                            (click)="printLoginCodes(group, true)" i18n>
+                        }
+                        @if (examByDocId.get(group.examDocId ?? -1)?.practice ?? markup['practiceExam']) {
+                          <button class="timButton"
+                            (click)="printLoginCodes(group, true)" i18n>
                                         Print login codes (Practice exam)
                                     </button>
-                                </div>
-                            </ng-container>
-                            <!--                            <ng-container *ngIf="anySelected(this.members[group.name])">-->
-                            <!--                                <p>Selected members:</p>-->
-                            <!--                                <ol>-->
-                            <!--                                    <ng-container *ngFor="let member of this.members[group.name]">-->
-                            <!--                                        <li *ngIf="member.selected">{{ member.name }}</li>-->
-                            <!--                                    </ng-container>-->
-                            <!--                                </ol>-->
-                            <!--                            </ng-container>-->
-                        </tab>
-                    </tabset>
-                </bootstrap-panel>
-                <bootstrap-panel title="3. Manage exams" i18n-title>
-                    <tabset class="merged">
-                        <tab *ngFor="let group of visibleGroups"
-                             heading="{{group.readableName}}"
-                             [active]="group.selected ?? false"
-                             [id]="group.name"
-                             (selectTab)="group.selected = true; onGroupTabSelected($event)"
-                             (deselect)="group.selected = false">
-
-                            <tim-alert severity="success" *ngIf="examReset" i18n>
+                        }
+                      </div>
+                    </ng-container>
+                    <!--                            <ng-container *ngIf="anySelected(this.members[group.name])">-->
+                    <!--                                <p>Selected members:</p>-->
+                    <!--                                <ol>-->
+                    <!--                                    <ng-container *ngFor="let member of this.members[group.name]">-->
+                    <!--                                        <li *ngIf="member.selected">{{ member.name }}</li>-->
+                  <!--                                    </ng-container>-->
+                <!--                                </ol>-->
+              <!--                            </ng-container>-->
+            </tab>
+          }
+        </tabset>
+        </bootstrap-panel>
+        <bootstrap-panel title="3. Manage exams" i18n-title>
+          <tabset class="merged">
+            @for (group of visibleGroups; track group) {
+              <tab
+                heading="{{group.readableName}}"
+                [active]="group.selected ?? false"
+                [id]="group.name"
+                (selectTab)="group.selected = true; onGroupTabSelected($event)"
+                (deselect)="group.selected = false">
+                @if (examReset) {
+                  <tim-alert severity="success" i18n>
                                 The exam is now ended and login codes are disabled. You can now select and start another
                                 exam below.
                             </tim-alert>
-                            <p *ngIf="!group.currentExamDoc" i18n>
+                }
+                @if (!group.currentExamDoc) {
+                  <p i18n>
                                 Begin by selecting the exam to be organized for the group.
                             </p>
-                            <div class="select-exam">
-                                <label for="current-exam-doc-{{group.id}}" i18n>Select exam</label>
-                                <select id="current-exam-doc-{{group.id}}" name="current-exam-doc-{{group.id}}"
-                                        class="form-control"
-                                        [ngModel]="group.currentExamDoc"
-                                        (ngModelChange)="confirmSelectExam(group, $event); handleOptionSelectForExamTime($event)">
-                                    <option *ngIf="examByDocId.get(group.examDocId ?? -1)?.practice ?? markup['practiceExam']"
-                                            [ngValue]="examByDocId.get(group.examDocId ?? -1)?.practice?.docId ?? markup['practiceExam']?.docId ?? -1">
-                                        {{ examByDocId.get(group.examDocId ?? -1)?.practice?.name ?? markup['practiceExam']?.name ?? "" }}
-                                    </option>
-                                    <option *ngIf="group.examDocId && examByDocId.get(group.examDocId)"
-                                            [ngValue]="examByDocId.get(group.examDocId)?.docId">
-                                        {{ examByDocId.get(group.examDocId)?.name }}
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div *ngIf="group.currentExamDoc" class="button-controls mt">
-                                <a target="exam-doc" class="timButton" href="/view/{{group.currentExamDoc}}" i18n>
+                }
+                <div class="select-exam">
+                  <label for="current-exam-doc-{{group.id}}" i18n>Select exam</label>
+                  <select id="current-exam-doc-{{group.id}}" name="current-exam-doc-{{group.id}}"
+                    class="form-control"
+                    [ngModel]="group.currentExamDoc"
+                    (ngModelChange)="confirmSelectExam(group, $event); handleOptionSelectForExamTime($event)">
+                    @if (examByDocId.get(group.examDocId ?? -1)?.practice ?? markup['practiceExam']) {
+                      <option
+                        [ngValue]="examByDocId.get(group.examDocId ?? -1)?.practice?.docId ?? markup['practiceExam']?.docId ?? -1">
+                        {{ examByDocId.get(group.examDocId ?? -1)?.practice?.name ?? markup['practiceExam']?.name ?? "" }}
+                      </option>
+                    }
+                    @if (group.examDocId && examByDocId.get(group.examDocId)) {
+                      <option
+                        [ngValue]="examByDocId.get(group.examDocId)?.docId">
+                        {{ examByDocId.get(group.examDocId)?.name }}
+                      </option>
+                    }
+                  </select>
+                </div>
+                @if (group.currentExamDoc) {
+                  <div class="button-controls mt">
+                    <a target="exam-doc" class="timButton" href="/view/{{group.currentExamDoc}}" i18n>
                                     View exam document and audio/video materials
                                 </a>
-                                <a target="exam-doc" class="timButton"
-                                   href="/teacher/{{group.currentExamDoc}}?group={{group.name}}" i18n>
+                    <a target="exam-doc" class="timButton"
+                      href="/teacher/{{group.currentExamDoc}}?group={{group.name}}" i18n>
                                     Review and correct student answers
                                 </a>
-                            </div>
-
-                            <div *ngIf="group.allowAccess" class="mt">
-                                <tim-alert severity="warning">
-                                    <ng-container i18n>You are showing exam answers to the students.</ng-container><br>
-                                    <ng-container i18n>To start a new exam, stop answer reviewing in section <i>4. Show answers to students</i>.</ng-container>
-                                </tim-alert>
-                            </div>
-                            <div
-                                *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached)"
-                                class="mt">
-                                <tim-alert severity="warning">
-                                    <h5 i18n>Exam reservation details</h5>
-                                    <p i18n>
+                  </div>
+                }
+                @if (group.allowAccess) {
+                  <div class="mt">
+                    <tim-alert severity="warning">
+                      <ng-container i18n>You are showing exam answers to the students.</ng-container><br>
+                      <ng-container i18n>To start a new exam, stop answer reviewing in section <i>4. Show answers to students</i>.</ng-container>
+                    </tim-alert>
+                  </div>
+                }
+                @if (group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached)) {
+                  <div
+                    class="mt">
+                    <tim-alert severity="warning">
+                      <h5 i18n>Exam reservation details</h5>
+                      <p i18n>
                                         You have a reservation for this exam.
                                         Starting the exam will become available
                                         on {{ toReadableDate(examByDocId.get(group.currentExamDoc)?.startingTime ?? "") }}.
                                     </p>
-                                </tim-alert>
-                            </div>
-                            <div
-                                *ngIf="group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.endingTime && practiceExamEndingTimeReached)"
-                                class="mt">
-                                <tim-alert severity="warning">
-                                    <h5 i18n>This is a practice exam</h5>
-                                    <p i18n>
+                    </tim-alert>
+                  </div>
+                }
+                @if (group.currentExamDoc && (!!examByDocId.get(group.currentExamDoc)?.endingTime && practiceExamEndingTimeReached)) {
+                  <div
+                    class="mt">
+                    <tim-alert severity="warning">
+                      <h5 i18n>This is a practice exam</h5>
+                      <p i18n>
                                         To start the main exam, select it from the dropdown menu above.
                                     </p>
-                                </tim-alert>
-                            </div>
-                            <fieldset
-                                [disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || (!!practiceExamByDocId.get(group.currentExamDoc)?.endingTime && practiceExamEndingTimeReached)">
-                                <h5 i18n>Hold an exam</h5>
-
-                                <p i18n>
+                    </tim-alert>
+                  </div>
+                }
+                <fieldset
+                  [disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || (!!practiceExamByDocId.get(group.currentExamDoc)?.endingTime && practiceExamEndingTimeReached)">
+                  <h5 i18n>Hold an exam</h5>
+                  <p i18n>
                                     Complete each step below to hold an exam.
                                     The checklist updates automatically with the current progress.
                                 </p>
-
-                                <div class="checklist">
-                                    <div
-                                        [class.disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || (!!practiceExamByDocId.get(group.currentExamDoc)?.endingTime && practiceExamEndingTimeReached)">
-                                        <div class="cb">
-                                            <input type="checkbox" title="Mark as done" i18n-title
-                                                   [checked]="group.examState > 0"
-                                                   (change)="checkExamStateEvent(group, 0, $event)"
-                                            >
-                                        </div>
-                                        <div>
-                                            <div>
-                                                <span i18n>Activate login codes</span>
-                                            </div>
-                                            <div class="small" *ngIf="group.examState <= 0" i18n>
+                  <div class="checklist">
+                    <div
+                      [class.disabled]="!group.currentExamDoc || group.allowAccess || (!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || (!!practiceExamByDocId.get(group.currentExamDoc)?.endingTime && practiceExamEndingTimeReached)">
+                      <div class="cb">
+                        <input type="checkbox" title="Mark as done" i18n-title
+                          [checked]="group.examState > 0"
+                          (change)="checkExamStateEvent(group, 0, $event)"
+                          >
+                      </div>
+                      <div>
+                        <div>
+                          <span i18n>Activate login codes</span>
+                        </div>
+                        @if (group.examState <= 0) {
+                          <div class="small" i18n>
                                                 Press the toggle button to activate login codes for the exam group
                                             </div>
-                                            <strong class="small text-success" *ngIf="group.examState > 0" i18n>
+                        }
+                        @if (group.examState > 0) {
+                          <strong class="small text-success" i18n>
                                                 The login codes are active! Students can now log in using the login
                                                 codes.
                                             </strong>
-                                        </div>
-                                        <div>
-                                            <tim-toggle [(value)]="group.loginCodesActive"
-                                                        (valueChange)="toggleActivateLoginCodes(group)"
-                                                        [disabled]="false"
-                                                        enabledButton="Activate login codes"
-                                                        i18n-enabledButton
-                                                        disabledButton="Disable login codes"
-                                                        i18n-disabledButton
-                                            ></tim-toggle>
-                                        </div>
-                                    </div>
-                                    <div [class.disabled]="group.examState < 1">
-                                        <div class="cb">
-                                            <input #cbStudentsLoggedIn [disabled]="group.examState < 1"
-                                                   type="checkbox"
-                                                   title="Mark as done"
-                                                   i18n-title
-                                                   [checked]="group.examState > 1"
-                                                   (change)="checkExamStateEvent(group, 1, $event)"
-                                            >
-                                        </div>
-                                        <div>
-                                            <div>
-                                                <ng-container i18n>Ask students to log in to the exam page:
+                        }
+                      </div>
+                      <div>
+                        <tim-toggle [(value)]="group.loginCodesActive"
+                          (valueChange)="toggleActivateLoginCodes(group)"
+                          [disabled]="false"
+                          enabledButton="Activate login codes"
+                          i18n-enabledButton
+                          disabledButton="Disable login codes"
+                          i18n-disabledButton
+                        ></tim-toggle>
+                      </div>
+                    </div>
+                    <div [class.disabled]="group.examState < 1">
+                      <div class="cb">
+                        <input #cbStudentsLoggedIn [disabled]="group.examState < 1"
+                          type="checkbox"
+                          title="Mark as done"
+                          i18n-title
+                          [checked]="group.examState > 1"
+                          (change)="checkExamStateEvent(group, 1, $event)"
+                          >
+                      </div>
+                      <div>
+                        <div>
+                          <ng-container i18n>Ask students to log in to the exam page:
                                                 </ng-container>
-                                                <a *ngIf="group.currentExamDoc; else noExam"
-                                                   [href]="getGroupSelectedExamUrl(group)"><code>{{ getGroupSelectedExamUrl(group) }}</code></a>
-                                                <ng-template #noExam>
-                                                    <ng-container i18n>Not selected</ng-container>
-                                                </ng-template>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <tim-toggle [(value)]="group.studentsLoggedIn"
-                                                        (valueChange)="checkExamStateElement(group, 1, cbStudentsLoggedIn, $event)"
-                                                        [disabled]="group.examState < 1"
-                                                        enabledButton="Mark as done"
-                                                        i18n-enabledButton
-                                                        disabledButton="Mark not done"
-                                                        i18n-disabledButton
-                                            ></tim-toggle>
-                                        </div>
-                                    </div>
-                                    <div [class.disabled]="group.examState < 2">
-                                        <div class="cb">
-                                            <input #cbStudentsReady [disabled]="group.examState < 2"
-                                                   type="checkbox"
-                                                   title="Mark as done"
-                                                   i18n-title
-                                                   [checked]="group.examState > 2"
-                                                   (change)="checkExamStateEvent(group, 2, $event)"
-                                            >
-                                        </div>
-                                        <div i18n>
+                          @if (group.currentExamDoc) {
+                            <a
+                              [href]="getGroupSelectedExamUrl(group)"><code>{{ getGroupSelectedExamUrl(group) }}</code></a>
+                            } @else {
+                              <ng-container i18n>Not selected</ng-container>
+                            }
+                          </div>
+                        </div>
+                        <div>
+                          <tim-toggle [(value)]="group.studentsLoggedIn"
+                            (valueChange)="checkExamStateElement(group, 1, cbStudentsLoggedIn, $event)"
+                            [disabled]="group.examState < 1"
+                            enabledButton="Mark as done"
+                            i18n-enabledButton
+                            disabledButton="Mark not done"
+                            i18n-disabledButton
+                          ></tim-toggle>
+                        </div>
+                      </div>
+                      <div [class.disabled]="group.examState < 2">
+                        <div class="cb">
+                          <input #cbStudentsReady [disabled]="group.examState < 2"
+                            type="checkbox"
+                            title="Mark as done"
+                            i18n-title
+                            [checked]="group.examState > 2"
+                            (change)="checkExamStateEvent(group, 2, $event)"
+                            >
+                        </div>
+                        <div i18n>
                                             Check that the students have logged in and are ready to begin the exam
                                         </div>
-                                        <div>
-                                            <tim-toggle [(value)]="group.studentsReady"
-                                                        (valueChange)="checkExamStateElement(group, 2, cbStudentsReady, $event)"
-                                                        [disabled]="group.examState < 1"
-                                                        enabledButton="Mark as done"
-                                                        i18n-enabledButton
-                                                        disabledButton="Mark not done"
-                                                        i18n-disabledButton
-                                            ></tim-toggle>
-                                        </div>
-                                    </div>
-                                    <div [class.disabled]="group.examState < 3">
-                                        <div class="cb">
-                                            <input [disabled]="group.examState < 3"
-                                                   type="checkbox"
-                                                   title="Mark as done"
-                                                   i18n-title
-                                                   [checked]="group.examState > 3"
-                                                   (change)="checkExamStateEvent(group, 3, $event)"
-                                            >
-                                        </div>
-                                        <div>
-                                            <span i18n>Begin exam</span>
-                                            <div class="small" *ngIf="group.examState <= 3" i18n>
+                        <div>
+                          <tim-toggle [(value)]="group.studentsReady"
+                            (valueChange)="checkExamStateElement(group, 2, cbStudentsReady, $event)"
+                            [disabled]="group.examState < 1"
+                            enabledButton="Mark as done"
+                            i18n-enabledButton
+                            disabledButton="Mark not done"
+                            i18n-disabledButton
+                          ></tim-toggle>
+                        </div>
+                      </div>
+                      <div [class.disabled]="group.examState < 3">
+                        <div class="cb">
+                          <input [disabled]="group.examState < 3"
+                            type="checkbox"
+                            title="Mark as done"
+                            i18n-title
+                            [checked]="group.examState > 3"
+                            (change)="checkExamStateEvent(group, 3, $event)"
+                            >
+                        </div>
+                        <div>
+                          <span i18n>Begin exam</span>
+                          @if (group.examState <= 3) {
+                            <div class="small" i18n>
                                                 Press the toggle button to start the exam
                                             </div>
-                                            <strong class="small text-success" *ngIf="group.examState > 3" i18n>
+                          }
+                          @if (group.examState > 3) {
+                            <strong class="small text-success" i18n>
                                                 The exam has started! Students can now access the exam. Audio and video
                                                 materials can be accessed via the <i>View exam document</i> link.
                                             </strong>
-                                        </div>
-                                        <div>
-                                            <tim-toggle [(value)]="group.examStarted"
-                                                        (valueChange)="toggleBeginExam(group)"
-                                                        [disabled]="group.examState < 3"
-                                                        enabledButton="Start exam"
-                                                        i18n-enabledButton
-                                                        disabledButton="Interrupt exam"
-                                                        i18n-disabledButton
-                                            ></tim-toggle>
-                                        </div>
-                                    </div>
-                                    <div [class.disabled]="group.examState < 4">
-                                        <div class="cb">
-                                            <input [disabled]="group.examState < 4"
-                                                   type="checkbox"
-                                                   title="Mark as done"
-                                                   i18n-title
-                                                   [checked]="group.examState > 4"
-                                                   (change)="checkExamStateEvent(group, 4, $event)"
-                                            >
-                                        </div>
-                                        <div>
-                                            <div i18n>End the exam for all except students with additional time</div>
-                                            <div class="small" *ngIf="group.examState <= 4" i18n>
+                          }
+                        </div>
+                        <div>
+                          <tim-toggle [(value)]="group.examStarted"
+                            (valueChange)="toggleBeginExam(group)"
+                            [disabled]="group.examState < 3"
+                            enabledButton="Start exam"
+                            i18n-enabledButton
+                            disabledButton="Interrupt exam"
+                            i18n-disabledButton
+                          ></tim-toggle>
+                        </div>
+                      </div>
+                      <div [class.disabled]="group.examState < 4">
+                        <div class="cb">
+                          <input [disabled]="group.examState < 4"
+                            type="checkbox"
+                            title="Mark as done"
+                            i18n-title
+                            [checked]="group.examState > 4"
+                            (change)="checkExamStateEvent(group, 4, $event)"
+                            >
+                        </div>
+                        <div>
+                          <div i18n>End the exam for all except students with additional time</div>
+                          @if (group.examState <= 4) {
+                            <div class="small" i18n>
                                                 Press the toggle button to end the exam for the main student group.
                                             </div>
-                                            <strong class="small text-success" *ngIf="group.examState > 4" i18n>
+                          }
+                          @if (group.examState > 4) {
+                            <strong class="small text-success" i18n>
                                                 Exam ended for main group! Students with additional time can continue
                                                 the exam.
                                             </strong>
-                                        </div>
-                                        <div>
-                                            <tim-toggle [(value)]="group.examMainGroupEnded"
-                                                        (valueChange)="toggleEndExamMainGroup(group)"
-                                                        [disabled]="group.examState < 4"
-                                                        enabledButton="End exam for main group"
-                                                        i18n-enabledButton
-                                                        disabledButton="Resume exam for main group"
-                                                        i18n-disabledButton
-                                            ></tim-toggle>
-                                        </div>
-                                    </div>
-                                    <div [class.disabled]="group.examState < 5">
-                                        <div class="cb">
-                                            <input [disabled]="group.examState < 5"
-                                                   type="checkbox"
-                                                   title="Mark as done"
-                                                   [checked]="group.examState > 5"
-                                                   (change)="checkExamStateEvent(group, 5, $event)"
-                                            >
-                                        </div>
-                                        <div>
-                                            <div i18n>End the exam for all students</div>
-                                            <div class="small" *ngIf="group.examState <= 5" i18n>
+                          }
+                        </div>
+                        <div>
+                          <tim-toggle [(value)]="group.examMainGroupEnded"
+                            (valueChange)="toggleEndExamMainGroup(group)"
+                            [disabled]="group.examState < 4"
+                            enabledButton="End exam for main group"
+                            i18n-enabledButton
+                            disabledButton="Resume exam for main group"
+                            i18n-disabledButton
+                          ></tim-toggle>
+                        </div>
+                      </div>
+                      <div [class.disabled]="group.examState < 5">
+                        <div class="cb">
+                          <input [disabled]="group.examState < 5"
+                            type="checkbox"
+                            title="Mark as done"
+                            [checked]="group.examState > 5"
+                            (change)="checkExamStateEvent(group, 5, $event)"
+                            >
+                        </div>
+                        <div>
+                          <div i18n>End the exam for all students</div>
+                          @if (group.examState <= 5) {
+                            <div class="small" i18n>
                                                 Press the toggle button to end the exam for all students
                                             </div>
-                                            <strong class="small text-success" *ngIf="group.examState > 5" i18n>
+                          }
+                          @if (group.examState > 5) {
+                            <strong class="small text-success" i18n>
                                                 Exam ended for all students! Remember to disable the login codes.
                                             </strong>
-                                        </div>
-                                        <div>
-                                            <tim-toggle [(value)]="group.examEnded"
-                                                        (valueChange)="toggleEndExamAll(group)"
-                                                        [disabled]="group.examState < 5"
-                                                        enabledButton="End exam for all students"
-                                                        i18n-enabledButton
-                                                        disabledButton="Resume exam for all students"
-                                                        i18n-disabledButton
-                                            ></tim-toggle>
-                                        </div>
-                                    </div>
-                                    <div [class.disabled]="group.examState < 6">
-                                        <div class="cb">
-                                            <input [disabled]="group.examState < 6"
-                                                   type="checkbox"
-                                                   title="Mark as done"
-                                                   i18n-title
-                                                   [checked]="group.examState > 6"
-                                                   (change)="checkExamStateEvent(group, 6, $event)"
-                                            >
-                                        </div>
-                                        <div>
-                                            <div i18n>Disable login codes</div>
-                                            <div class="small" i18n>
+                          }
+                        </div>
+                        <div>
+                          <tim-toggle [(value)]="group.examEnded"
+                            (valueChange)="toggleEndExamAll(group)"
+                            [disabled]="group.examState < 5"
+                            enabledButton="End exam for all students"
+                            i18n-enabledButton
+                            disabledButton="Resume exam for all students"
+                            i18n-disabledButton
+                          ></tim-toggle>
+                        </div>
+                      </div>
+                      <div [class.disabled]="group.examState < 6">
+                        <div class="cb">
+                          <input [disabled]="group.examState < 6"
+                            type="checkbox"
+                            title="Mark as done"
+                            i18n-title
+                            [checked]="group.examState > 6"
+                            (change)="checkExamStateEvent(group, 6, $event)"
+                            >
+                        </div>
+                        <div>
+                          <div i18n>Disable login codes</div>
+                          <div class="small" i18n>
                                                 Remember to disable the login codes after the exam has ended
                                             </div>
-                                        </div>
-                                        <div>
-                                            <button [disabled]="group.examState < 6"
-                                                    (click)="disableLoginCodesAndResetExam(group)"
-                                                    class="btn btn-success" i18n>
+                        </div>
+                        <div>
+                          <button [disabled]="group.examState < 6"
+                            (click)="disableLoginCodesAndResetExam(group)"
+                            class="btn btn-success" i18n>
                                                 Disable login codes
                                             </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </fieldset>
-                        </tab>
-                    </tabset>
-                </bootstrap-panel>
-                <bootstrap-panel title="4. Show answers to students" i18n-title>
-                    <tabset class="merged">
-                        <tab *ngFor="let group of visibleGroups"
-                             heading="{{group.readableName}}"
-                             [active]="group.selected ?? false"
-                             [id]="group.name"
-                             (selectTab)="group.selected = true; onGroupTabSelected($event)"
-                             (deselect)="group.selected = false">
-                            <tim-alert *ngIf="group.examState > 0" severity="warning">
-                                <ng-container i18n>You can show answers only when they don't have an active exam running.</ng-container><br>
-                                <ng-container i18n>Stop the exam and disable login codes in section <i>3. Manage exams</i> to enable showing
+                        </div>
+                      </div>
+                    </div>
+                  </fieldset>
+                </tab>
+              }
+            </tabset>
+          </bootstrap-panel>
+          <bootstrap-panel title="4. Show answers to students" i18n-title>
+            <tabset class="merged">
+              @for (group of visibleGroups; track group) {
+                <tab
+                  heading="{{group.readableName}}"
+                  [active]="group.selected ?? false"
+                  [id]="group.name"
+                  (selectTab)="group.selected = true; onGroupTabSelected($event)"
+                  (deselect)="group.selected = false">
+                  @if (group.examState > 0) {
+                    <tim-alert severity="warning">
+                      <ng-container i18n>You can show answers only when they don't have an active exam running.</ng-container><br>
+                      <ng-container i18n>Stop the exam and disable login codes in section <i>3. Manage exams</i> to enable showing
                                 answers.</ng-container>
-                            </tim-alert>
-                            <tim-alert *ngIf="group.currentExamDoc && group.currentExamDoc !== group.examDocId"
-                                       severity="warning" >
-                                <ng-container i18n>You can only show answers for the main exam
+                  </tim-alert>
+                }
+                @if (group.currentExamDoc && group.currentExamDoc !== group.examDocId) {
+                  <tim-alert
+                    severity="warning" >
+                    <ng-container i18n>You can only show answers for the main exam
                                </ng-container> ({{ examByDocId.get(group.examDocId!)?.name }}) <ng-container i18n>and not for the practice exam.</ng-container>
-                                <ng-container i18n>Change the exam in section <i>3. Manage exams</i> to enable showing answers.</ng-container>
-                            </tim-alert>
-                            <tim-alert *ngIf="!group.currentExamDoc" severity="warning" i18n>
+                      <ng-container i18n>Change the exam in section <i>3. Manage exams</i> to enable showing answers.</ng-container>
+                    </tim-alert>
+                  }
+                  @if (!group.currentExamDoc) {
+                    <tim-alert severity="warning" i18n>
                                 Select an exam in section <i>3. Manage exams</i> to enable showing answers.
                             </tim-alert>
-                            <div
-                                *ngIf="group.currentExamDoc && ((!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || ((!!examByDocId.get(group.currentExamDoc)?.showAnswersStartingTime && !showAnswersTimeReached)))">
-                                <tim-alert severity="warning">
-                                    <p *ngIf="!examStartingTimeReached" i18n>
+                  }
+                  @if (group.currentExamDoc && ((!!examByDocId.get(group.currentExamDoc)?.startingTime && !examStartingTimeReached) || ((!!examByDocId.get(group.currentExamDoc)?.showAnswersStartingTime && !showAnswersTimeReached)))) {
+                    <div
+                      >
+                      <tim-alert severity="warning">
+                        @if (!examStartingTimeReached) {
+                          <p i18n>
                                         You can hold the exam after {{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.startingTime ?? "") }}.
                                     </p>
-                                    <p *ngIf="!showAnswersTimeReached" i18n>
+                        }
+                        @if (!showAnswersTimeReached) {
+                          <p i18n>
                                         You can show the answers only after {{ toReadableDate(examByDocId.get(group.currentExamDoc!)?.showAnswersStartingTime ?? "") }}.
                                     </p>
-                                </tim-alert>
-                            </div>
-                            <ng-container *ngIf="group.currentExamDoc === group.examDocId">
-                                <tim-toggle
-                                    [(value)]="group.allowAccess"
-                                    [disabled]="group.examState > 0 || !examStartingTimeReached || !showAnswersTimeReached"
-                                    (valueChange)="toggleAllowRestrictedAccess(group)"
-                                    enabledButton="Begin showing answers to students"
-                                    i18n-enabledButton
-                                    disabledButton="End showing answers to students"
-                                    i18n-disabledButton
-                                >
-                                </tim-toggle>
-                                <p>
-                                    <strong class="text-success" *ngIf="group.allowAccess" i18n>
+                        }
+                      </tim-alert>
+                    </div>
+                  }
+                  @if (group.currentExamDoc === group.examDocId) {
+                    <tim-toggle
+                      [(value)]="group.allowAccess"
+                      [disabled]="group.examState > 0 || !examStartingTimeReached || !showAnswersTimeReached"
+                      (valueChange)="toggleAllowRestrictedAccess(group)"
+                      enabledButton="Begin showing answers to students"
+                      i18n-enabledButton
+                      disabledButton="End showing answers to students"
+                      i18n-disabledButton
+                      >
+                    </tim-toggle>
+                    <p>
+                      @if (group.allowAccess) {
+                        <strong class="text-success" i18n>
                                         Students can access the answers to the exam
                                         '{{ examByDocId.get(group.examDocId!)?.name }}'. The access is automatically
                                         disabled
                                         on {{ toReadableDate(group.accessAnswersTo ?? '') }}.
                                     </strong>
-                                </p>
-                                <p>
-                                    <strong *ngIf="!group.allowAccess" i18n>
+                      }
+                    </p>
+                    <p>
+                      @if (!group.allowAccess) {
+                        <strong i18n>
                                         Press the button above to allow students to review their answers for 1 hour.
                                     </strong>
-                                </p>
-                                <h5 i18n>Guide</h5>
-                                <ol>
-                                    <li i18n>Make sure the exam is ended and login codes are disabled in section <i>'3.
+                      }
+                    </p>
+                    <h5 i18n>Guide</h5>
+                    <ol>
+                      <li i18n>Make sure the exam is ended and login codes are disabled in section <i>'3.
                                         Manage exams'</i></li>
-                                    <li i18n>Press the <i>'Begin showing answers to students'</i> button to allow
+                      <li i18n>Press the <i>'Begin showing answers to students'</i> button to allow
                                         students to review their answers for 1 hour.
                                     </li>
-                                    <li i18n>Ask students to log in to the exam page using their login codes: <a
+                    <li i18n>Ask students to log in to the exam page using their login codes: <a
                                         [href]="getExamUrl(examByDocId.get(group.examDocId!))"><code>{{ getExamUrl(examByDocId.get(group.examDocId!)) }}</code></a>
                                     </li>
-                                    <li i18n>Students can open the exam using the <i>'Open exam'</i> button.</li>
-                                    <li i18n>Students can now review their answers. Students cannot submit new answers
+                    <li i18n>Students can open the exam using the <i>'Open exam'</i> button.</li>
+                    <li i18n>Students can now review their answers. Students cannot submit new answers
                                         but can see their answers and model answers (if they are included).
                                     </li>
-                                    <li i18n>To end the view right, press the <i>'End showing answers to students
+                    <li i18n>To end the view right, press the <i>'End showing answers to students
                                         button'</i>. The right is automatically disabled in 1 hour.
                                     </li>
-                                </ol>
-                            </ng-container>
-                        </tab>
-                    </tabset>
-                </bootstrap-panel>
-            </fieldset>
+                </ol>
+              }
+            </tab>
+          }
+        </tabset>
+        </bootstrap-panel>
+        </fieldset>
         </form>
-    `,
+        `,
     styleUrls: ["exam-group-manager.component.scss"],
     standalone: false,
 })
@@ -1832,7 +1938,7 @@ export class ExamGroupManagerComponent
         FormsModule,
         TimUtilityModule,
         // TimTableModule,
-        TabsModule.forRoot(),
+        TabsModule,
         DialogModule,
         PurifyModule,
         ButtonsModule,

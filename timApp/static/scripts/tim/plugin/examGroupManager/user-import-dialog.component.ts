@@ -17,12 +17,12 @@ export interface UserImportDialogParams {
     selector: "tim-user-import-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container i18n header>
+          <ng-container i18n header>
                 Import users
             </ng-container>
-            <ng-container body>
-                <form #form="ngForm">
-                    <div class="instructions" i18n>
+          <ng-container body>
+            <form #form="ngForm">
+              <div class="instructions" i18n>
                         <p>
                             If your school uses Wilma, you can import students by copy-pasting the student list from
                             Wilma.
@@ -43,35 +43,39 @@ export interface UserImportDialogParams {
                             You can obtain the student list from Wilma by selecting "Print course book" and selecting the students in the table.
                         </p>
                     </div>
-
-                    <div class="form-group">
-                        <textarea i18n-placeholder [(ngModel)]="importText"
-                                  rows="10"
-                                  id="user_import_text" name="user_import_text"
-                                  class="form-control"
-                                  placeholder="Enter student information in the format <class> <last name> <first name>, one student per line."></textarea>
-
-                    </div>
-                </form>
-
-                <tim-alert *ngIf="message" severity="danger">
-                    <ng-container *ngIf="message">
-                        {{ message }}
-                    </ng-container>
+        
+              <div class="form-group">
+                <textarea i18n-placeholder [(ngModel)]="importText"
+                  rows="10"
+                  id="user_import_text" name="user_import_text"
+                  class="form-control"
+                  placeholder="Enter student information in the format <class> <last name> <first name>, one student per line."></textarea>
+        
+                </div>
+              </form>
+        
+              @if (message) {
+                <tim-alert severity="danger">
+                  @if (message) {
+                    {{ message }}
+                  }
                 </tim-alert>
-
+              }
+        
             </ng-container>
             <ng-container footer>
-                <tim-loading *ngIf="loading"></tim-loading>
-                <button i18n class="timButton" type="button" (click)="saveUser()" [disabled]="form.invalid || loading">
+              @if (loading) {
+                <tim-loading></tim-loading>
+              }
+              <button i18n class="timButton" type="button" (click)="saveUser()" [disabled]="form.invalid || loading">
                     Add
                 </button>
-                <button i18n class="btn btn-default" type="button" (click)="dismiss()" [disabled]="loading">
+              <button i18n class="btn btn-default" type="button" (click)="dismiss()" [disabled]="loading">
                     Cancel
                 </button>
             </ng-container>
-        </tim-dialog-frame>
-    `,
+          </tim-dialog-frame>
+        `,
     styleUrls: ["user-import-dialog.component.scss"],
     standalone: false,
 })

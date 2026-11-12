@@ -78,37 +78,47 @@ function computeSourcePosition(
     selector: "tim-spell-error-dialog",
     template: `
         <tim-dialog-frame class="overflow-visible">
-            <ng-container header>
-                Sanan {{options.word}} oikeinkirjoitus
-            </ng-container>
-            <ng-container body>
-                <div *ngIf="suggestions.length > 0">
-                    Ehdotukset:
-                    <ul *ngFor="let sug of suggestions">
-                        <li title="Korvaa '{{options.word}}' sanalla '{{sug}}'">
-                            <a (click)="replaceWord(sug); $event.stopPropagation()">{{sug}}</a>
-                        </li>
-                    </ul>
-                </div>
-                <div *ngIf="suggestions.length == 0">Ei ehdotuksia.</div>
-                <tim-alert *ngIf="wordFindError">
-                    Sanaa '{{options.word}}' ei löydy markdown-tekstistä.
-                </tim-alert>
-                <tim-alert *ngIf="copied" severity="info">
-                    Sana '{{copied}}' kopioitu leikepöydälle.
-                </tim-alert>
-            </ng-container>
-            <ng-container footer>
-                <button class="timButton"
-                        (click)="ignoreWord(); $event.stopPropagation()"
-                        [disabled]="wordFindError"
-                        title="Älä huomioi sanaa jatkossa">
-                    Ohita sana
-                </button>
-                <button class="timButton" (click)="dismiss()">Peruuta</button>
-            </ng-container>
+          <ng-container header>
+            Sanan {{options.word}} oikeinkirjoitus
+          </ng-container>
+          <ng-container body>
+            @if (suggestions.length > 0) {
+              <div>
+                Ehdotukset:
+                @for (sug of suggestions; track sug) {
+                  <ul>
+                    <li title="Korvaa '{{options.word}}' sanalla '{{sug}}'">
+                      <a (click)="replaceWord(sug); $event.stopPropagation()">{{sug}}</a>
+                    </li>
+                  </ul>
+                }
+              </div>
+            }
+            @if (suggestions.length == 0) {
+              <div>Ei ehdotuksia.</div>
+            }
+            @if (wordFindError) {
+              <tim-alert>
+                Sanaa '{{options.word}}' ei löydy markdown-tekstistä.
+              </tim-alert>
+            }
+            @if (copied) {
+              <tim-alert severity="info">
+                Sana '{{copied}}' kopioitu leikepöydälle.
+              </tim-alert>
+            }
+          </ng-container>
+          <ng-container footer>
+            <button class="timButton"
+              (click)="ignoreWord(); $event.stopPropagation()"
+              [disabled]="wordFindError"
+              title="Älä huomioi sanaa jatkossa">
+              Ohita sana
+            </button>
+            <button class="timButton" (click)="dismiss()">Peruuta</button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class SpellErrorDialogComponent extends AngularDialogComponent<

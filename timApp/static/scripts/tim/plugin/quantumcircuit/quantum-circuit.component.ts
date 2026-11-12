@@ -326,85 +326,103 @@ export interface CircuitOptions {
     selector: "tim-quantum-circuit",
     template: `
         <tim-plugin-frame [markupError]="markupError">
-            <tim-plugin-header *ngIf="header" header>
-                <span [innerHTML]="header | purify"></span>
+          @if (header) {
+            <tim-plugin-header header>
+              <span [innerHTML]="header | purify"></span>
             </tim-plugin-header>
-            <p stem class="stem" *ngIf="stem" [innerHTML]="stem | purify"></p>
-            <ng-container body>
-                <div #qcContainer class="circuit-container" (window:resize)="handleResize()">
-                    <div class="top-menu">
-                        <tim-quantum-gate-menu
-                                [circuitOptions]="circuitOptions"
-                                [isToolboxStaticHeight]="isToolboxStaticHeight"
-                                [gateCounts]="gateCounts"
-                                (select)="handleMenuGateSelect($event)">
-                        </tim-quantum-gate-menu>
-                        <tim-quantum-toolbox [activeGateInfo]="activeGateInfo"
-                                             [isToolboxStaticHeight]="isToolboxStaticHeight"
-                                             (close)="handleActiveGateHide()"></tim-quantum-toolbox>
-                    </div>
-
-                    <tim-quantum-circuit-board
-                            *ngIf="board"
-                            class="circuit"
-                            [board]="board"
-                            [selectedGate]="selectedGate"
-                            [qubits]="qubits"
-                            [qubitOutputs]="qubitOutputs"
-                            [circuitOptions]="circuitOptions"
-                            [showOutputBits]="showOutputBits"
-                            [leftAxisLabel]="leftAxisLabel"
-                            [rightAxisLabel]="rightAxisLabel"
-                            [middleAxisLabel]="middleAxisLabel"
-                            (qubitChange)="handleQubitChange($event)"
-                            (gateDrop)="handleGateDrop($event)"
-                            (gateMove)="handleGateMove($event)"
-                            (gateRemove)="handleGateRemove($event)"
-                            (gateSelect)="handleGateSelect($event)"
-                    ></tim-quantum-circuit-board>
-
-                    <tim-quantum-stats class="starts"
-                                       [measurements]="measurements"
-                                       [quantumChartData]="quantumChartData"
-                                       [showChart]="showChart"
-                                       [showPrintField]="showPrintField"
-                                       [showExport]="showExport"
-                                       [samplingMode]="samplingMode"
-                                       [nSamples]="nSamples"
-                                       [isSimulatorRunning]="isSimulatorRunning"
-                                       (clear)="handleClearMeasurements()"
-                                       (measure)="handleMeasure()"
-                                       (export)="handleExport($event)">
-                    </tim-quantum-stats>
-
-                    <div class="buttons">
-                        <button class="timButton"
-                                (click)="save()">
-                            <ng-container i18n>Save</ng-container>
-                        </button>
-                        <button class="btn btn-default btn-xs"
-                                (click)="reset()">
-                            <ng-container i18n>Reset</ng-container>
-                        </button>
-                        <button class="btn btn-default btn-xs"
-                                *ngIf="hasEditRights"
-                                (click)="copyCircuit()">
-                            <ng-container i18n>Copy circuit to clipboard</ng-container>
-                        </button>
-                        <div *ngIf="notification">{{notification}}</div>
-                    </div>
-                </div>
-
-                <tim-loading *ngIf="isResultCheckingRunning"></tim-loading>
-                <tim-quantum-error *ngIf="error" [error]="error" [feedbackShowTable]="feedbackShowTable"></tim-quantum-error>
-                <pre class="circuit-error" *ngIf="errorString" [innerHTML]="errorString | purify"></pre>
-                <pre *ngIf="result" [innerHTML]="result | purify"></pre>
-            </ng-container>
-            <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
-
+          }
+          @if (stem) {
+            <p stem class="stem" [innerHTML]="stem | purify"></p>
+          }
+          <ng-container body>
+            <div #qcContainer class="circuit-container" (window:resize)="handleResize()">
+              <div class="top-menu">
+                <tim-quantum-gate-menu
+                  [circuitOptions]="circuitOptions"
+                  [isToolboxStaticHeight]="isToolboxStaticHeight"
+                  [gateCounts]="gateCounts"
+                  (select)="handleMenuGateSelect($event)">
+                </tim-quantum-gate-menu>
+                <tim-quantum-toolbox [activeGateInfo]="activeGateInfo"
+                  [isToolboxStaticHeight]="isToolboxStaticHeight"
+                (close)="handleActiveGateHide()"></tim-quantum-toolbox>
+              </div>
+        
+              @if (board) {
+                <tim-quantum-circuit-board
+                  class="circuit"
+                  [board]="board"
+                  [selectedGate]="selectedGate"
+                  [qubits]="qubits"
+                  [qubitOutputs]="qubitOutputs"
+                  [circuitOptions]="circuitOptions"
+                  [showOutputBits]="showOutputBits"
+                  [leftAxisLabel]="leftAxisLabel"
+                  [rightAxisLabel]="rightAxisLabel"
+                  [middleAxisLabel]="middleAxisLabel"
+                  (qubitChange)="handleQubitChange($event)"
+                  (gateDrop)="handleGateDrop($event)"
+                  (gateMove)="handleGateMove($event)"
+                  (gateRemove)="handleGateRemove($event)"
+                  (gateSelect)="handleGateSelect($event)"
+                ></tim-quantum-circuit-board>
+              }
+        
+              <tim-quantum-stats class="starts"
+                [measurements]="measurements"
+                [quantumChartData]="quantumChartData"
+                [showChart]="showChart"
+                [showPrintField]="showPrintField"
+                [showExport]="showExport"
+                [samplingMode]="samplingMode"
+                [nSamples]="nSamples"
+                [isSimulatorRunning]="isSimulatorRunning"
+                (clear)="handleClearMeasurements()"
+                (measure)="handleMeasure()"
+                (export)="handleExport($event)">
+              </tim-quantum-stats>
+        
+              <div class="buttons">
+                <button class="timButton"
+                  (click)="save()">
+                  <ng-container i18n>Save</ng-container>
+                </button>
+                <button class="btn btn-default btn-xs"
+                  (click)="reset()">
+                  <ng-container i18n>Reset</ng-container>
+                </button>
+                @if (hasEditRights) {
+                  <button class="btn btn-default btn-xs"
+                    (click)="copyCircuit()">
+                    <ng-container i18n>Copy circuit to clipboard</ng-container>
+                  </button>
+                }
+                @if (notification) {
+                  <div>{{notification}}</div>
+                }
+              </div>
+            </div>
+        
+            @if (isResultCheckingRunning) {
+              <tim-loading></tim-loading>
+            }
+            @if (error) {
+              <tim-quantum-error [error]="error" [feedbackShowTable]="feedbackShowTable"></tim-quantum-error>
+            }
+            @if (errorString) {
+              <pre class="circuit-error" [innerHTML]="errorString | purify"></pre>
+            }
+            @if (result) {
+              <pre [innerHTML]="result | purify"></pre>
+            }
+          </ng-container>
+          @if (footer) {
+            <p footer [innerHTML]="footer | purify"></p>
+          }
+        
         </tim-plugin-frame>
-
-    `,
+        
+        `,
     styleUrls: ["./quantum-circuit.component.scss"],
     providers: [GateService, SerializerService],
     standalone: false,

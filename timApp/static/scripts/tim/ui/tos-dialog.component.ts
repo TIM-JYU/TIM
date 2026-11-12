@@ -16,39 +16,41 @@ import {Users} from "tim/user/userService";
         <div class="modal-bg">
         </div>
         <tim-dialog-frame [minimizable]="false" [showCloseIcon]="false">
-            <ng-container i18n header>
+          <ng-container i18n header>
                 Terms of Service Update
             </ng-container>
-            <ng-container body>
+          <ng-container body>
             <div class="modal-body">
-                <h3 i18n>We have updated our Terms of Service</h3>
-                <p i18n>To continue using TIM, please review and accept the updated terms.</p>
-                <p i18n>By checking the box and clicking "Confirm", you acknowledge that you have read and agree to the Terms of Service.</p>
-                <div class="form-group">
-                    <div class="checkbox">
-                        <label>
-                            <input type="checkbox" name="agree" [(ngModel)]="agreeToTerms">
-                            <ng-container i18n>I have read and agree to the </ng-container><a [href]="termsOfServiceLink" target="_blank" rel="noopener noreferrer"><ng-container i18n>Terms of Service.</ng-container></a>
-                        </label>
-                    </div>
+              <h3 i18n>We have updated our Terms of Service</h3>
+              <p i18n>To continue using TIM, please review and accept the updated terms.</p>
+              <p i18n>By checking the box and clicking "Confirm", you acknowledge that you have read and agree to the Terms of Service.</p>
+              <div class="form-group">
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" name="agree" [(ngModel)]="agreeToTerms">
+                    <ng-container i18n>I have read and agree to the </ng-container><a [href]="termsOfServiceLink" target="_blank" rel="noopener noreferrer"><ng-container i18n>Terms of Service.</ng-container></a>
+                  </label>
                 </div>
+              </div>
             </div>
-            </ng-container>
-            <ng-container footer>
-                <div *ngIf="errorMessage">
-                    <div class="alert alert-danger alert-dismissible">
-                        <button type="button" class="close" (click)="dismissAlert()"><span>&times;</span></button>
-                        <p class="text-left"><strong><span class="glyphicon glyphicon-exclamation-sign"></span><ng-container> There was an error.</ng-container></strong></p>
-                        <p class="text-left">{{errorMessage}}</p>
-                    </div>
+          </ng-container>
+          <ng-container footer>
+            @if (errorMessage) {
+              <div>
+                <div class="alert alert-danger alert-dismissible">
+                  <button type="button" class="close" (click)="dismissAlert()"><span>&times;</span></button>
+                  <p class="text-left"><strong><span class="glyphicon glyphicon-exclamation-sign"></span><ng-container> There was an error.</ng-container></strong></p>
+                  <p class="text-left">{{errorMessage}}</p>
                 </div>
-                <div class="form-group">
-                    <button class="timButton" [disabled]="!agreeToTerms" (click)="confirmAgreement()"><span class="glyphicon glyphicon-ok"></span><ng-container i18n> Confirm</ng-container></button>
-                    <button class="timButton btn-danger" (click)="beginLogout()"><span class="glyphicon glyphicon-remove"></span><ng-container i18n> Log out</ng-container></button>
-                </div>
-            </ng-container>
+              </div>
+            }
+            <div class="form-group">
+              <button class="timButton" [disabled]="!agreeToTerms" (click)="confirmAgreement()"><span class="glyphicon glyphicon-ok"></span><ng-container i18n> Confirm</ng-container></button>
+              <button class="timButton btn-danger" (click)="beginLogout()"><span class="glyphicon glyphicon-remove"></span><ng-container i18n> Log out</ng-container></button>
+            </div>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     styleUrls: ["tos-dialog.component.scss"],
     standalone: false,
 })

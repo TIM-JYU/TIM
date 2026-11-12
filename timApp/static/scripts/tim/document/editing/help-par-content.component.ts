@@ -6,18 +6,24 @@ import type {ViewCtrl} from "tim/document/viewctrl";
     selector: "tim-help-par-content",
     template: `
         <div class="text-center text-smaller">
-            <div *ngIf="!hasText && !canEdit()">
-                This document is currently empty.
+          @if (!hasText && !canEdit()) {
+            <div>
+              This document is currently empty.
             </div>
-            <div *ngIf="showSettingsYaml">
-                <p>Since this document has no text content, the settings paragraphs are visible above.</p>
+          }
+          @if (showSettingsYaml) {
+            <div>
+              <p>Since this document has no text content, the settings paragraphs are visible above.</p>
             </div>
-            <div *ngIf="showHelp">
-                <p>You can get help with editing from editor's Help tab.</p>
-                <p>This is an automatically added help paragraph. It will disappear when you add content.</p>
+          }
+          @if (showHelp) {
+            <div>
+              <p>You can get help with editing from editor's Help tab.</p>
+              <p>This is an automatically added help paragraph. It will disappear when you add content.</p>
             </div>
+          }
         </div>
-    `,
+        `,
     standalone: false,
 })
 export class HelpParContent {

@@ -20,12 +20,6 @@
       ]
     },
     "target": "ES2022",
-    "lib": [
-      "dom",
-      "es2019",
-      "scripthost",
-      "dom.iterable"
-    ],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "downlevelIteration": true,

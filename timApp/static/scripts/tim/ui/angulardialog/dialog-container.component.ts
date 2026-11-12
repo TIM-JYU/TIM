@@ -22,14 +22,16 @@ interface IDialogEntry {
 @Component({
     selector: "tim-dialog-container",
     template: `
-        <div *ngFor="let c of dialogs"
-             [timDialogHost]="c.comp"
-             [hostData]="c.data"
-             [instanceId]="c.id"
-             [dialogOptions]="c.dialogOptions"
-             (instanceCreated)="created($event)"
-             (instanceClosed)="closed($event)"></div>
-    `,
+        @for (c of dialogs; track c) {
+          <div
+            [timDialogHost]="c.comp"
+            [hostData]="c.data"
+            [instanceId]="c.id"
+            [dialogOptions]="c.dialogOptions"
+            (instanceCreated)="created($event)"
+          (instanceClosed)="closed($event)"></div>
+        }
+        `,
     standalone: false,
 })
 export class DialogContainerComponent {

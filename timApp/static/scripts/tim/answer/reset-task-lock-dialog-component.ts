@@ -28,69 +28,77 @@ type sortOption = "name" | "username" | "email" | "time";
     selector: "tim-reset-task-lock-dialog",
     template: `
         <tim-dialog-frame [autoHeight]="false">
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <div class="mainContainer">
-                    <div class="controlContainer">
-                        <div i18n>Users who have an active lock on task {{data.taskId}}</div>
-                        <div class="userFilter">
-                            <label i18n class="col-sm-2 control-label">Find user</label>
-                            <div class="col-sm-10">
-                                <input id="searchInput"
-                                       class="form-control"
-                                       type="text"
-                                       [(ngModel)]="searchInput"
-                                       (ngModelChange)="updateSearch()"
-                                       name="searchInput"
-                                       focusMe/>
-                            </div>
-                        </div>
-                        <div class="controls">
-                            <button i18n class="btn btn-default" type="button" (click)="refresh()">Refresh</button>
-                            <button i18n class="timButton" type="button" (click)="doClearRequest()">Clear locks for selected
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            <div class="mainContainer">
+              <div class="controlContainer">
+                <div i18n>Users who have an active lock on task {{data.taskId}}</div>
+                <div class="userFilter">
+                  <label i18n class="col-sm-2 control-label">Find user</label>
+                  <div class="col-sm-10">
+                    <input id="searchInput"
+                      class="form-control"
+                      type="text"
+                      [(ngModel)]="searchInput"
+                      (ngModelChange)="updateSearch()"
+                      name="searchInput"
+                      focusMe/>
+                  </div>
+                </div>
+                <div class="controls">
+                  <button i18n class="btn btn-default" type="button" (click)="refresh()">Refresh</button>
+                  <button i18n class="timButton" type="button" (click)="doClearRequest()">Clear locks for selected
                                 users
                             </button>
-                            <div class="response" *ngIf="responseMessage">{{responseMessage}}</div>
-                        </div>
-                    </div>
-                    <div class="tableContainer">
-                        <table>
-                            <thead>
-                            <tr class="row">
-                                <th i18n (click)="selectAll()">Select</th>
-                                <th i18n (click)="sort('name')">Name</th>
-                                <th i18n (click)="sort('username')">Username</th>
-                                <th i18n (click)="sort('email')">Email</th>
-                                <th i18n (click)="sort('time')">Task locked on</th>
-                            </tr>
-                            </thead>
-                            <tbody *ngIf="userData">
-                            <ng-container *ngFor="let user of userData">
-                                <tr class="row" *ngIf="user.visible">
-                                    <td>
-                                        <input type="checkbox" [(ngModel)]="user.selected">
-                                    </td>
-                                    <td>{{user.user.real_name}}</td>
-                                    <td>{{user.user.name}}</td>
-                                    <td>{{user.user.email}}</td>
-                                    <td>{{user.time | timdate}}</td>
-                                </tr>
-                            </ng-container>
-                            </tbody>
-                            <tbody *ngIf="fetchError">
-                            <td>{{fetchError}}</td>
-                            </tbody>
-                        </table>
-                    </div>
+                  @if (responseMessage) {
+                    <div class="response">{{responseMessage}}</div>
+                  }
                 </div>
-            </ng-container>
-            <ng-container footer>
-                <button i18n class="btn btn-default" type="button" (click)="done()">Close</button>
-            </ng-container>
+              </div>
+              <div class="tableContainer">
+                <table>
+                  <thead>
+                    <tr class="row">
+                      <th i18n (click)="selectAll()">Select</th>
+                      <th i18n (click)="sort('name')">Name</th>
+                      <th i18n (click)="sort('username')">Username</th>
+                      <th i18n (click)="sort('email')">Email</th>
+                      <th i18n (click)="sort('time')">Task locked on</th>
+                    </tr>
+                  </thead>
+                  @if (userData) {
+                    <tbody>
+                      @for (user of userData; track user) {
+                        @if (user.visible) {
+                          <tr class="row">
+                            <td>
+                              <input type="checkbox" [(ngModel)]="user.selected">
+                            </td>
+                            <td>{{user.user.real_name}}</td>
+                            <td>{{user.user.name}}</td>
+                            <td>{{user.user.email}}</td>
+                            <td>{{user.time | timdate}}</td>
+                          </tr>
+                        }
+                      }
+                    </tbody>
+                  }
+                  @if (fetchError) {
+                    <tbody>
+                      <td>{{fetchError}}</td>
+                    </tbody>
+                  }
+                </table>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container footer>
+            <button i18n class="btn btn-default" type="button" (click)="done()">Close</button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     styleUrls: ["reset-task-lock-dialog.component.scss"],
     standalone: false,
 })

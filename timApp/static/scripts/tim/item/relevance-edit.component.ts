@@ -32,35 +32,41 @@ export interface IRelevanceResponse {
     template: `
         <p>View and set relevance value denoting item priority in search results</p>
         <div class="form-group form-inline">
-            <input class="form-control" [(ngModel)]="relevance"
-                   type="number"
-                   title="Enter a new relevance value"
-                   placeholder="Enter relevance value"
-                   [typeaheadMinLength]="0"
-                   [typeahead]="suggestions">
+          <input class="form-control" [(ngModel)]="relevance"
+            type="number"
+            title="Enter a new relevance value"
+            placeholder="Enter relevance value"
+            [typeaheadMinLength]="0"
+            [typeahead]="suggestions">
         </div>
         <div class="checkbox">
-            <input type="checkbox" [(ngModel)]="updateTranslations" id="cbUpdateTranslationRelevance" style="margin-left: 0">
-            <label for="cbUpdateTranslationRelevance" i18n>Update translations' relevance values</label>
+          <input type="checkbox" [(ngModel)]="updateTranslations" id="cbUpdateTranslationRelevance" style="margin-left: 0">
+          <label for="cbUpdateTranslationRelevance" i18n>Update translations' relevance values</label>
         </div>
-        <div *ngIf="isDefault" class="alert alert-info">
+        @if (isDefault) {
+          <div class="alert alert-info">
             <span class="glyphicon glyphicon-exclamation-sign"></span>
             Default relevance value. This may be affected by changes in parent directories.
-        </div>
-        <div *ngIf="isInherited" class="alert alert-info">
+          </div>
+        }
+        @if (isInherited) {
+          <div class="alert alert-info">
             <span class="glyphicon glyphicon-exclamation-sign"></span>
             Relevance value was inherited from a parent directory.
-        </div>
-        <div *ngIf="errorMessage" class="alert alert-info">
+          </div>
+        }
+        @if (errorMessage) {
+          <div class="alert alert-info">
             <span class="glyphicon glyphicon-exclamation-sign"></span> {{errorMessage}}
-        </div>
+          </div>
+        }
         <div>
-            <button class="timButton" (click)="saveClicked()" title="Save new relevance value">Save</button>
-            <button class="timButton" (click)="resetClicked()" [disabled]="isDefault"
-                    title="Return default relevance value" style="margin-left: 0.3em">Reset
-            </button>
+          <button class="timButton" (click)="saveClicked()" title="Save new relevance value">Save</button>
+          <button class="timButton" (click)="resetClicked()" [disabled]="isDefault"
+            title="Return default relevance value" style="margin-left: 0.3em">Reset
+          </button>
         </div>
-    `,
+        `,
     standalone: false,
 })
 export class RelevanceEditComponent {

@@ -25,34 +25,44 @@ export enum RestampDialogClose {
     selector: "tim-restamp-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <tim-alert *ngIf="!successMessage && !errorMessage" severity="info">
-                    There are changes in the contents of the macro that may not have been updated to the stamps yet!
-                </tim-alert>
-                <tim-alert severity="success" *ngIf="successMessage">{{successMessage}}</tim-alert>
-                <tim-alert severity="warning" *ngIf="errorMessage">{{errorMessage}}</tim-alert>
-                <div>
-                    <p>
-                        You can update the stamps by clicking the restamp button below. You can also return to the
-                        editor to manually check and reupload the attachments.
-                    </p>
-                    <div>
-                        <button class="timButton" (click)="restamp()">
-                            Restamp <ng-container *ngIf="data.attachments.length > 1">all</ng-container>
-                        </button>
-                        <tim-loading *ngIf="stamping"></tim-loading>
-                    </div>
-                </div>
-            </ng-container>
-            <ng-container footer>
-                <button class="timButton" (click)="returnToEditor()">Return to editor</button>
-                <button class="timButton" (click)="saveAndExit()">Save and exit</button>
-            </ng-container>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            @if (!successMessage && !errorMessage) {
+              <tim-alert severity="info">
+                There are changes in the contents of the macro that may not have been updated to the stamps yet!
+              </tim-alert>
+            }
+            @if (successMessage) {
+              <tim-alert severity="success">{{successMessage}}</tim-alert>
+            }
+            @if (errorMessage) {
+              <tim-alert severity="warning">{{errorMessage}}</tim-alert>
+            }
+            <div>
+              <p>
+                You can update the stamps by clicking the restamp button below. You can also return to the
+                editor to manually check and reupload the attachments.
+              </p>
+              <div>
+                <button class="timButton" (click)="restamp()">
+                  Restamp @if (data.attachments.length > 1) {
+                  all
+                }
+              </button>
+              @if (stamping) {
+                <tim-loading></tim-loading>
+              }
+            </div>
+          </div>
+        </ng-container>
+        <ng-container footer>
+          <button class="timButton" (click)="returnToEditor()">Return to editor</button>
+          <button class="timButton" (click)="saveAndExit()">Save and exit</button>
+        </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class RestampDialogComponent extends AngularDialogComponent<

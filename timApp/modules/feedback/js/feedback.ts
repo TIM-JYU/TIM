@@ -126,25 +126,38 @@ const FeedbackAll = t.intersection([
     selector: "tim-feedback-runner",
     template: `
 <div class="feedbackContent">
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <div class="error" *ngIf="error" [innerHtml]="error | purify"></div>
-    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-    <p *ngIf="stem">{{stem}}</p>
-    <div class="form-inline">
+  @if (markupError) {
+    <tim-markup-error [data]="markupError"></tim-markup-error>
+  }
+  @if (error) {
+    <div class="error" [innerHtml]="error | purify"></div>
+  }
+  @if (header) {
+    <h4 [innerHtml]="header | purify"></h4>
+  }
+  @if (stem) {
+    <p>{{stem}}</p>
+  }
+  <div class="form-inline">
     <span [innerHtml]="feedback | purify"></span>
-    </div>
+  </div>
+  @if (buttonText()) {
     <button class="timButton feedbackButton"
-            *ngIf="buttonText()"
-            (click)="handleAnswer()"
-            [disabled]="markupError || saving">
-        {{buttonText()}}
+      (click)="handleAnswer()"
+      [disabled]="markupError || saving">
+      {{buttonText()}}
     </button>
-    <div class="feedbackAnswer" *ngIf="showAnswers && attrsall.state">
-        <p>User answer: <span [innerHtml]="attrsall.state.user_answer | purify"></span></p>
-        <p>Feedback: <span [innerHtml]="attrsall.state.feedback | purify"></span></p>
-        <p>Correct answer: <span [innerHtml]="attrsall.state.correct_answer | purify"></span></p>
+  }
+  @if (showAnswers && attrsall.state) {
+    <div class="feedbackAnswer">
+      <p>User answer: <span [innerHtml]="attrsall.state.user_answer | purify"></span></p>
+      <p>Feedback: <span [innerHtml]="attrsall.state.feedback | purify"></span></p>
+      <p>Correct answer: <span [innerHtml]="attrsall.state.correct_answer | purify"></span></p>
     </div>
-    <p *ngIf="footer" [innerHtml]="footer | purify"></p>
+  }
+  @if (footer) {
+    <p [innerHtml]="footer | purify"></p>
+  }
 </div>
 `,
     standalone: false,

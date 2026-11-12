@@ -26,51 +26,61 @@ import type {IUserApiKey} from "tim/user/IUser";
     selector: "tim-add-api-key-dialog",
     template: `
         <tim-dialog-frame [minimizable]="false">
-            <ng-container header i18n>
+          <ng-container header i18n>
                 Add new machine translator API key
             </ng-container>
-            <ng-container body>
-                <form>
-                    <fieldset [disabled]="saving || saved">
-                        <div class="form-group">
-                            <label class="control-label" for="name-select" i18n>Machine translator</label>
-                            <select class="form-control" name="channel-select" [(ngModel)]="chosenTranslator">
-                                <option *ngFor="let translator of this.translators"
-                                        value="{{translator.name}}"
-                                >{{translator.name}}</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label" for="api-key-text" i18n>API key</label>
-                            <input class="form-control" type="text" name="api-key-text"
-                                   [(ngModel)]="apiKey">
-                        </div>
-                        <div>
-                            <tim-alert *ngIf="added" severity="success" i18n>
+          <ng-container body>
+            <form>
+              <fieldset [disabled]="saving || saved">
+                <div class="form-group">
+                  <label class="control-label" for="name-select" i18n>Machine translator</label>
+                  <select class="form-control" name="channel-select" [(ngModel)]="chosenTranslator">
+                    @for (translator of this.translators; track translator) {
+                      <option
+                        value="{{translator.name}}"
+                      >{{translator.name}}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="control-label" for="api-key-text" i18n>API key</label>
+                  <input class="form-control" type="text" name="api-key-text"
+                    [(ngModel)]="apiKey">
+                </div>
+                <div>
+                  @if (added) {
+                    <tim-alert severity="success" i18n>
                                 The API key was added successfully!
                             </tim-alert>
-                            <tim-alert *ngIf="addError" severity="danger" i18n>
+                  }
+                  @if (addError) {
+                    <tim-alert severity="danger" i18n>
                                 Could not add the new API key: {{addError}}
                             </tim-alert>
-                        </div>
-                    </fieldset>
-                </form>
-            </ng-container>
-            <ng-container footer>
-                <i class="glyphicon glyphicon-ok success" *ngIf="saved"></i>
-                <tim-loading *ngIf="saving" style="margin-right: 1em;"></tim-loading>
-                <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key">
-                    <span class="glyphicon glyphicon-question-sign" style="margin-right: 1em; font-size: x-large; vertical-align: middle;" title="Help with machine translation setup" i18n-title></span>
-                </a>
-                <button class="timButton"
-                        (click)="addNewAPIKey()"
-                        [disabled]="!(chosenTranslator && apiKey) || saved" i18n>
+                  }
+                </div>
+              </fieldset>
+            </form>
+          </ng-container>
+          <ng-container footer>
+            @if (saved) {
+              <i class="glyphicon glyphicon-ok success"></i>
+            }
+            @if (saving) {
+              <tim-loading style="margin-right: 1em;"></tim-loading>
+            }
+            <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key">
+              <span class="glyphicon glyphicon-question-sign" style="margin-right: 1em; font-size: x-large; vertical-align: middle;" title="Help with machine translation setup" i18n-title></span>
+            </a>
+            <button class="timButton"
+              (click)="addNewAPIKey()"
+              [disabled]="!(chosenTranslator && apiKey) || saved" i18n>
                     Add
                 </button>
-                <button class="timButton" (click)="dismiss()">Close</button>
-            </ng-container>
+            <button class="timButton" (click)="dismiss()">Close</button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class AddAPIKeyDialogComponent extends AngularDialogComponent<

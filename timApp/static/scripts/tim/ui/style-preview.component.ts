@@ -14,22 +14,36 @@ import {BrowserModule} from "@angular/platform-browser";
 @Component({
     selector: "tim-style-preview",
     template: `
-    <tim-alert *ngIf="error">
-        <strong *ngIf="error.title">{{error.title}}</strong>
-        <p *ngIf="error.message">{{error.message}}</p>
-        <div class="error-code" *ngIf="error.code">
+    @if (error) {
+      <tim-alert>
+        @if (error.title) {
+          <strong>{{error.title}}</strong>
+        }
+        @if (error.message) {
+          <p>{{error.message}}</p>
+        }
+        @if (error.code) {
+          <div class="error-code">
             <pre>{{error.code}}</pre>
-        </div>
-    </tim-alert>
+          </div>
+        }
+      </tim-alert>
+    }
     <div class="preview-items">
-        <tim-loading *ngIf="loading"></tim-loading>
-        <button [disabled]="!docId || loading" class="timButton" (click)="previewStyle()">
-            <ng-container *ngIf="currentStyle == originalStyle" i18n>Preview style</ng-container>
-            <ng-container *ngIf="currentStyle != originalStyle" i18n>Refresh preview</ng-container>
-        </button>
-        <button [disabled]="!docId || loading || currentStyle == originalStyle" class="timButton" (click)="stopPreview()" i18n>Stop preview</button>
+      @if (loading) {
+        <tim-loading></tim-loading>
+      }
+      <button [disabled]="!docId || loading" class="timButton" (click)="previewStyle()">
+        @if (currentStyle == originalStyle) {
+          <ng-container i18n>Preview style</ng-container>
+        }
+        @if (currentStyle != originalStyle) {
+          <ng-container i18n>Refresh preview</ng-container>
+        }
+      </button>
+      <button [disabled]="!docId || loading || currentStyle == originalStyle" class="timButton" (click)="stopPreview()" i18n>Stop preview</button>
     </div>
-  `,
+    `,
     styleUrls: ["./style-preview.component.scss"],
     standalone: false,
 })

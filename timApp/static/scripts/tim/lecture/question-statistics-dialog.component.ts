@@ -36,22 +36,26 @@ function getQuestionEndTime(q: IAskedQuestion) {
     selector: "tim-question-statistics-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <div class="flex" style="height: 100%; flex-direction: column">
-                    <tim-answer-chart
-                            [question]="data"
-                            [answers]="answers"></tim-answer-chart>
-                    <p>Question <span *ngIf="ended">has ended</span><span *ngIf="!ended">is running</span>.</p>
-                </div>
-            </ng-container>
-            <ng-container footer>
-                <button class="timButton" (click)="close({})">Close</button>
-            </ng-container>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            <div class="flex" style="height: 100%; flex-direction: column">
+              <tim-answer-chart
+                [question]="data"
+              [answers]="answers"></tim-answer-chart>
+              <p>Question @if (ended) {
+                <span>has ended</span>
+                }@if (!ended) {
+                <span>is running</span>
+              }.</p>
+            </div>
+          </ng-container>
+          <ng-container footer>
+            <button class="timButton" (click)="close({})">Close</button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class QuestionStatisticsDialogComponent extends AngularDialogComponent<

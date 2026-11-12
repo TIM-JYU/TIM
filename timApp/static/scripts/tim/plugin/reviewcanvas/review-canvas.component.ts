@@ -122,57 +122,85 @@ const PluginFields = t.intersection([
 @Component({
     selector: "reviewcanvas-runner",
     template: `
-        <tim-plugin-header *ngIf="header" header>
+        @if (header) {
+          <tim-plugin-header header>
             <span [innerHTML]="header | purify"></span>
-        </tim-plugin-header>
-        <a *ngIf="uploadedFiles.length > 0 && !isUnSaved() && downloadPDFUrl" [href]="downloadPDFUrl" target="_blank">{{downloadPDFText()}}</a>
-        <p stem *ngIf="stem" [innerHTML]="stem | purify"></p>
-        <div *ngIf="!inReviewView()">
-            <ng-container *ngIf="enabled" body>
+          </tim-plugin-header>
+        }
+        @if (uploadedFiles.length > 0 && !isUnSaved() && downloadPDFUrl) {
+          <a [href]="downloadPDFUrl" target="_blank">{{downloadPDFText()}}</a>
+        }
+        @if (stem) {
+          <p stem [innerHTML]="stem | purify"></p>
+        }
+        @if (!inReviewView()) {
+          <div>
+            @if (enabled) {
+              <ng-container body>
                 <div class="form-inline small">
-                    <div style="position: relative;" *ngFor="let item of uploadedFiles; let i = index">
-                        <div class="uploadContainer" #wraps>
-                            <img alt="Uploaded image" #img [src]="item.path" (load)="onImgLoad($event, i)">
-                        </div>
-                        <div class="tools">
-                            <button class="timButton" title="Move up" i18n-title (click)="moveImageUp(i)">&uarr;
-                            </button>
-                            <button class="timButton" title="Move down" i18n-title (click)="moveImageDown(i)">&darr;
-                            </button>
-                            <button class="timButton" title="Rotate clockwise" i18n-title (click)="increaseRotation(i)">
-                                &#8635;
-                            </button>
-                            <button class="timButton" title="Delete picture" i18n-title (click)="deleteImage(i)">
-                                <i class="glyphicon glyphicon-trash"></i>
-                            </button>
-                        </div>
+                  @for (item of uploadedFiles; track item; let i = $index) {
+                    <div style="position: relative;">
+                      <div class="uploadContainer" #wraps>
+                        <img alt="Uploaded image" #img [src]="item.path" (load)="onImgLoad($event, i)">
+                      </div>
+                      <div class="tools">
+                        <button class="timButton" title="Move up" i18n-title (click)="moveImageUp(i)">&uarr;
+                        </button>
+                        <button class="timButton" title="Move down" i18n-title (click)="moveImageDown(i)">&darr;
+                        </button>
+                        <button class="timButton" title="Rotate clockwise" i18n-title (click)="increaseRotation(i)">
+                          &#8635;
+                        </button>
+                        <button class="timButton" title="Delete picture" i18n-title (click)="deleteImage(i)">
+                          <i class="glyphicon glyphicon-trash"></i>
+                        </button>
+                      </div>
                     </div>
+                  }
                 </div>
                 <div class="flex">
-                    <file-select-manager class="small"
-                                         [dragAndDrop]="dragAndDrop"
-                                         [uploadUrl]="uploadUrl"
-                                         [stem]="uploadstem"
-                                         (file)="onFileLoad($event)"
-                                         (upload)="onUploadResponse($event)"
-                                         (uploadDone)="onUploadDone($event)"
-                                         [accept]="'image/*,.pdf'">
-                    </file-select-manager>
-                    <ng-template #tolTemplate>{{ tooltipText }}</ng-template>
-                    <input #pasteInput (focusout)="onPasteFocusout()" (paste)="onPaste($event)" i18n-placeholder placeholder="Paste image" #tooltip="bs-tooltip" [tooltip]="tolTemplate" size="9" style="font-size: 0.7em;"/>
+                  <file-select-manager class="small"
+                    [dragAndDrop]="dragAndDrop"
+                    [uploadUrl]="uploadUrl"
+                    [stem]="uploadstem"
+                    (file)="onFileLoad($event)"
+                    (upload)="onUploadResponse($event)"
+                    (uploadDone)="onUploadDone($event)"
+                    [accept]="'image/*,.pdf'">
+                  </file-select-manager>
+                  <ng-template #tolTemplate>{{ tooltipText }}</ng-template>
+                  <input #pasteInput (focusout)="onPasteFocusout()" (paste)="onPaste($event)" i18n-placeholder placeholder="Paste image" #tooltip="bs-tooltip" [tooltip]="tolTemplate" size="9" style="font-size: 0.7em;"/>
                 </div>
-                <tim-loading *ngIf="isRunning"></tim-loading>
-                <div *ngIf="error" [innerHTML]="error"></div>
-                <pre *ngIf="result">{{result}}</pre>
-            </ng-container>
-            <div *ngIf="connectionErrorMessage || userErrorMessage">
-                <span *ngIf="connectionErrorMessage" class="error" [innerHTML]="connectionErrorMessage"></span>
-                <span *ngIf="userErrorMessage" class="error" [innerHTML]="userErrorMessage"></span>
-            </div>
-            <button *ngIf="enabled" class="timButton" (click)="save()" i18n>Save answer</button>
-        </div>
-        <p footer *ngIf="footer" [textContent]="footer"></p>
-    `,
+                @if (isRunning) {
+                  <tim-loading></tim-loading>
+                }
+                @if (error) {
+                  <div [innerHTML]="error"></div>
+                }
+                @if (result) {
+                  <pre>{{result}}</pre>
+                }
+              </ng-container>
+            }
+            @if (connectionErrorMessage || userErrorMessage) {
+              <div>
+                @if (connectionErrorMessage) {
+                  <span class="error" [innerHTML]="connectionErrorMessage"></span>
+                }
+                @if (userErrorMessage) {
+                  <span class="error" [innerHTML]="userErrorMessage"></span>
+                }
+              </div>
+            }
+            @if (enabled) {
+              <button class="timButton" (click)="save()" i18n>Save answer</button>
+            }
+          </div>
+        }
+        @if (footer) {
+          <p footer [textContent]="footer"></p>
+        }
+        `,
     styleUrls: ["./review-canvas.component.scss"],
     standalone: false,
 })
@@ -648,7 +676,7 @@ export class ReviewCanvasComponent
         TimUtilityModule,
         CsUtilityModule,
         PurifyModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],
 })

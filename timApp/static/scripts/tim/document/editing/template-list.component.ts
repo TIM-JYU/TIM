@@ -9,23 +9,25 @@ import {documentglobals} from "tim/util/globals";
 @Component({
     selector: "tim-template-list",
     template: `
-        <bootstrap-panel i18n-title title="Choose a template" [showClose]="true" *ngIf="templateList.length > 0">
-
+        @if (templateList.length > 0) {
+          <bootstrap-panel i18n-title title="Choose a template" [showClose]="true">
             <!--
             Templates' panel will always be shown even without any content.
             By removing an empty templates list placeholder message
             “No templates found” was to ensure that users would not
             misinterpret the placeholder text as an error message.
             -->
-
             <ul>
-                <li *ngFor="let template of templateList">
-                    {{template.title}}
-                    <button i18n class="timButton btn-xs" (click)="loadTemplate(template)">Load</button>
+              @for (template of templateList; track template) {
+                <li>
+                  {{template.title}}
+                  <button i18n class="timButton btn-xs" (click)="loadTemplate(template)">Load</button>
                 </li>
+              }
             </ul>
-        </bootstrap-panel>
-    `,
+          </bootstrap-panel>
+        }
+        `,
     standalone: false,
 })
 export class TemplateListComponent implements OnInit {

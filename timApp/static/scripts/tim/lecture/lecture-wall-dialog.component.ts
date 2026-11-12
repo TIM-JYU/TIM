@@ -124,7 +124,7 @@ export class LectureWallDialogComponent extends AngularDialogComponent<
         TimUtilityModule,
         DialogModule,
         LectureWallContentModule,
-        BsDropdownModule.forRoot(),
+        BsDropdownModule,
     ],
     exports: [LectureWallDialogComponent],
 })

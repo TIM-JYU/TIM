@@ -24,34 +24,36 @@ import {CommonModule} from "@angular/common";
     selector: "tim-view-range-edit-dialog",
     template: `
         <tim-dialog-frame class="overflow-visible">
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <div>
-                    <p>Toggle showing documents in smaller parts and edit the number of paragraphs shown per part.</p>
-                    <div class="checkbox">
-                        <label><input type="checkbox" [(ngModel)]="partitionDocumentsSetting">Enable partitioning
-                            documents</label>
-                    </div>
-                    <label title="Enter how many paragraphs are shown at a time">Piece size: <input class="form-control"
-                                                                                                    [(ngModel)]="viewRangeSetting"
-                                                                                                    type="number"
-                                                                                                    min="1"></label>
-                </div>
-                <br>
-                <tim-alert *ngIf="errorMessage" severity="warning">{{errorMessage}}</tim-alert>
-                <tim-alert severity="info">The page may reload when the changes are saved.</tim-alert>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            <div>
+              <p>Toggle showing documents in smaller parts and edit the number of paragraphs shown per part.</p>
+              <div class="checkbox">
+                <label><input type="checkbox" [(ngModel)]="partitionDocumentsSetting">Enable partitioning
+                documents</label>
+              </div>
+              <label title="Enter how many paragraphs are shown at a time">Piece size: <input class="form-control"
+                [(ngModel)]="viewRangeSetting"
+                type="number"
+              min="1"></label>
+            </div>
+            <br>
+              @if (errorMessage) {
+                <tim-alert severity="warning">{{errorMessage}}</tim-alert>
+              }
+              <tim-alert severity="info">The page may reload when the changes are saved.</tim-alert>
             </ng-container>
             <ng-container footer>
-                <button title="Return default settings" class="timButton pull-left"
-                        (click)="resetDefaults()">Reset defaults
-                </button>
-                <button class="timButton" title="Quit and save changes" (click)="ok()">OK</button>
-                <button class="timButton" title="Quit and discard changes" (click)="dismiss()">Cancel</button>
+              <button title="Return default settings" class="timButton pull-left"
+                (click)="resetDefaults()">Reset defaults
+              </button>
+              <button class="timButton" title="Quit and save changes" (click)="ok()">OK</button>
+              <button class="timButton" title="Quit and discard changes" (click)="dismiss()">Cancel</button>
             </ng-container>
-        </tim-dialog-frame>
-    `,
+          </tim-dialog-frame>
+        `,
     standalone: false,
 })
 export class ViewRangeEditDialogComponent extends AngularDialogComponent<

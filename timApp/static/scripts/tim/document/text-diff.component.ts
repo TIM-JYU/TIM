@@ -152,67 +152,83 @@ export function computeDiffRows(left: string, right: string): IDiffRow[] {
 @Component({
     selector: "tim-text-diff",
     template: `
-        <div class="diff-toolbar" *ngIf="showToolbar">
+        @if (showToolbar) {
+          <div class="diff-toolbar">
             <label class="normalLabel">
-                <input type="checkbox" [(ngModel)]="hideMatchingLines" (ngModelChange)="updateRows()">
-                Only show lines with differences ({{ diffsCount }})
+              <input type="checkbox" [(ngModel)]="hideMatchingLines" (ngModelChange)="updateRows()">
+              Only show lines with differences ({{ diffsCount }})
             </label>
             <div class="btn-group">
-                <button class="btn btn-default btn-sm"
-                        [class.active]="format === 'SideBySide'"
-                        (click)="format = 'SideBySide'">Side by side
-                </button>
-                <button class="btn btn-default btn-sm"
-                        [class.active]="format === 'LineByLine'"
-                        (click)="format = 'LineByLine'">Line by line
-                </button>
+              <button class="btn btn-default btn-sm"
+                [class.active]="format === 'SideBySide'"
+                (click)="format = 'SideBySide'">Side by side
+              </button>
+              <button class="btn btn-default btn-sm"
+                [class.active]="format === 'LineByLine'"
+                (click)="format = 'LineByLine'">Line by line
+              </button>
             </div>
-        </div>
+          </div>
+        }
         <div class="diff-table-container">
-            <table class="diff-table" *ngIf="format === 'LineByLine'">
-                <tbody>
-                <tr *ngFor="let row of lineRows">
+          @if (format === 'LineByLine') {
+            <table class="diff-table">
+              <tbody>
+                @for (row of lineRows; track row) {
+                  <tr>
                     <td class="content-col"
-                        [class.delete-row]="row.left?.prefix === '-'"
-                        [class.insert-row]="row.right?.prefix === '+'">
-                        <ng-container
-                                *ngTemplateOutlet="line; context: {$implicit: row.left ?? row.right, hasDiffs: row.hasDiffs}">
-                        </ng-container>
+                      [class.delete-row]="row.left?.prefix === '-'"
+                      [class.insert-row]="row.right?.prefix === '+'">
+                      <ng-container
+                        *ngTemplateOutlet="line; context: {$implicit: row.left ?? row.right, hasDiffs: row.hasDiffs}">
+                      </ng-container>
                     </td>
-                </tr>
-                </tbody>
+                  </tr>
+                }
+              </tbody>
             </table>
-            <table class="diff-table side-by-side" *ngIf="format === 'SideBySide'">
-                <tbody>
-                <tr *ngFor="let row of shownRows">
+          }
+          @if (format === 'SideBySide') {
+            <table class="diff-table side-by-side">
+              <tbody>
+                @for (row of shownRows; track row) {
+                  <tr>
                     <td class="content-col"
-                        [class.delete-row]="row.left?.prefix === '-'"
-                        [class.empty-row]="!row.left">
-                        <ng-container
-                                *ngTemplateOutlet="line; context: {$implicit: row.left, hasDiffs: row.hasDiffs}">
-                        </ng-container>
+                      [class.delete-row]="row.left?.prefix === '-'"
+                      [class.empty-row]="!row.left">
+                      <ng-container
+                        *ngTemplateOutlet="line; context: {$implicit: row.left, hasDiffs: row.hasDiffs}">
+                      </ng-container>
                     </td>
                     <td class="content-col"
-                        [class.insert-row]="row.right?.prefix === '+'"
-                        [class.empty-row]="!row.right">
-                        <ng-container
-                                *ngTemplateOutlet="line; context: {$implicit: row.right, hasDiffs: row.hasDiffs}">
-                        </ng-container>
+                      [class.insert-row]="row.right?.prefix === '+'"
+                      [class.empty-row]="!row.right">
+                      <ng-container
+                        *ngTemplateOutlet="line; context: {$implicit: row.right, hasDiffs: row.hasDiffs}">
+                      </ng-container>
                     </td>
-                </tr>
-                </tbody>
+                  </tr>
+                }
+              </tbody>
             </table>
+          }
         </div>
         <ng-template #line let-l let-hasDiffs="hasDiffs">
-            <ng-container *ngIf="l">
-                <span *ngIf="!hasDiffs">{{ l.content || ' ' }}</span>
-                <ng-container *ngIf="hasDiffs">
-                    <span *ngFor="let p of l.parts" [class.highlight]="p.isDiff">{{ p.content }}</span>
-                    <span *ngIf="l.parts.length === 0">&#32;</span>
-                </ng-container>
-            </ng-container>
+          @if (l) {
+            @if (!hasDiffs) {
+              <span>{{ l.content || ' ' }}</span>
+            }
+            @if (hasDiffs) {
+              @for (p of l.parts; track p) {
+                <span [class.highlight]="p.isDiff">{{ p.content }}</span>
+              }
+              @if (l.parts.length === 0) {
+                <span>&#32;</span>
+              }
+            }
+          }
         </ng-template>
-    `,
+        `,
     styleUrls: ["./text-diff.component.scss"],
     standalone: false,
 })

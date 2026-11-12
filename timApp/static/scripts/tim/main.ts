@@ -1,7 +1,11 @@
 import "tim/loadJQueryAndMomentGlobals";
 import "reflect-metadata";
 
-import {enableProdMode, NgZone} from "@angular/core";
+import {
+    enableProdMode,
+    NgZone,
+    provideZoneChangeDetection,
+} from "@angular/core";
 import bootstrap from "bootstrap";
 import $ from "jquery";
 import {ViewCtrl} from "tim/document/viewctrl";
@@ -171,7 +175,10 @@ $(async () => {
     }
     await Promise.all(moduleLoads);
 
-    const moduleRef = await platformBrowserDynamic().bootstrapModule(AppModule);
+    const moduleRef = await platformBrowserDynamic().bootstrapModule(
+        AppModule,
+        {applicationProviders: [provideZoneChangeDetection()]}
+    );
     timLogTime("Angular bootstrap done", "main.ts");
     const zone = moduleRef.injector.get(NgZone);
 

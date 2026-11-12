@@ -42,66 +42,84 @@ export interface IAttachment {
     selector: "tim-merge-pdf-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{getTitle()}}
-            </ng-container>
-            <ng-container body>
-                <div class="form-horizontal">
-                    <p *ngIf="attachmentList.length > 0">
-                        The following attachments were found in the current document:
-                    </p>
-                    <div class="form-group">
-                        <div class="col-sm-12">
-                            <ul class="list-unstyled">
-                                <li *ngFor="let x of attachmentList">
-                                    <label>
-                                        <input type="checkbox"
-                                               [(ngModel)]="x.selected"
-                                               [disabled]="!!x.error">&ngsp;
-                                        <a [href]="x.url" target="_blank">{{getFileName(x.url)}}</a>
-                                    </label>
-                                    &ngsp;
-                                    <span [style.color]="macroColor(x.macro)">{{x.macro}}</span>
-                                    &ngsp;
-                                    <span *ngIf="x.error"
-                                          style="color:red;"
-                                          class="glyphicon glyphicon-warning-sign"
-                                          [tooltip]="x.error"></span>
-                                </li>
-                            </ul>
-                            <p *ngIf="!errorMessage && attachmentList.length == 0 && !checking">
-                                No attachments found
-                            </p>
-                            <tim-alert *ngIf="errorMessage && !checking" severity="warning">
-                                {{errorMessage}}
-                            </tim-alert>
-                        </div>
-                    </div>
-                    <tim-alert *ngIf="checking" severity="info">
-                        <tim-loading></tim-loading>
-                        Checking validity of the attachments, please wait...
-                    </tim-alert>
+          <ng-container header>
+            {{getTitle()}}
+          </ng-container>
+          <ng-container body>
+            <div class="form-horizontal">
+              @if (attachmentList.length > 0) {
+                <p>
+                  The following attachments were found in the current document:
+                </p>
+              }
+              <div class="form-group">
+                <div class="col-sm-12">
+                  <ul class="list-unstyled">
+                    @for (x of attachmentList; track x) {
+                      <li>
+                        <label>
+                          <input type="checkbox"
+                            [(ngModel)]="x.selected"
+                            [disabled]="!!x.error">&ngsp;
+                            <a [href]="x.url" target="_blank">{{getFileName(x.url)}}</a>
+                          </label>
+                          &ngsp;
+                          <span [style.color]="macroColor(x.macro)">{{x.macro}}</span>
+                          &ngsp;
+                          @if (x.error) {
+                            <span
+                              style="color:red;"
+                              class="glyphicon glyphicon-warning-sign"
+                            [tooltip]="x.error"></span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                    @if (!errorMessage && attachmentList.length == 0 && !checking) {
+                      <p>
+                        No attachments found
+                      </p>
+                    }
+                    @if (errorMessage && !checking) {
+                      <tim-alert severity="warning">
+                        {{errorMessage}}
+                      </tim-alert>
+                    }
+                  </div>
                 </div>
+                @if (checking) {
+                  <tim-alert severity="info">
+                    <tim-loading></tim-loading>
+                    Checking validity of the attachments, please wait...
+                  </tim-alert>
+                }
+              </div>
             </ng-container>
             <ng-container footer>
-                <div style="float: left;">
-                    <button class="timButton"
-                            (click)="mergeClicked()"
-                            [disabled]="attachmentList.length == 0"
-                            title="Merge selected files">
-                        <span *ngIf="loading"><tim-loading></tim-loading>
-                        Merging</span>
-                        <span *ngIf="!loading">Merge selected</span>
-                    </button>
-                    <button class="timButton" (click)="dismiss()"><span>Cancel</span></button>
-                </div>
-                <tim-alert style="float: right;" *ngIf="mergedUrl" severity="success">
-                    Merging succeeded!
-                    <a href="{{mergedUrl}}" target="_blank">View the document.</a>
-                </tim-alert>
-            </ng-container>
+              <div style="float: left;">
+                <button class="timButton"
+                  (click)="mergeClicked()"
+                  [disabled]="attachmentList.length == 0"
+                  title="Merge selected files">
+                @if (loading) {
+                  <span><tim-loading></tim-loading>
+                Merging</span>
+              }
+              @if (!loading) {
+                <span>Merge selected</span>
+              }
+            </button>
+            <button class="timButton" (click)="dismiss()"><span>Cancel</span></button>
+          </div>
+          @if (mergedUrl) {
+            <tim-alert style="float: right;" severity="success">
+              Merging succeeded!
+              <a href="{{mergedUrl}}" target="_blank">View the document.</a>
+            </tim-alert>
+          }
+        </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class MergePdfDialogComponent extends AngularDialogComponent<
@@ -198,7 +216,7 @@ export class MergePdfDialogComponent extends AngularDialogComponent<
         DialogModule,
         TimUtilityModule,
         FormsModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],
 })

@@ -86,65 +86,94 @@ interface IStackData {
     selector: "tim-stack-runner",
     template: `
         <div class="csRunDiv math que stack no-popup-menu" [class.cs-has-header]="header">
-            <h4 *ngIf="header" [innerHtml]="header"></h4>
-            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
-            <p *ngIf="!isOpen" class="stem" [innerHtml]="markup.beforeOpen | purify"></p>
-
-            <div class="no-popup-menu stackOutput" *ngIf="timWay">
-                <div class="csRunCode"><textarea class="csRunArea csInputArea"
-                                                 name="stackapi_ans1" id="stackapi_ans1"
-                                                 [rows]="inputrows"
-                                                 [(ngModel)]="userCode"
-                                                 [placeholder]="inputplaceholder"></textarea></div>
+          @if (header) {
+            <h4 [innerHtml]="header"></h4>
+          }
+          @if (stem) {
+            <p class="stem" [innerHtml]="stem"></p>
+          }
+          @if (!isOpen) {
+            <p class="stem" [innerHtml]="markup.beforeOpen | purify"></p>
+          }
+        
+          @if (timWay) {
+            <div class="no-popup-menu stackOutput">
+              <div class="csRunCode"><textarea class="csRunArea csInputArea"
+                name="stackapi_ans1" id="stackapi_ans1"
+                [rows]="inputrows"
+                [(ngModel)]="userCode"
+              [placeholder]="inputplaceholder"></textarea></div>
             </div>
-            <div id="output" *ngIf="!timWay && stackOutput" class="stackOutput" [scriptedInnerHTML]="stackOutput"></div>
-            <p class="csRunMenu">
-                <button *ngIf="!isOpen"
-                        class="timButton btn-sm"
-                        (click)="runGetTask()">Show task
-                </button>
-                <button *ngIf="isOpen && !markup.autosave"
-                        [disabled]="isRunning"
-                        title="(Ctrl-S)"
-                        class="timButton btn-sm"
-                        (click)="runSave()"
-                        [innerHtml]="button | purify"></button>
-                <button *ngIf="!markup.autopeek"
-                        class="timButton btn-sm"
-                        [disabled]="isRunning"
-                        (click)="runPeek()">Peek
-                </button>
-            </p>
-            <div *ngIf="stackInputFeedback" id="stackinputfeedback"
-                 class="stackinputfeedback1"
-                 [scriptedInnerHTML]="stackInputFeedback"></div>
+          }
+          @if (!timWay && stackOutput) {
+            <div id="output" class="stackOutput" [scriptedInnerHTML]="stackOutput"></div>
+          }
+          <p class="csRunMenu">
+            @if (!isOpen) {
+              <button
+                class="timButton btn-sm"
+                (click)="runGetTask()">Show task
+              </button>
+            }
+            @if (isOpen && !markup.autosave) {
+              <button
+                [disabled]="isRunning"
+                title="(Ctrl-S)"
+                class="timButton btn-sm"
+                (click)="runSave()"
+              [innerHtml]="button | purify"></button>
+            }
+            @if (!markup.autopeek) {
+              <button
+                class="timButton btn-sm"
+                [disabled]="isRunning"
+                (click)="runPeek()">Peek
+              </button>
+            }
+          </p>
+          @if (stackInputFeedback) {
+            <div id="stackinputfeedback"
+              class="stackinputfeedback1"
+            [scriptedInnerHTML]="stackInputFeedback"></div>
+          }
+          @if (error) {
             <span class="csRunError"
-                  *ngIf="error"
-                  [innerHtml]="error | purify"></span>
-            &nbsp;&nbsp;
-            <span *ngIf="savedText" class="savedtext">{{savedText}}</span>
-
-            <div *ngIf="stackFeedback">
-                <div *ngIf="markup.generalfeedback">
-                    <h5>General feedback:</h5>
-                    <div id="generalfeedback" [innerHtml]="stackFeedback | purify"></div>
+            [innerHtml]="error | purify"></span>
+          }
+          <ng-container> &nbsp;&nbsp; </ng-container>
+          @if (savedText) {
+            <span class="savedtext">{{savedText}}</span>
+          }
+        
+          @if (stackFeedback) {
+            <div>
+              @if (markup.generalfeedback) {
+                <div>
+                  <h5>General feedback:</h5>
+                  <div id="generalfeedback" [innerHtml]="stackFeedback | purify"></div>
                 </div>
-                <div *ngIf="markup.correctresponse">
-                    <h5>Format correct response:</h5>
-                    <div id="formatcorrectresponse" [innerHtml]="stackFormatCorrectResponse | purify"></div>
-                    <div style="font-size: 0.7em;">
-                        <p>Score: <span id="score" [innerHtml]="stackScore | purify"></span></p>
-                        <p>Summarise response: <span id="summariseresponse"
-                                                     [innerHtml]="stackSummariseResponse | purify"></span></p>
-                        <p>Answer notes: <span id="answernotes" [innerHtml]="stackAnswerNotes | purify"></span></p>
-                        <p>Time: <span id="time" [innerHtml]="stackTime | purify"></span></p>
-                    </div>
+              }
+              @if (markup.correctresponse) {
+                <div>
+                  <h5>Format correct response:</h5>
+                  <div id="formatcorrectresponse" [innerHtml]="stackFormatCorrectResponse | purify"></div>
+                  <div style="font-size: 0.7em;">
+                    <p>Score: <span id="score" [innerHtml]="stackScore | purify"></span></p>
+                    <p>Summarise response: <span id="summariseresponse"
+                    [innerHtml]="stackSummariseResponse | purify"></span></p>
+                    <p>Answer notes: <span id="answernotes" [innerHtml]="stackAnswerNotes | purify"></span></p>
+                    <p>Time: <span id="time" [innerHtml]="stackTime | purify"></span></p>
+                  </div>
                 </div>
+              }
             </div>
-
-            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
+          }
+        
+          @if (footer) {
+            <p class="plgfooter" [innerHtml]="footer | purify"></p>
+          }
         </div>
-    `,
+        `,
     standalone: false,
 })
 export class StackPluginComponent

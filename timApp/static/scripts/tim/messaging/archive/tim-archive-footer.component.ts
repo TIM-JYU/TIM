@@ -8,14 +8,18 @@ import {ArchivedMessageStateService} from "tim/messaging/archive/archived-messag
     selector: "tim-archive-footer",
     template: `
         <div class="message-footer-jump-links">
-            <a *ngIf="siblings.prev" href="/{{route}}/{{siblings.prev.path}}" i18n>
+          @if (siblings.prev) {
+            <a href="/{{route}}/{{siblings.prev.path}}" i18n>
                 Previous: {{siblings.prev.title}}
             </a>
-            <a *ngIf="siblings.next" href="/{{route}}/{{siblings.next.path}}" i18n>
+          }
+          @if (siblings.next) {
+            <a href="/{{route}}/{{siblings.next.path}}" i18n>
                 Next: {{siblings.next.title}}
             </a>
+          }
         </div>
-    `,
+        `,
     styleUrls: ["./tim-archive-footer.component.scss"],
     encapsulation: ViewEncapsulation.None,
     standalone: false,

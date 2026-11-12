@@ -27,119 +27,141 @@ export interface IContentReport {
     selector: "report-content-dialog",
     template: `
         <tim-dialog-frame [minimizable]="false">
-            <ng-container i18n header>
+          <ng-container i18n header>
                 Report inappropriate content
             </ng-container>
-            <ng-container body>
-                <div class="page-header">
-                    <h1 i18n>Report inappropriate content</h1>
-                </div>
-                <div i18n class="help-block">
+          <ng-container body>
+            <div class="page-header">
+              <h1 i18n>Report inappropriate content</h1>
+            </div>
+            <div i18n class="help-block">
                     <p>Use this form to report any harmful or inappropriate content you encounter on TIM. If you would like a response from the TIM administrators, please provide your email address.</p>
                 </div>
-                <form #reportForm="ngForm">
-                    <fieldset [disabled]="showOk" [ngClass]="{'text-muted': showOk}">
-                        <div class="form-group">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <label i18n for="idUrl">
+            <form #reportForm="ngForm">
+              <fieldset [disabled]="showOk" [ngClass]="{'text-muted': showOk}">
+                <div class="form-group">
+                  <div class="row">
+                    <div class="col-lg-12">
+                      <label i18n for="idUrl">
                                         Page address
                                         <span>(optional)</span>
                                     </label>
-                                    <div class="input-group" [ngClass]="{'has-error': urlError}">
-                                        <input 
-                                                class="form-control"
-                                                id="idUrl" 
-                                                type="url" 
-                                                name="url" 
-                                                [(ngModel)]="reportedUrl"
-                                                (ngModelChange)="clearUrlError()"
-                                                i18n>
-                                        <span class="input-group-btn">
-                                            <button class="btn btn-primary" (click)="getUrl()" i18n>Fill current address</button>
-                                        </span>
-                                    </div>
-                                    <div *ngIf="urlError" class="alert alert-danger">
-                                        <small *ngIf="urlError" i18n>Please check the page address. You can only report addresses from TIM.</small>
-                                    </div>
-                                    <small class="help-block" i18n>This is the page address where you encountered the issue. If you are reporting a problem on a different page, please paste the correct address here.</small>
-                                </div>
-                            </div>
+                      <div class="input-group" [ngClass]="{'has-error': urlError}">
+                        <input
+                          class="form-control"
+                          id="idUrl"
+                          type="url"
+                          name="url"
+                          [(ngModel)]="reportedUrl"
+                          (ngModelChange)="clearUrlError()"
+                          i18n>
+                        <span class="input-group-btn">
+                          <button class="btn btn-primary" (click)="getUrl()" i18n>Fill current address</button>
+                          </span>
                         </div>
-                        <div class="form-group">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <label i18n for="idEmail">
-                                        Your Email
+                        @if (urlError) {
+                          <div class="alert alert-danger">
+                            @if (urlError) {
+                              <small i18n>Please check the page address. You can only report addresses from TIM.</small>
+                              }
+                            </div>
+                          }
+                          <small class="help-block" i18n>This is the page address where you encountered the issue. If you are reporting a problem on a different page, please paste the correct address here.</small>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <div class="row">
+                          <div class="col-lg-12">
+                            <label i18n for="idEmail">
+                                                                     Your Email
                                         <span>(optional)</span>
                                     </label>
-                                    <div class="input-group" [ngClass]="{'has-error': email_error}">
-                                        <input 
-                                                class="form-control"
-                                                id="idEmail" 
-                                                type="email" 
-                                                #emailfield="ngModel"
-                                                name="emailInput" 
-                                                [(ngModel)]="email" 
-                                                placeholder="Email"
-                                                maxlength="256"
-                                                (ngModelChange)="clearEmailError()"
-                                                i18n>
-                                        <span class="input-group-btn">
-                                            <button class="btn btn-primary" (click)="getUserMail()" [disabled]="!isLoggedIn()" i18n>Fill user email</button>
-                                        </span>
-                                        </div>
-                                        <div *ngIf="emailfield.invalid && (emailfield.dirty || emailfield.touched) || email_error" class="alert alert-danger">
-                                            <small *ngIf="emailfield.errors?.email || email_error" i18n>Please enter a valid email address.</small>
-                                            <small *ngIf="emailfield.errors?.maxlenght" i18n>The email address cannot exceed 256 characters.</small>
-                                    </div>
-                                    <small class="help-block" i18n>Please provide your email address if you wish for the TIM administrators to follow up with you regarding this report.</small>
+                              <div class="input-group" [ngClass]="{'has-error': email_error}">
+                                <input
+                                  class="form-control"
+                                  id="idEmail"
+                                  type="email"
+                                  #emailfield="ngModel"
+                                  name="emailInput"
+                                  [(ngModel)]="email"
+                                  placeholder="Email"
+                                  maxlength="256"
+                                  (ngModelChange)="clearEmailError()"
+                                  i18n>
+                                <span class="input-group-btn">
+                                  <button class="btn btn-primary" (click)="getUserMail()" [disabled]="!isLoggedIn()" i18n>Fill user email</button>
+                                  </span>
                                 </div>
-                            </div>
-                        </div>
-                        <div class="form-group" [ngClass]="{'has-error': reasonfield.invalid && reasonfield.touched}">
-                            <label for="idReportText" i18n>Describe the issue</label>
-                            <textarea 
-                                    class="form-control" 
-                                    id="idReportText" 
-                                    name="reportText" 
-                                    rows="5"
-                                    [(ngModel)]="reason" 
-                                    #reasonfield="ngModel"
-                                    maxlength="2000"
+                                @if (emailfield.invalid && (emailfield.dirty || emailfield.touched) || email_error) {
+                                  <div class="alert alert-danger">
+                                    @if (emailfield.errors?.email || email_error) {
+                                      <small i18n>Please enter a valid email address.</small>
+                                      }
+                                      @if (emailfield.errors?.maxlenght) {
+                                        <small i18n>The email address cannot exceed 256 characters.</small>
+                                        }
+                                      </div>
+                                    }
+                                    <small class="help-block" i18n>Please provide your email address if you wish for the TIM administrators to follow up with you regarding this report.</small>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="form-group" [ngClass]="{'has-error': reasonfield.invalid && reasonfield.touched}">
+                                  <label for="idReportText" i18n>Describe the issue</label>
+                                    <textarea
+                                      class="form-control"
+                                      id="idReportText"
+                                      name="reportText"
+                                      rows="5"
+                                      [(ngModel)]="reason"
+                                      #reasonfield="ngModel"
+                                      maxlength="2000"
                                     required></textarea>
-                            <div *ngIf="reasonfield.invalid && (reasonfield.dirty || reasonfield.touched)" class="alert alert-danger">
-                                <small *ngIf="reasonfield.errors?.required" i18n><span class="glyphicon glyphicon-exclamation-sign"></span> This field is required.</small>    
-                                <small *ngIf="reasonfield.errors?.maxlenght" i18n>The description cannot exceed 2000 characters.</small>    
-                            </div>
-                            <small class="help-block" i18n>Explain why you think the content is inappropriate. Be as specific as possible.</small>
-                        </div>
-                    </fieldset>
-                </form>           
-            </ng-container>
-            <ng-container footer>
-                <div *ngIf="showError">
-                    <div class="alert alert-danger alert-dismissible">
-                        <button type="button" class="close" (click)="dismissAlert()"><span>&times;</span></button>
-                        <p class="text-left" i18n><strong><span class="glyphicon glyphicon-exclamation-sign"></span> There was an error.</strong></p>
-                        <p class="text-left">{{errorMsg}}</p>
-                        <p class="text-left" i18n>Your report was not sent.</p>
-                    </div>
-                </div>
-                <div *ngIf="!showOk">
-                    <button class="timButton" (click)="sendMail()" [disabled]="reportForm.invalid || showError || urlError || email_error" i18n>Report Page</button>
-                    <button class="btn btn-default" (click)="dismiss()" i18n>Cancel</button>
-                </div>
-                <div *ngIf="showOk">
-                    <div class="alert alert-success">
-                        <p class="text-left" i18n><strong>Thank you for your report.</strong></p>
-                        <p class="text-left" i18n>Your message has been sent to the TIM administrators. We appreciate your help in keeping our content accurate and safe.</p>
-                    </div>
-                    <button class="timButton" (click)="dismiss()" i18n>Done</button>
-                </div>
-            </ng-container>
-        </tim-dialog-frame>
-    `,
+                                    @if (reasonfield.invalid && (reasonfield.dirty || reasonfield.touched)) {
+                                      <div class="alert alert-danger">
+                                        @if (reasonfield.errors?.required) {
+                                          <small i18n><span class="glyphicon glyphicon-exclamation-sign"></span> This field is required.</small>
+                                        }
+                                        @if (reasonfield.errors?.maxlenght) {
+                                          <small i18n>The description cannot exceed 2000 characters.</small>
+                                          }
+                                        </div>
+                                      }
+                                      <small class="help-block" i18n>Explain why you think the content is inappropriate. Be as specific as possible.</small>
+                                      </div>
+                                    </fieldset>
+                                  </form>
+                                </ng-container>
+                                <ng-container footer>
+                                  @if (showError) {
+                                    <div>
+                                      <div class="alert alert-danger alert-dismissible">
+                                        <button type="button" class="close" (click)="dismissAlert()"><span>&times;</span></button>
+                                        <p class="text-left" i18n><strong><span class="glyphicon glyphicon-exclamation-sign"></span> There was an error.</strong></p>
+                                        <p class="text-left">{{errorMsg}}</p>
+                                        <p class="text-left" i18n>Your report was not sent.</p>
+                                      </div>
+                                    </div>
+                                  }
+                                  @if (!showOk) {
+                                    <div>
+                                      <button class="timButton" (click)="sendMail()" [disabled]="reportForm.invalid || showError || urlError || email_error" i18n>Report Page</button>
+                                        <button class="btn btn-default" (click)="dismiss()" i18n>Cancel</button>
+                                        </div>
+                                      }
+                                      @if (showOk) {
+                                        <div>
+                                          <div class="alert alert-success">
+                                            <p class="text-left" i18n><strong>Thank you for your report.</strong></p>
+                                            <p class="text-left" i18n>Your message has been sent to the TIM administrators. We appreciate your help in keeping our content accurate and safe.</p>
+                                          </div>
+                                          <button class="timButton" (click)="dismiss()" i18n>Done</button>
+                                          </div>
+                                        }
+                                      </ng-container>
+                                    </tim-dialog-frame>
+        `,
     styleUrls: ["./report-content-dialog.component.scss"],
     standalone: false,
 })

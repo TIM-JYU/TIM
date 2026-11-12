@@ -49,7 +49,7 @@ export class SpellErrorComponent implements OnDestroy {
         const par = $(this.e.nativeElement).parents(".par");
         this.dlg = await showSpellErrorDialog({
             info: {
-                word: this.e.nativeElement.textContent!,
+                word: this.e.nativeElement.textContent,
                 occurrence: Number(this.count ?? 1) || 1,
                 blockIndex: par.length > 0 ? par.index() : 0, // In case we're editing a comment, there is no par class.
                 suggestions: this.getSuggestions(),

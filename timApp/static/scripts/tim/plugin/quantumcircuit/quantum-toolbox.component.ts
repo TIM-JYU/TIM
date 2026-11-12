@@ -10,53 +10,67 @@ import {
     selector: "tim-quantum-toolbox",
     template: `
         <div class="toolbox" [class.toolbox-static-height]="isToolboxStaticHeight">
-            <div class="gate-info" *ngIf="activeGateInfo && !activeGateInfo.hide">
-                <div class="gate-info-header">
-                    <div>{{activeGateInfo.description}}</div>
-                    <div *ngIf="showEditableInfo" class="text-info gate-editable-message">
-                        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                        <ng-container i18n>This gate can't be edited</ng-container>
-                        
-                    </div>
-
-                    <button i18n-title title="hide" type="button" class="btn btn-default btn-sm" (click)="handleClose()">
-                        <span class="glyphicon glyphicon-remove"></span>
-                    </button>
-                </div>
-                <hr>
+          @if (activeGateInfo && !activeGateInfo.hide) {
+            <div class="gate-info">
+              <div class="gate-info-header">
+                <div>{{activeGateInfo.description}}</div>
+                @if (showEditableInfo) {
+                  <div class="text-info gate-editable-message">
+                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                    <ng-container i18n>This gate can't be edited</ng-container>
+                  </div>
+                }
+                <button i18n-title title="hide" type="button" class="btn btn-default btn-sm" (click)="handleClose()">
+                  <span class="glyphicon glyphicon-remove"></span>
+                </button>
+              </div>
+              <hr>
                 <ng-container i18n>Matrix</ng-container>:
                 <table>
-                    <tbody>
-                    <tr *ngFor="let row of matrixTable">
-                        <td [attr.title]="value.long" *ngFor="let value of row">{{value.rounded}}</td>
-                    </tr>
-                    </tbody>
+                  <tbody>
+                    @for (row of matrixTable; track row) {
+                      <tr>
+                        @for (value of row; track value) {
+                          <td [attr.title]="value.long">{{value.rounded}}</td>
+                        }
+                      </tr>
+                    }
+                  </tbody>
                 </table>
-                <p *ngIf="qubitString"><ng-container i18n>Qubit</ng-container>: {{qubitString}}</p>
-                <p *ngIf="timeString"><ng-container i18n>Time</ng-container>: {{timeString}}</p>
-                <p *ngIf="controlsString" class="controls">
+                @if (qubitString) {
+                  <p><ng-container i18n>Qubit</ng-container>: {{qubitString}}</p>
+                }
+                @if (timeString) {
+                  <p><ng-container i18n>Time</ng-container>: {{timeString}}</p>
+                }
+                @if (controlsString) {
+                  <p class="controls">
                     <ng-container i18n>Controls</ng-container>:
                     {{controlsString}}
-                </p>
-                
-                <p *ngIf="antiControlsString" class="anti-controls">
+                  </p>
+                }
+                @if (antiControlsString) {
+                  <p class="anti-controls">
                     <ng-container i18n>Anti-controls</ng-container>:
                     {{antiControlsString}}
-                </p>
-
-                <p *ngIf="swapString">
+                  </p>
+                }
+                @if (swapString) {
+                  <p>
                     Swap:
                     {{swapString}}
-                </p>
-            </div>
-
+                  </p>
+                }
+              </div>
+            }
+        
             <a href="/view/tim/ohjeita/kvanttisimulaattori"
-               target="_blank">
-                <span class="glyphicon glyphicon-question-sign help-icon" i18n-title title="Instructions"></span>
+              target="_blank">
+              <span class="glyphicon glyphicon-question-sign help-icon" i18n-title title="Instructions"></span>
             </a>
-
-        </div>
-    `,
+        
+          </div>
+        `,
     styleUrls: ["./quantum-toolbox.component.scss"],
     standalone: false,
 })

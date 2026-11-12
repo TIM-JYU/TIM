@@ -17,20 +17,24 @@ import {TimMessageModule} from "tim/messaging/tim-message.component";
 @Component({
     selector: "tim-message-view",
     template: `
-        <tim-alert *ngIf="messageError" i18n>
+        @if (messageError) {
+          <tim-alert i18n>
             Could not load messages for the page: {{messageError}}
         </tim-alert>
-        <div class="sticky" *ngIf="globalUserMessage">
+        }
+        @if (globalUserMessage) {
+          <div class="sticky">
             <tim-message [message]="globalUserMessageObject" [isGlobal]="true"></tim-message>
-        </div>
+          </div>
+        }
         <div class="sticky">
-            <ng-container #messageContainerSticky></ng-container>
+          <ng-container #messageContainerSticky></ng-container>
         </div>
         <div>
-            <ng-container #messageContainerNormal></ng-container>
+          <ng-container #messageContainerNormal></ng-container>
         </div>
-
-    `,
+        
+        `,
     styleUrls: ["tim-message-view.component.scss"],
     standalone: false,
 })

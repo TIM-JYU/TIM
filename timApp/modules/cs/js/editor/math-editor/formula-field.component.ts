@@ -59,55 +59,56 @@ const ERROR_MESSAGE_DELAY = 1000;
     selector: "cs-formula-field",
     template: `
         <div class="formula-field" [class.active-field]="isActive">
-            <div class="input-container" #inputContainer>
-                <span
-                        class="visual-input"
-                        [class.active-visual-input]="isActive"
-                        #visualInput
-                        (keyup.tab)="handleFocus()"
-                        (keyup.shift.tab)="handleFocus()"
-                        (click)="handleFocus()"
-                        (focus)="handleFocus()"
-                        (touchstart)="handleTouch()"
-                        (keyup)="handleVisualFocus()"
-                        (keydown.control.z)="handleUndo()"
-                        (keydown.control.y)="handleRedo()">
-                </span>
-
-                <textarea name="math-editor-output" #latexInputElement cols="30"
-                          *ngIf="isActive"
-                          rows="{{rows}}"
-                          (click)="handleLatexFocus()"
-                          (keyup)="handleLatexInput()"
-                          [(ngModel)]="latexInput"
-                          placeholder="Write LaTeX" i18n-placeholder
-                          class="formula-area"
-                          (focus)="handleLatexFocus()"
-                          (keydown.control.z)="handleUndo()"
-                          (keydown.control.y)="handleRedo()">
-                </textarea>
-                <span class="placeholder-text" [hidden]="error || !isMathFieldEmpty || !isActive" i18n>Write math</span>
-                <span class="render-error" [hidden]="!error || !isActive">{{getErrorMessage()}}</span>
+          <div class="input-container" #inputContainer>
+            <span
+              class="visual-input"
+              [class.active-visual-input]="isActive"
+              #visualInput
+              (keyup.tab)="handleFocus()"
+              (keyup.shift.tab)="handleFocus()"
+              (click)="handleFocus()"
+              (focus)="handleFocus()"
+              (touchstart)="handleTouch()"
+              (keyup)="handleVisualFocus()"
+              (keydown.control.z)="handleUndo()"
+              (keydown.control.y)="handleRedo()">
+            </span>
+        
+            @if (isActive) {
+              <textarea name="math-editor-output" #latexInputElement cols="30"
+                rows="{{rows}}"
+                (click)="handleLatexFocus()"
+                (keyup)="handleLatexInput()"
+                [(ngModel)]="latexInput"
+                placeholder="Write LaTeX" i18n-placeholder
+                class="formula-area"
+                (focus)="handleLatexFocus()"
+                (keydown.control.z)="handleUndo()"
+                (keydown.control.y)="handleRedo()">
+              </textarea>
+            }
+            <span class="placeholder-text" [hidden]="error || !isMathFieldEmpty || !isActive" i18n>Write math</span>
+            <span class="render-error" [hidden]="!error || !isActive">{{getErrorMessage()}}</span>
+          </div>
+        
+          @if (isActive) {
+            <div class="formula-field-buttons btn-group btn-group-xs">
+              <button type="button" class="btn btn-default" (click)="handleAddLine(false)" title="Add line above"
+                i18n-title>
+                <span class="glyphicon glyphicon-plus"></span>
+              </button>
+              <button type="button" class="btn btn-default" (click)="handleRemoveLine()" title="Remove current line"
+                i18n-title>
+                <span class="glyphicon glyphicon-remove"></span>
+              </button>
+              <button type="button" class="btn btn-default" (click)="handleAddLine(true)" title="Add line below"
+                i18n-title>
+                <span class="glyphicon glyphicon-plus"></span>
+              </button>
             </div>
-
-            <div class="formula-field-buttons btn-group btn-group-xs" *ngIf="isActive">
-                <button type="button" class="btn btn-default" (click)="handleAddLine(false)" title="Add line above"
-                        i18n-title>
-                    <span class="glyphicon glyphicon-plus"></span>
-                </button>
-
-                <button type="button" class="btn btn-default" (click)="handleRemoveLine()" title="Remove current line"
-                        i18n-title>
-                    <span class="glyphicon glyphicon-remove"></span>
-                </button>
-
-                <button type="button" class="btn btn-default" (click)="handleAddLine(true)" title="Add line below"
-                        i18n-title>
-                    <span class="glyphicon glyphicon-plus"></span>
-                </button>
-            </div>
+          }
         </div>
-    `,
+        `,
     styleUrls: ["./formula-field.component.scss"],
     standalone: false,
 })

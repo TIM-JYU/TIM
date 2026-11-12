@@ -11,25 +11,31 @@ import {AlertSeverity} from "tim/ui/formErrorMessage";
     selector: "bootstrap-panel",
     template: `
         <div class="panel panel-{{ severity ? severity : 'default' }}" [hidden]="show === false">
-            <div class="panel-heading" [attr.id]="anchorId">
-                <ng-container *ngIf="title">{{ title }}</ng-container>
-                <ng-container *ngIf="titleTemplate">
-                    <ng-container *ngTemplateOutlet="titleTemplate"></ng-container>
-                </ng-container>
-                <a *ngIf="showClose">
-                    <tim-close-button (click)="close()"></tim-close-button>
+          <div class="panel-heading" [attr.id]="anchorId">
+            @if (title) {
+              {{ title }}
+            }
+            @if (titleTemplate) {
+              <ng-container *ngTemplateOutlet="titleTemplate"></ng-container>
+            }
+            @if (showClose) {
+              <a>
+                <tim-close-button (click)="close()"></tim-close-button>
+              </a>
+            }
+            @if (showHeadingAnchors && anchorId) {
+              <span class="headerlink">
+                <a href="#{{ anchorId }}" title="Permanent link to paragraph" class="">
+                  <span class="header-anchor">#</span>
                 </a>
-                <span class="headerlink" *ngIf="showHeadingAnchors && anchorId">
-                    <a href="#{{ anchorId }}" title="Permanent link to paragraph" class="">
-                        <span class="header-anchor">#</span>
-                    </a>
-                </span>
-            </div>
-            <div class="panel-body">
-                <ng-content></ng-content>
-            </div>
+              </span>
+            }
+          </div>
+          <div class="panel-body">
+            <ng-content></ng-content>
+          </div>
         </div>
-    `,
+        `,
     standalone: false,
 })
 export class BootstrapPanelComponent {

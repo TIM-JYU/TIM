@@ -80,91 +80,97 @@ export class SymbolsPipe implements PipeTransform {
     selector: "symbol-button-menu",
     template: `
         <div class="symbol-menu-container" [class.symbol-menu-container-mini]="mini" [class.symbol-menu-container-open]="isOpen()">
-            <div class="button-menu-container">
-                <div class="button-menu-left">
-                    <div [hidden]="formulaEditorOpen" *ngIf="!mini" class="formula-controls">
-                        <button class="timButton formula-button" (click)="toggleFormulaEditor()" i18n
-                                title="Ctrl+e">Open formula editor
+          <div class="button-menu-container">
+            <div class="button-menu-left">
+              @if (!mini) {
+                <div [hidden]="formulaEditorOpen" class="formula-controls">
+                  <button class="timButton formula-button" (click)="toggleFormulaEditor()" i18n
+                    title="Ctrl+e">Open formula editor
                         </button>
-
-                        <div class="file-select-button">
-                            <ng-content></ng-content>
-                        </div>
-                    </div>
-
-                    <div class="common-symbol-buttons math display"
-                         [class.common-symbol-buttons-small]="!formulaEditorOpen"
-                         [class.common-symbol-buttons-mini]="mini">
-                        <button
-                                [hidden]="formulaEditorOpen"
-                                class="symbol-button"
-                                [class.symbol-button-mini]="mini"
-                                *ngFor="let item of templateButtons | symbols:'t'"
-                                title="{{item.expl}}"
-                                (mouseup)="addFormula($event, item.data)"
-                                (touchend)="addFormula($event, item.data)"
-                                (mousedown)="handleMouseDown($event)"
-                                (touchstart)="handleMouseDown($event)"
-                        >{{item.text}}</button>
-                        <button
-                                class="symbol-button"
-                                [class.symbol-button-mini]="mini"
-                                *ngFor="let item of templateButtons | symbols:'q'"
-                                title="{{item.expl}}"
-                                (mouseup)="addFormula($event, item.data)"
-                                (touchend)="addFormula($event, item.data)"
-                                (mousedown)="handleMouseDown($event)"
-                                (touchstart)="handleMouseDown($event)"
-                        >{{item.text}}</button>
-                    </div>
+                  <div class="file-select-button">
+                    <ng-content></ng-content>
+                  </div>
                 </div>
-
-                <div *ngIf="!mini" class="button-menu-right">
-
-                    <button *ngIf="!isOpen(); else elseBlock" type="button" class="btn btn-default" (click)="openMenu()"
-                            title="Show more symbols" i18n-title>
-                        <span class="glyphicon glyphicon-menu-down"></span>
-                    </button>
-                    <ng-template #elseBlock>
-                        <button type="button" class="btn btn-default" (click)="closeMenu()" title="Show less symbols"
-                                i18n-title>
-                            <span class="glyphicon glyphicon-menu-up"></span>
-                        </button>
-                    </ng-template>
-
-                    <a href="/view/tim/ohjeita/kayttoohjeet-matikkaeditori"
-                       target="_blank">
-                        <span class="glyphicon glyphicon-question-sign help-icon" title="Instructions"
-                              i18n-title></span>
-                    </a>
-                </div>
+              }
+        
+              <div class="common-symbol-buttons math display"
+                [class.common-symbol-buttons-small]="!formulaEditorOpen"
+                [class.common-symbol-buttons-mini]="mini">
+                @for (item of templateButtons | symbols:'t'; track item) {
+                  <button
+                    [hidden]="formulaEditorOpen"
+                    class="symbol-button"
+                    [class.symbol-button-mini]="mini"
+                    title="{{item.expl}}"
+                    (mouseup)="addFormula($event, item.data)"
+                    (touchend)="addFormula($event, item.data)"
+                    (mousedown)="handleMouseDown($event)"
+                    (touchstart)="handleMouseDown($event)"
+                  >{{item.text}}</button>
+                }
+                @for (item of templateButtons | symbols:'q'; track item) {
+                  <button
+                    class="symbol-button"
+                    [class.symbol-button-mini]="mini"
+                    title="{{item.expl}}"
+                    (mouseup)="addFormula($event, item.data)"
+                    (touchend)="addFormula($event, item.data)"
+                    (mousedown)="handleMouseDown($event)"
+                    (touchstart)="handleMouseDown($event)"
+                  >{{item.text}}</button>
+                }
+              </div>
             </div>
-
-            <div class="symbol-button-menu" [class.symbol-button-menu-open]="isOpen()">
-                <div class="buttons-container math display" [hidden]="!isOpen()">
-                    <button class="symbol-button"
-                            title="{{item.expl}}"
-                            *ngFor="let item of templateButtons | symbols:'s'"
-                            (mouseup)="addFormula($event, item.data)"
-                            (touchend)="addFormula($event, item.data)"
-                            (mousedown)="handleMouseDown($event)"
-                            (touchstart)="handleMouseDown($event)"
-                    >{{item.text}}</button>
-                    <button class="symbol-button"
-                            [hidden]="formulaEditorOpen"
-                            title="{{item.expl}}"
-                            *ngFor="let item of templateButtons | symbols:'e'"
-                            (mouseup)="addFormula($event, item.data)"
-                            (touchend)="addFormula($event, item.data)"
-                            (mousedown)="handleMouseDown($event)"
-                            (touchstart)="handleMouseDown($event)"
-                    >{{item.text}}</button>
-                </div>
+        
+            @if (!mini) {
+              <div class="button-menu-right">
+                @if (!isOpen()) {
+                  <button type="button" class="btn btn-default" (click)="openMenu()"
+                    title="Show more symbols" i18n-title>
+                    <span class="glyphicon glyphicon-menu-down"></span>
+                  </button>
+                } @else {
+                  <button type="button" class="btn btn-default" (click)="closeMenu()" title="Show less symbols"
+                    i18n-title>
+                    <span class="glyphicon glyphicon-menu-up"></span>
+                  </button>
+                }
+                <a href="/view/tim/ohjeita/kayttoohjeet-matikkaeditori"
+                  target="_blank">
+                  <span class="glyphicon glyphicon-question-sign help-icon" title="Instructions"
+                  i18n-title></span>
+                </a>
+              </div>
+            }
+          </div>
+        
+          <div class="symbol-button-menu" [class.symbol-button-menu-open]="isOpen()">
+            <div class="buttons-container math display" [hidden]="!isOpen()">
+              @for (item of templateButtons | symbols:'s'; track item) {
+                <button class="symbol-button"
+                  title="{{item.expl}}"
+                  (mouseup)="addFormula($event, item.data)"
+                  (touchend)="addFormula($event, item.data)"
+                  (mousedown)="handleMouseDown($event)"
+                  (touchstart)="handleMouseDown($event)"
+                >{{item.text}}</button>
+              }
+              @for (item of templateButtons | symbols:'e'; track item) {
+                <button class="symbol-button"
+                  [hidden]="formulaEditorOpen"
+                  title="{{item.expl}}"
+                  (mouseup)="addFormula($event, item.data)"
+                  (touchend)="addFormula($event, item.data)"
+                  (mousedown)="handleMouseDown($event)"
+                  (touchstart)="handleMouseDown($event)"
+                >{{item.text}}</button>
+              }
             </div>
-
+          </div>
+        
         </div>
-
-    `,
+        
+        `,
     styleUrls: ["./symbol-button-menu.component.scss"],
     standalone: false,
 })

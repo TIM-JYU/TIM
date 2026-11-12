@@ -13,50 +13,66 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 @Component({
     selector: "bookmarks-list",
     template: `
-        <div *ngFor="let group of groups" class="btn-group btn-group-sm margin-4"
-             dropdown
-             [isOpen]="group.isOpen"
-             container="body">
+        @for (group of groups; track group) {
+          <div class="btn-group btn-group-sm margin-4"
+            dropdown
+            [isOpen]="group.isOpen"
+            container="body">
             <button dropdownToggle type="button" class="btn btn-default">
-                <ng-container *ngIf="group.name; else defaultName">{{group.name | bookmarkName}} </ng-container>
-                <ng-template #defaultName i18n>Top level </ng-template>
-                <span class="caret"></span>
+              @if (group.name) {
+                {{group.name | bookmarkName}}
+              } @else {
+                <ng-container i18n>Top level </ng-container>
+              }
+              <span class="caret"></span>
             </button>
             <ul *dropdownMenu class="dropdown-menu" role="menu" aria-labelledby="single-button">
-                <li *ngFor="let item of group.items" role="menuitem">
-                    <a [href]="item.link">{{item.name}}
-                        <ng-container *ngIf="deleting">
-                            <i (click)="editItem($event, group, item)" class="glyphicon glyphicon-pencil"></i>
-                            <i (click)="deleteItem($event, group, item)" class="glyphicon glyphicon-remove"></i>
-                        </ng-container>
-                    </a>
-                </li>
-                <li *ngIf="group.items.length > 0" class="divider"></li>
+              @for (item of group.items; track item) {
                 <li role="menuitem">
-                    <a (click)="newBookmark($event, group.name)" href="#" i18n>New bookmark...</a>
+                  <a [href]="item.link">{{item.name}}
+                    @if (deleting) {
+                      <i (click)="editItem($event, group, item)" class="glyphicon glyphicon-pencil"></i>
+                      <i (click)="deleteItem($event, group, item)" class="glyphicon glyphicon-remove"></i>
+                    }
+                  </a>
                 </li>
-                <ng-container *ngIf="group.editable">
-                    <li class="divider"></li>
-                    <li role="menuitem">
-                        <a (click)="toggleDelete($event)" href="#">
-                            <ng-container *ngIf="deleting; else editText" i18n>Done editing</ng-container>
-                            <ng-template #editText i18n>Edit...</ng-template>
-                        </a>
-                    </li>
-                </ng-container>
-                <li *ngIf="group.editable && deleting" role="menuitem">
-                    <a (click)="deleteGroup($event, group)" href="#" i18n>Delete this folder</a>
+              }
+              @if (group.items.length > 0) {
+                <li class="divider"></li>
+              }
+              <li role="menuitem">
+                <a (click)="newBookmark($event, group.name)" href="#" i18n>New bookmark...</a>
+              </li>
+              @if (group.editable) {
+                <li class="divider"></li>
+                <li role="menuitem">
+                  <a (click)="toggleDelete($event)" href="#">
+                    @if (deleting) {
+                      <ng-container i18n>Done editing</ng-container>
+                    } @else {
+                      <ng-container i18n>Edit...</ng-container>
+                    }
+                  </a>
                 </li>
+              }
+              @if (group.editable && deleting) {
+                <li role="menuitem">
+                  <a (click)="deleteGroup($event, group)" href="#" i18n>Delete this folder</a>
+                </li>
+              }
             </ul>
-        </div>
-        <a *ngFor="let bookmark of getTopLevelBookmarks()"
-           [href]="bookmark.link"
-           class="btn btn-sm btn-default space-right bookmark">{{bookmark.name}}
-        </a>
+          </div>
+        }
+        @for (bookmark of getTopLevelBookmarks(); track bookmark) {
+          <a
+            [href]="bookmark.link"
+            class="btn btn-sm btn-default space-right bookmark">{{bookmark.name}}
+          </a>
+        }
         <button (click)="newBookmark($event)" class="btn btn-sm btn-default" i18n>
             <i class="glyphicon glyphicon-plus"></i> New bookmark...
         </button>
-    `,
+        `,
     styleUrls: ["./bookmarks.component.scss"],
     standalone: false,
 })

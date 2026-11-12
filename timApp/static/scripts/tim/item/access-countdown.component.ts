@@ -6,17 +6,20 @@ import {documentglobals} from "tim/util/globals";
 @Component({
     selector: "tim-access-countdown",
     template: `
-        <ng-container *ngIf="countDown; else goto" i18n>
+        @if (countDown) {
+          <ng-container i18n>
             You will be able to access this { item.isFolder, select, true {folder} false {document} }
             in <tim-countdown [seconds]="waitTime"
                               [displayUnits]="['y', 'mo', 'w', 'd', 'h', 'm', 's']"
                               (onFinish)="this.countDown = false"></tim-countdown>.
         </ng-container>
-        <ng-template #goto i18n>
+        } @else {
+          <ng-container i18n>
             You can access the { item.isFolder, select, true { folder } false { document } } now.
             <tim-goto-link href="" [maxWait]="waitOffset" [autoOpen]="true">Refresh the page</tim-goto-link>
-        </ng-template>
-    `,
+        </ng-container>
+        }
+        `,
     standalone: false,
 })
 export class AccessCountdownComponent {

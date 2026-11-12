@@ -181,61 +181,79 @@ export class JSParsonsEditorComponent implements IEditor {
 @Component({
     selector: "cs-editor",
     template: `
-        <ng-container *ngIf="files.length">
-            <div *ngIf="showTabs" class="tab-list">
-                <div *ngFor="let file of files; index as i; trackBy: trackByPath" class="tab-label file-tab"
-                     [ngClass]="{'tab-label-active': tabIndex == i}" (click)="tabIndex = i">
-                    {{file.path}} {{file.canModify ? "" : "(read-only)"}}
-                    <div class="close-wrapper">
-                        <tim-close-button *ngIf="file.canClose" (click)="closeFile(i)"></tim-close-button>
-                    </div>
+        @if (files.length) {
+          @if (showTabs) {
+            <div class="tab-list">
+              @for (file of files; track trackByPath(i, file); let i = $index) {
+                <div class="tab-label file-tab"
+                  [ngClass]="{'tab-label-active': tabIndex == i}" (click)="tabIndex = i">
+                  {{file.path}} {{file.canModify ? "" : "(read-only)"}}
+                  <div class="close-wrapper">
+                    @if (file.canClose) {
+                      <tim-close-button (click)="closeFile(i)"></tim-close-button>
+                    }
+                  </div>
                 </div>
-                <div *ngIf="canAddFile" class="tab-label" [ngClass]="{'tab-label-active': tabIndex == files.length}"
-                     (click)="tabIndex = files.length">
-                    <span class="file-add-tab glyphicon glyphicon-plus"></span>
+              }
+              @if (canAddFile) {
+                <div class="tab-label" [ngClass]="{'tab-label-active': tabIndex == files.length}"
+                  (click)="tabIndex = files.length">
+                  <span class="file-add-tab glyphicon glyphicon-plus"></span>
                 </div>
+              }
             </div>
-            <ng-container *ngIf="!addTabActive">
-                <cs-normal-editor *ngIf="mode == Mode.Normal"
-                                  [minRows]="minRows_"
-                                  [maxRows]="maxRows_"
-                                  [placeholder]="file && file.placeholder ? file.placeholder : ''"
-                                  [disabled]="isDisabled"
-                                  [spellcheck]="spellcheck"
-                                  [allowContextMenu]="allowContextMenu">
-                </cs-normal-editor>
-                <cs-parsons-editor *ngIf="mode == Mode.Parsons"
-                                   [base]="base"
-                                   [parsonsOptions]="parsonsOptions"
-                                   (change)="onEditorContentChanged($event)">
-                </cs-parsons-editor>
-                <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
-                <cs-ace-editor *ngIf="mode == Mode.ACE"
-                               [languageMode]="languageMode"
-                               [startLineNumber]="startLineNumber"
-                               [minRows]="minRows_"
-                               [maxRows]="maxRows_"
-                               [placeholder]="file && file.placeholder ? file.placeholder : ''"
-                               [disabled]="isDisabled"
-                               [aceOptions]="aceOptions">
-                </cs-ace-editor>
-            </ng-container>
-            <div *ngIf="addTabActive" class="add-view">
-                <file-select class="small" style="height: 4em;"
-                             [multiple]="false"
-                             [stem]="'Load a file (optional)'"
-                             [dragAndDrop]="true"
-                             (file)="onFileLoad($event)">
-                </file-select>
-                Filename:<input type="text" placeholder="Give a name here" [(ngModel)]="filenameInput">
-                <br>
+          }
+          @if (!addTabActive) {
+            @if (mode == Mode.Normal) {
+              <cs-normal-editor
+                [minRows]="minRows_"
+                [maxRows]="maxRows_"
+                [placeholder]="file && file.placeholder ? file.placeholder : ''"
+                [disabled]="isDisabled"
+                [spellcheck]="spellcheck"
+                [allowContextMenu]="allowContextMenu">
+              </cs-normal-editor>
+            }
+            @if (mode == Mode.Parsons) {
+              <cs-parsons-editor
+                [base]="base"
+                [parsonsOptions]="parsonsOptions"
+                (change)="onEditorContentChanged($event)">
+              </cs-parsons-editor>
+            }
+            @if (mode == Mode.JSParsons) {
+              <cs-jsparsons-editor></cs-jsparsons-editor>
+            }
+            @if (mode == Mode.ACE) {
+              <cs-ace-editor
+                [languageMode]="languageMode"
+                [startLineNumber]="startLineNumber"
+                [minRows]="minRows_"
+                [maxRows]="maxRows_"
+                [placeholder]="file && file.placeholder ? file.placeholder : ''"
+                [disabled]="isDisabled"
+                [aceOptions]="aceOptions">
+              </cs-ace-editor>
+            }
+          }
+          @if (addTabActive) {
+            <div class="add-view">
+              <file-select class="small" style="height: 4em;"
+                [multiple]="false"
+                [stem]="'Load a file (optional)'"
+                [dragAndDrop]="true"
+                (file)="onFileLoad($event)">
+              </file-select>
+              Filename:<input type="text" placeholder="Give a name here" [(ngModel)]="filenameInput">
+              <br>
                 <button class="timButton btn-sm"
-                        (click)="clickAddFile()"
-                        [attr.title]="addButtonTitle"
-                        [disabled]="disableAddButton">Add
+                  (click)="clickAddFile()"
+                  [attr.title]="addButtonTitle"
+                  [disabled]="disableAddButton">Add
                 </button>
-            </div>
-        </ng-container>`,
+              </div>
+            }
+          }`,
     standalone: false,
 })
 export class EditorComponent implements IMultiEditor {

@@ -79,68 +79,93 @@ const ShowFileAll = t.type({
     encapsulation: ViewEncapsulation.None, // Prevents style isolation
     template: `
         <div [class]="imagesClass"
-             tabindex="0"
-             (keydown.-)="speed(1.0/1.2, $event)"
-             (keydown.1)="speed(0, $event)"
-             (keydown.+)="speed(1.2, $event)"
-             (keydown.arrowLeft)="jump(-1, $event)"
-             (keydown.arrowRight)="jump(1, $event)"
-             (keydown.space)="jump(1, $event)"
-             (keydown.control.arrowLeft)="jumpTo(1, $event)"
-             (keydown.control.arrowRight)="jumpTo(-1, $event)"
-        >
-            <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
-            <p *ngIf="header" [innerHtml]="header | purify"></p>
-            <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
-
-
-            <div #images class="images-container"
-                        [style.width.px]="width"
-                        [style.height.px]="height"
+          tabindex="0"
+          (keydown.-)="speed(1.0/1.2, $event)"
+          (keydown.1)="speed(0, $event)"
+          (keydown.+)="speed(1.2, $event)"
+          (keydown.arrowLeft)="jump(-1, $event)"
+          (keydown.arrowRight)="jump(1, $event)"
+          (keydown.space)="jump(1, $event)"
+          (keydown.control.arrowLeft)="jumpTo(1, $event)"
+          (keydown.control.arrowRight)="jumpTo(-1, $event)"
+          >
+          @if (markupError) {
+            <tim-markup-error [data]="markupError!"></tim-markup-error>
+          }
+          @if (header) {
+            <p [innerHtml]="header | purify"></p>
+          }
+          @if (stem) {
+            <p class="stem" [innerHtml]="stem | purify"></p>
+          }
+        
+        
+          <div #images class="images-container"
+            [style.width.px]="width"
+            [style.height.px]="height"
             >
-                <ng-container *ngFor="let file of files; let i = index">
-                    <div [class]="{fade: markup.fade}" *ngIf="noFlicker || isNear(i+1)" [hidden]="fileIndex!==(i+1)"  (click)="jump(1)">
-                        <div *ngIf="markup.counter" class="numbertext">{{(i+1)}} / {{files.length}}</div>
-                        <img src="{{file.name}}" alt="{{file.alt}}" style="width:100%">
-                        <div class="text"><span [innerHTML]="file.caption | purify"></span></div>
-                    </div>
-                </ng-container>
-                <a *ngIf="markup.change && markup.arrows" class="prev" (click)="jump(-1)">&#10094;</a>
-                <a *ngIf="markup.change && markup.arrows" class="next" (click)="jump(1)">&#10095;</a>
-            </div>
-            <br>
-
-            <div *ngIf="markup.dots" style="text-align:center" class="images-control" >
-              <span *ngFor="let file of files;
-                let i = index" [ngClass]="{'active': (i+1) === fileIndex}"
+            @for (file of files; track file; let i = $index) {
+              @if (noFlicker || isNear(i+1)) {
+                <div [class]="{fade: markup.fade}" [hidden]="fileIndex!==(i+1)"  (click)="jump(1)">
+                  @if (markup.counter) {
+                    <div class="numbertext">{{(i+1)}} / {{files.length}}</div>
+                  }
+                  <img src="{{file.name}}" alt="{{file.alt}}" style="width:100%">
+                  <div class="text"><span [innerHTML]="file.caption | purify"></span></div>
+                </div>
+              }
+            }
+            @if (markup.change && markup.arrows) {
+              <a class="prev" (click)="jump(-1)">&#10094;</a>
+            }
+            @if (markup.change && markup.arrows) {
+              <a class="next" (click)="jump(1)">&#10095;</a>
+            }
+          </div>
+          <br>
+        
+            @if (markup.dots) {
+              <div style="text-align:center" class="images-control" >
+                @for (file of files; track file; let i = $index) {
+                  <span [ngClass]="{'active': (i+1) === fileIndex}"
                     class="dot"
                     (click)="currentFile(i+1)"
                     (mouseover)="hoverCurrentFile(i+1)"
                     (touchstart)="$event.preventDefault(); hoverCurrentFile(i+1)"
-              ></span>
-            </div>
-<!--                    (touchmove)="$event.preventDefault(); hoverCurrentFile(i+1)"-->
-
-            <div *ngIf="markup.autoplay" class="flex"  style="justify-content: flex-end">
+                  ></span>
+                }
+              </div>
+            }
+            <!--                    (touchmove)="$event.preventDefault(); hoverCurrentFile(i+1)"-->
+        
+            @if (markup.autoplay) {
+              <div class="flex"  style="justify-content: flex-end">
                 <div class="margin-5-right">
-                    <span *ngIf="intervalId">
-                        <span class="text-smaller">
-                            Interval:
-                            {{this.duration/1000 | number: '1.1-1'}}
-                            s
-                        </span>
-                        <a (click)="speed(1.0/1.2)" title="Shorter interval (-)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
-                        <a (click)="speed(0)" title="Normal interval (1)">1x</a>&ngsp;
-                        <a (click)="speed(1.2)" title="Longer interval (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
+                  @if (intervalId) {
+                    <span>
+                      <span class="text-smaller">
+                        Interval:
+                        {{this.duration/1000 | number: '1.1-1'}}
+                        s
+                      </span>
+                      <a (click)="speed(1.0/1.2)" title="Shorter interval (-)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
+                      <a (click)="speed(0)" title="Normal interval (1)">1x</a>&ngsp;
+                      <a (click)="speed(1.2)" title="Longer interval (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
                     </span>
-                    <span *ngIf="intervalId===0">
-                        <a (click)="speed(1)" title="Run">Run</a>&ngsp;
+                  }
+                  @if (intervalId===0) {
+                    <span>
+                      <a (click)="speed(1)" title="Run">Run</a>&ngsp;
                     </span>
+                  }
                 </div>
-            </div>
-            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
-        </div>
-    `,
+              </div>
+            }
+            @if (footer) {
+              <p class="plgfooter" [innerHtml]="footer | purify"></p>
+            }
+          </div>
+        `,
     standalone: false,
 })
 export class ImagesComponent extends AngularPluginBase<

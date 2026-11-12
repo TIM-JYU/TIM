@@ -22,6 +22,7 @@ import {
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {TooltipIsOpenDirective} from "tim/ui/tooltip-is-open.directive";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
@@ -416,7 +417,8 @@ export class CbfieldPluginComponent
         CommonModule,
         TimUtilityModule,
         FormsModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
+        TooltipIsOpenDirective,
         PurifyModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],

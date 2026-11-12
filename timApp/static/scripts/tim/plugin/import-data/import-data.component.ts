@@ -95,92 +95,137 @@ interface IFieldSaveResult {
 @Component({
     selector: "importdata-runner",
     template: `
-        <button *ngIf="!isOpen" class="timButton" [innerHtml]="markup.beforeOpen" (click)="isOpen = true"></button>
-        <tim-plugin-frame [markupError]="markupError" *ngIf="isVisible() && isOpen">
-            <tim-plugin-header *ngIf="header" header>
+        @if (!isOpen) {
+          <button class="timButton" [innerHtml]="markup.beforeOpen" (click)="isOpen = true"></button>
+        }
+        @if (isVisible() && isOpen) {
+          <tim-plugin-frame [markupError]="markupError">
+            @if (header) {
+              <tim-plugin-header header>
                 <span [innerHTML]="header"></span>
                 <tim-close-button (click)="isOpen = false"></tim-close-button>
-            </tim-plugin-header>
+              </tim-plugin-header>
+            }
             <ng-container body>
-                <tim-close-button *ngIf="!header" (click)="isOpen = false"></tim-close-button>
-                <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
-                <div *ngIf="useurl || useurltoken" class="form">
-                    <div *ngIf="useurl" class="form-group form-group-sm">
-                        <label for="url" class="small">{{markup.urlstem}}</label>
-                        <input id="url"
-                               [disabled]="!!markup.aplus"
-                               class="form-control"
-                               [(ngModel)]="url"
-                               size="50">
+              @if (!header) {
+                <tim-close-button (click)="isOpen = false"></tim-close-button>
+              }
+              @if (stem) {
+                <p class="stem" [innerHtml]="stem"></p>
+              }
+              @if (useurl || useurltoken) {
+                <div class="form">
+                  @if (useurl) {
+                    <div class="form-group form-group-sm">
+                      <label for="url" class="small">{{markup.urlstem}}</label>
+                      <input id="url"
+                        [disabled]="!!markup.aplus"
+                        class="form-control"
+                        [(ngModel)]="url"
+                        size="50">
                     </div>
-                    <div *ngIf="useurltoken" class="form-group form-group-sm">
-                        <label for="urltoken" class="small">Auth token:</label>
-                        <input id="urltoken" class="form-control" [(ngModel)]="urlToken">
+                  }
+                  @if (useurltoken) {
+                    <div class="form-group form-group-sm">
+                      <label for="urltoken" class="small">Auth token:</label>
+                      <input id="urltoken" class="form-control" [(ngModel)]="urlToken">
                     </div>
+                  }
+                  @if (!markup.aplus) {
                     <button [disabled]="fetchingData || !url"
-                            *ngIf="!markup.aplus"
-                            class="timButton btn-sm"
-                            (click)="pickFromWWW()">{{markup.loadButtonText}}
+                      class="timButton btn-sm"
+                      (click)="pickFromWWW()">{{markup.loadButtonText}}
                     </button>
-                    <tim-loading *ngIf="fetchingData"></tim-loading>
+                  }
+                  @if (fetchingData) {
+                    <tim-loading></tim-loading>
+                  }
                 </div>
-                <div *ngIf="markup.upload" class="form-inline small">
-                    <div class="form-group small"> {{markup.uploadstem}}
-                        <input type="file" (change)="onFileSelect($event)">
-                    </div>
+              }
+              @if (markup.upload) {
+                <div class="form-inline small">
+                  <div class="form-group small"> {{markup.uploadstem}}
+                    <input type="file" (change)="onFileSelect($event)">
+                  </div>
                 </div>
-                <p class="form-inline small" *ngIf="markup.useseparator">{{markup.separatorstem}}<input
-                        [(ngModel)]="separator" size="5"/></p>
-                <p *ngIf="markup.usefields">Fields:</p>
-                <p><textarea class="form-control"
-                             *ngIf="markup.usefields"
-                             [(ngModel)]="fields"
-                             placeholder="fields"
-                             rows="7"
-                             cols="30"></textarea></p>
-                <p><textarea class="form-control"
-                             *ngIf="!markup.aplus"
-                             [(ngModel)]="importText"
-                             (change)="importTextChanged()"
-                             [placeholder]="markup.placeholder"
-                             rows="10"
-                             cols="50"></textarea></p>
-                <div class="checkbox" *ngIf="showCreateMissingUsers()">
-                    <label>
-                        <input [(ngModel)]="createMissingUsers"
-                               type="checkbox"> Create missing users
+              }
+              @if (markup.useseparator) {
+                <p class="form-inline small">{{markup.separatorstem}}<input
+                [(ngModel)]="separator" size="5"/></p>
+              }
+              @if (markup.usefields) {
+                <p>Fields:</p>
+              }
+              <p>@if (markup.usefields) {
+                <textarea class="form-control"
+                  [(ngModel)]="fields"
+                  placeholder="fields"
+                  rows="7"
+                cols="30"></textarea>
+              }</p>
+              <p>@if (!markup.aplus) {
+                <textarea class="form-control"
+                  [(ngModel)]="importText"
+                  (change)="importTextChanged()"
+                  [placeholder]="markup.placeholder"
+                  rows="10"
+                cols="50"></textarea>
+              }</p>
+              @if (showCreateMissingUsers()) {
+                <div class="checkbox">
+                  <label>
+                    <input [(ngModel)]="createMissingUsers"
+                      type="checkbox"> Create missing users
                     </label>
-                </div>
+                  </div>
+                }
                 <button class="timButton" [disabled]="isRunning" (click)="doImport()">
-                    {{buttonText()}}
+                  {{buttonText()}}
                 </button>
-                <tim-loading *ngIf="isRunning"></tim-loading>
-                <div *ngIf="error">
+                @if (isRunning) {
+                  <tim-loading></tim-loading>
+                }
+                @if (error) {
+                  <div>
                     <tim-close-button (click)="error = undefined"></tim-close-button>
                     <tim-alert severity="danger">
-                        <span [innerHTML]="error"></span>
+                      <span [innerHTML]="error"></span>
                     </tim-alert>
-                </div>
-                <pre *ngIf="result">{{result}}</pre>
-                <ul *ngIf="importResult">
+                  </div>
+                }
+                @if (result) {
+                  <pre>{{result}}</pre>
+                }
+                @if (importResult) {
+                  <ul>
                     <li>Changed values: {{importResult.fields_changed}}</li>
                     <li>Unchanged values: {{importResult.fields_unchanged}}</li>
-                    <li *ngIf="importResult.users_created.length > 0">
+                    @if (importResult.users_created.length > 0) {
+                      <li>
                         Created users: {{importResult.users_created.length}}
-                    </li>
-                    <li *ngIf="importResult.users_missing.length > 0">
+                      </li>
+                    }
+                    @if (importResult.users_missing.length > 0) {
+                      <li>
                         Missing users:
                         <ul>
-                            <li *ngFor="let u of importResult.users_missing">
-                                {{u.full_name || 'Unnamed user'}} ({{u.username || u.email}})
+                          @for (u of importResult.users_missing; track u) {
+                            <li>
+                              {{u.full_name || 'Unnamed user'}} ({{u.username || u.email}})
                             </li>
+                          }
                         </ul>
-                    </li>
-                </ul>
-            </ng-container>
-            <p footer *ngIf="footer" [textContent]="footer"></p>
-        </tim-plugin-frame>
-    `,
+                      </li>
+                    }
+                  </ul>
+                }
+              </ng-container>
+              @if (footer) {
+                <p footer [textContent]="footer"></p>
+              }
+            </tim-plugin-frame>
+          }
+        `,
     styleUrls: ["./import-data.component.scss"],
     standalone: false,
 })

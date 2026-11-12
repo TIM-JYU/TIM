@@ -4,12 +4,16 @@ import {AlertSeverity} from "tim/ui/formErrorMessage";
 @Component({
     selector: "tim-alert",
     template: `
-        <div *ngIf="open" class="alert alert-{{ severity }}">
+        @if (open) {
+          <div class="alert alert-{{ severity }}">
             <span class="glyphicon glyphicon-{{getIcon()}}"></span>
             <div class="content"><ng-content></ng-content></div>
-            <i *ngIf="closeable" role="button" class="glyphicon glyphicon-remove" (click)="onClose()"></i>
-        </div>
-    `,
+            @if (closeable) {
+              <i role="button" class="glyphicon glyphicon-remove" (click)="onClose()"></i>
+            }
+          </div>
+        }
+        `,
     styleUrls: ["tim-alert.component.scss"],
     standalone: false,
 })

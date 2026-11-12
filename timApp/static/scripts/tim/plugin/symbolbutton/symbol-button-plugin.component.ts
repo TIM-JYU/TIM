@@ -54,11 +54,13 @@ const SymbolButtonFields = t.intersection([
 @Component({
     selector: "symbolbutton-runner",
     template: `
-        <div class="symbol-button-plugin-filler" *ngIf="isFloat()"></div>
+        @if (isFloat()) {
+          <div class="symbol-button-plugin-filler"></div>
+        }
         <div [class.symbol-button-plugin-float]="isFloat()">
-            <ng-container #symbolButtonMenu></ng-container>
+          <ng-container #symbolButtonMenu></ng-container>
         </div>
-    `,
+        `,
     styleUrls: ["./symbol-button-plugin.component.scss"],
     standalone: false,
 })

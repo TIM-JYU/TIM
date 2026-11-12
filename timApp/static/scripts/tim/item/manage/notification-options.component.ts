@@ -18,37 +18,41 @@ interface INotificationSettings {
 @Component({
     selector: "tim-notification-options",
     template: `
-        <tim-alert *ngIf="errorMessage" severity="danger">{{errorMessage}}</tim-alert>
+        @if (errorMessage) {
+          <tim-alert severity="danger">{{errorMessage}}</tim-alert>
+        }
         <form>
-            <fieldset [disabled]="!canEdit">
-                <p>Send me email on</p>
-                <div class="checkbox"><label>
-                    <input name="email_doc_modify" type="checkbox" [(ngModel)]="notifySettings.email_doc_modify"
-                           (ngModelChange)="notifyChanged()"/>Document modifications
+          <fieldset [disabled]="!canEdit">
+            <p>Send me email on</p>
+            <div class="checkbox"><label>
+              <input name="email_doc_modify" type="checkbox" [(ngModel)]="notifySettings.email_doc_modify"
+                (ngModelChange)="notifyChanged()"/>Document modifications
+              </label></div>
+              <div class="checkbox"><label>
+                <input name="email_comment_add" type="checkbox" [(ngModel)]="notifySettings.email_comment_add"
+                  (ngModelChange)="notifyChanged()"/>New comments
                 </label></div>
                 <div class="checkbox"><label>
-                    <input name="email_comment_add" type="checkbox" [(ngModel)]="notifySettings.email_comment_add" 
-                           (ngModelChange)="notifyChanged()"/>New comments
-                </label></div>
-                <div class="checkbox"><label>
-                    <input name="email_comment_modify" type="checkbox" [(ngModel)]="notifySettings.email_comment_modify"
-                           (ngModelChange)="notifyChanged()"/>Edited comments
-                </label></div>
-                <div class="checkbox" *ngIf="curItem.rights.teacher"><label>
-                    <input name="email_answer_add" type="checkbox" [(ngModel)]="notifySettings.email_answer_add"
-                           (ngModelChange)="notifyChanged()"/>New answers to tasks
-                </label></div>
-                <div class="checkbox"><label>
-                    <input name="email_annotation_add" type="checkbox" [(ngModel)]="notifySettings.email_annotation_add" 
-                           (ngModelChange)="notifyChanged()"/>New velps
-                </label></div>
-                <div class="checkbox"><label>
-                    <input name="email_annotation_modify" type="checkbox" [(ngModel)]="notifySettings.email_annotation_modify"
-                           (ngModelChange)="notifyChanged()"/>Edited velps
-                </label></div>
-            </fieldset>
-        </form>
-    `,
+                  <input name="email_comment_modify" type="checkbox" [(ngModel)]="notifySettings.email_comment_modify"
+                    (ngModelChange)="notifyChanged()"/>Edited comments
+                  </label></div>
+                  @if (curItem.rights.teacher) {
+                    <div class="checkbox"><label>
+                      <input name="email_answer_add" type="checkbox" [(ngModel)]="notifySettings.email_answer_add"
+                        (ngModelChange)="notifyChanged()"/>New answers to tasks
+                      </label></div>
+                    }
+                    <div class="checkbox"><label>
+                      <input name="email_annotation_add" type="checkbox" [(ngModel)]="notifySettings.email_annotation_add"
+                        (ngModelChange)="notifyChanged()"/>New velps
+                      </label></div>
+                      <div class="checkbox"><label>
+                        <input name="email_annotation_modify" type="checkbox" [(ngModel)]="notifySettings.email_annotation_modify"
+                          (ngModelChange)="notifyChanged()"/>Edited velps
+                        </label></div>
+                      </fieldset>
+                    </form>
+        `,
     standalone: false,
 })
 export class NotificationOptionsComponent implements OnInit {

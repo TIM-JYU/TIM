@@ -18,35 +18,37 @@ import {CommonModule} from "@angular/common";
     selector: "tim-search-tags-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <h4>{{header}}</h4>
-                <tim-tagged-document-list [enableSearch]="enableSearch"
-                                          tagFilter=""
-                                          [exactMatch]="exactMatch"
-                                          [listDocTags]="listDocTags"
-                                          [caseSensitive]="caseSensitive">
-                </tim-tagged-document-list>
-                <div>
-                    <label class="font-weight-normal"><input type="checkbox"
-                                                             [(ngModel)]="advancedOptions"> Advanced options</label>
-                </div>
-                <div *ngIf="advancedOptions">
-                    <label class="font-weight-normal"><input type="checkbox" [(ngModel)]="exactMatch"> Search whole
-                        words</label>&ngsp;
-                    <label class="font-weight-normal"><input type="checkbox" [(ngModel)]="caseSensitive"> Case sensitive</label>&ngsp;
-                    <label class="font-weight-normal"><input type="checkbox" [(ngModel)]="listDocTags"
-                                                             title="List all document tags in search results"> List all
-                        tags</label>
-                </div>
-            </ng-container>
-            <ng-container footer>
-                <button class="timButton" (click)="dismiss()">Close</button>
-            </ng-container>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            <h4>{{header}}</h4>
+            <tim-tagged-document-list [enableSearch]="enableSearch"
+              tagFilter=""
+              [exactMatch]="exactMatch"
+              [listDocTags]="listDocTags"
+              [caseSensitive]="caseSensitive">
+            </tim-tagged-document-list>
+            <div>
+              <label class="font-weight-normal"><input type="checkbox"
+              [(ngModel)]="advancedOptions"> Advanced options</label>
+            </div>
+            @if (advancedOptions) {
+              <div>
+                <label class="font-weight-normal"><input type="checkbox" [(ngModel)]="exactMatch"> Search whole
+                words</label>&ngsp;
+                <label class="font-weight-normal"><input type="checkbox" [(ngModel)]="caseSensitive"> Case sensitive</label>&ngsp;
+                <label class="font-weight-normal"><input type="checkbox" [(ngModel)]="listDocTags"
+                  title="List all document tags in search results"> List all
+                tags</label>
+              </div>
+            }
+          </ng-container>
+          <ng-container footer>
+            <button class="timButton" (click)="dismiss()">Close</button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class SearchTagsDialogComponent extends AngularDialogComponent<
@@ -96,7 +98,7 @@ export class SearchTagsDialogComponent extends AngularDialogComponent<
         FormsModule,
         TimUtilityModule,
         DialogModule,
-        TypeaheadModule.forRoot(),
+        TypeaheadModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],
 })

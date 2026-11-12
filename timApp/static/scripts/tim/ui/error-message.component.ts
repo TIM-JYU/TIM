@@ -6,10 +6,12 @@ import {formErrorMessages} from "tim/ui/formErrorMessages";
 @Component({
     selector: "tim-error-message",
     template: `
-        <tim-alert *ngIf="for && !for.pristine && for.invalid" severity="danger">
+        @if (for && !for.pristine && for.invalid) {
+          <tim-alert severity="danger">
             {{ getMessage() }}
-        </tim-alert>
-    `,
+          </tim-alert>
+        }
+        `,
     standalone: false,
 })
 export class ErrorMessageComponent {

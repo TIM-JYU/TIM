@@ -17,47 +17,55 @@ import {ContactOrigin} from "tim/user/IUser";
     selector: "tim-add-contact-dialog",
     template: `
         <tim-dialog-frame [minimizable]="false">
-            <ng-container header i18n>
+          <ng-container header i18n>
                 Add new contact information
             </ng-container>
-            <ng-container body>
-                <form>
-                    <fieldset [disabled]="saving || saved">
-                        <div class="form-group">
-                            <label class="control-label" for="name-select" i18n>Channel</label>
-                            <select class="form-control" name="channel-select" [(ngModel)]="chosenChannel">
-                                <option value="email" i18n>Email</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label" for="contact-info-text" i18n>Contact info</label>
-                            <input class="form-control" type="text" name="contact-info-text"
-                                   [(ngModel)]="contactInfo">
-                        </div>
-                        <div>
-                            <tim-alert *ngIf="verificationSent" severity="success" i18n>
+          <ng-container body>
+            <form>
+              <fieldset [disabled]="saving || saved">
+                <div class="form-group">
+                  <label class="control-label" for="name-select" i18n>Channel</label>
+                  <select class="form-control" name="channel-select" [(ngModel)]="chosenChannel">
+                    <option value="email" i18n>Email</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="control-label" for="contact-info-text" i18n>Contact info</label>
+                  <input class="form-control" type="text" name="contact-info-text"
+                    [(ngModel)]="contactInfo">
+                </div>
+                <div>
+                  @if (verificationSent) {
+                    <tim-alert severity="success" i18n>
                                 A verification link was sent to this contact.
                                 Please check possible spam filters.
                             </tim-alert>
-                            <tim-alert *ngIf="addError" severity="danger" i18n>
+                  }
+                  @if (addError) {
+                    <tim-alert severity="danger" i18n>
                                 Could not add the new contact: {{addError}}
                             </tim-alert>
-                        </div>
-                    </fieldset>
-                </form>
-            </ng-container>
-            <ng-container footer>
-                <i class="glyphicon glyphicon-ok success" *ngIf="saved"></i>
-                <tim-loading *ngIf="saving" style="margin-right: 1em;"></tim-loading>
-                <button class="timButton"
-                        (click)="addNewContact()"
-                        [disabled]="!(chosenChannel && contactInfo) || saved" i18n>
+                  }
+                </div>
+              </fieldset>
+            </form>
+          </ng-container>
+          <ng-container footer>
+            @if (saved) {
+              <i class="glyphicon glyphicon-ok success"></i>
+            }
+            @if (saving) {
+              <tim-loading style="margin-right: 1em;"></tim-loading>
+            }
+            <button class="timButton"
+              (click)="addNewContact()"
+              [disabled]="!(chosenChannel && contactInfo) || saved" i18n>
                     Add
                 </button>
-                <button class="timButton" (click)="dismiss()">Close</button>
-            </ng-container>
+            <button class="timButton" (click)="dismiss()">Close</button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class AddContactDialogComponent extends AngularDialogComponent<

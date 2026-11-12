@@ -24,18 +24,24 @@ export const TIME_VIEW_EVENING_HOURS: number[] = TIME_VIEW_MORNING_HOURS.map(
     selector: "tim-time-view-selector",
     template: `
         <ng-container>
-            <span i18n>Set view with timeslots of </span>
-            <select [(ngModel)]="segmentDuration" (ngModelChange)="segmentDurationChange.emit($event)">
-                <option *ngFor="let item of accuracies" [value]="item">{{ item | number:'2.0' }}</option>
-            </select>
-            <span i18n> minutes from </span>
-            <select [(ngModel)]="startHour" (ngModelChange)="startHourChange.emit($event)">
-                <option *ngFor="let hour of morningHours" [value]="hour">{{ hour | number:'2.0' }}</option>
-            </select>
-            <span i18n> to </span>
-            <select [(ngModel)]="endHour" (ngModelChange)="endHourChange.emit($event)">
-                <option *ngFor="let hour of eveningHours" [value]="hour">{{ hour | number:'2.0' }}</option>
-            </select>
+          <span i18n>Set view with timeslots of </span>
+          <select [(ngModel)]="segmentDuration" (ngModelChange)="segmentDurationChange.emit($event)">
+            @for (item of accuracies; track item) {
+              <option [value]="item">{{ item | number:'2.0' }}</option>
+            }
+          </select>
+          <span i18n> minutes from </span>
+          <select [(ngModel)]="startHour" (ngModelChange)="startHourChange.emit($event)">
+            @for (hour of morningHours; track hour) {
+              <option [value]="hour">{{ hour | number:'2.0' }}</option>
+            }
+          </select>
+          <span i18n> to </span>
+          <select [(ngModel)]="endHour" (ngModelChange)="endHourChange.emit($event)">
+            @for (hour of eveningHours; track hour) {
+              <option [value]="hour">{{ hour | number:'2.0' }}</option>
+            }
+          </select>
         </ng-container>`,
     styleUrls: ["calendar.component.scss"],
     standalone: false,

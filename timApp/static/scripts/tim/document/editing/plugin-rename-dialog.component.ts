@@ -48,49 +48,53 @@ export type RenameResult = IParResponse | IManageResponse;
     selector: "tim-plugin-rename-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <p>There are multiple objects with the same task name in this document. Plugins with duplicate task
-                    names will
-                    not work properly. Rename the duplicates by writing new names in the field(s) below and click
-                    "Save", choose
-                    "Rename automatically" or "Ignore" to proceed without renaming.</p>
-                <strong>Rename duplicates:</strong>
-                <form #form (keydown)="keyHandler($event)">
-                    <div *ngFor="let dupe of getDuplicates(); let index = index" class="form-group form-horz-flex">
-                        <label for="field{{index}}" [innerText]="dupe[0]"></label>
-                        <input type="text"
-                               class="form-control"
-                               name="field{{index}}"
-                               id="field{{index}}"
-                               required
-                               [(ngModel)]="newNames[index]">
-                        <i *ngIf="dupe[2]"
-                           class="glyphicon glyphicon-warning-sign"
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            <p>There are multiple objects with the same task name in this document. Plugins with duplicate task
+              names will
+              not work properly. Rename the duplicates by writing new names in the field(s) below and click
+              "Save", choose
+            "Rename automatically" or "Ignore" to proceed without renaming.</p>
+            <strong>Rename duplicates:</strong>
+            <form #form (keydown)="keyHandler($event)">
+              @for (dupe of getDuplicates(); track dupe; let index = $index) {
+                <div class="form-group form-horz-flex">
+                  <label for="field{{index}}" [innerText]="dupe[0]"></label>
+                  <input type="text"
+                    class="form-control"
+                    name="field{{index}}"
+                    id="field{{index}}"
+                    required
+                    [(ngModel)]="newNames[index]">
+                  @if (dupe[2]) {
+                    <i
+                      class="glyphicon glyphicon-warning-sign"
                            tooltip="There are answers related to this task.
                    They might be lost upon renaming this task."></i>
-                    </div>
-                </form>
-            </ng-container>
-            <ng-container footer>
-                <button [disabled]="form.invalid" class="timButton"
-                        title="Rename task names with given names (Ctrl + S)"
-                        (click)="renameTaskNamesClicked(false)">Save
-                </button>
-                <button class="timButton" title="Rename duplicate task names automatically"
-                        (click)="renameTaskNamesClicked(true)">Rename automatically
-                </button>
-                <button class="timButton" title="Proceed without renaming"
-                        (click)="dismiss()">Ignore
-                </button>
-                <button class="timButton" title="Return to editor"
-                        (click)="cancelPluginRenameClicked()">Cancel
-                </button>
-            </ng-container>
+                  }
+                </div>
+              }
+            </form>
+          </ng-container>
+          <ng-container footer>
+            <button [disabled]="form.invalid" class="timButton"
+              title="Rename task names with given names (Ctrl + S)"
+              (click)="renameTaskNamesClicked(false)">Save
+            </button>
+            <button class="timButton" title="Rename duplicate task names automatically"
+              (click)="renameTaskNamesClicked(true)">Rename automatically
+            </button>
+            <button class="timButton" title="Proceed without renaming"
+              (click)="dismiss()">Ignore
+            </button>
+            <button class="timButton" title="Return to editor"
+              (click)="cancelPluginRenameClicked()">Cancel
+            </button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class PluginRenameDialogComponent extends AngularDialogComponent<
@@ -202,7 +206,7 @@ export class PluginRenameDialogComponent extends AngularDialogComponent<
         CommonModule,
         DialogModule,
         TimUtilityModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
         FormsModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],

@@ -205,57 +205,82 @@ export interface Iframesettings {
     selector: "jsframe-runner",
     template: `
         <div [ngClass]="{'warnFrame': isUnSaved(), 'csRunDiv': borders}" [class.cs-has-header]="header" class="math que jsframe no-popup-menu">
-            <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-            <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-            <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
-            <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen"></p>
-            <div *ngIf="isOpen && iframesettings" id="output" class="jsFrameContainer jsframeOutput">
-                <iframe #frame
-                        class='showJsframe jsframeFrame'
+          @if (markupError) {
+            <tim-markup-error [data]="markupError"></tim-markup-error>
+          }
+          @if (header) {
+            <h4 [innerHtml]="header | purify"></h4>
+          }
+          @if (stem) {
+            <p class="stem" [innerHtml]="stem | purify"></p>
+          }
+          @if (!isOpen) {
+            <p class="stem" [innerHtml]="beforeOpen"></p>
+          }
+          @if (isOpen && iframesettings) {
+            <div id="output" class="jsFrameContainer jsframeOutput">
+              <iframe #frame
+                class='showJsframe jsframeFrame'
                         style='margin-left: auto;
                                margin-right: auto;
                                display: block; border: none;'
-                        [style.width]="this.getDesiredSize(iframesettings.width)"
-                        [style.height]="this.getDesiredSize(iframesettings.height)"
-                        [timIframeSettings]="iframesettings"
-                        (load)="iframeloaded($event)"
-                        [ngClass]="{fullScreen: fullScreen}"
+                [style.width]="this.getDesiredSize(iframesettings.width)"
+                [style.height]="this.getDesiredSize(iframesettings.height)"
+                [timIframeSettings]="iframesettings"
+                (load)="iframeloaded($event)"
+                [ngClass]="{fullScreen: fullScreen}"
                 >
-                </iframe>
+              </iframe>
             </div>
-            <p class="csRunMenu">
-                <button class="timButton btn-sm" *ngIf="!isOpen" (click)="runShowTask()" [innerHtml]="showButton() | purify"></button>
-                <button class="timButton btn-sm" *ngIf="isOpen && !norun" [disabled]="isRunning" title="(Ctrl-S)"
-                        (click)="getData('getDataSave')"
-                        [innerHtml]="button | purify"></button>
-                <button class="timButton btn-sm" *ngIf="saveButton"
-                        (click)="getData('getDataSave')"
-                        [disabled]="disableUnchanged && !isUnSaved()" [innerHtml]="saveButton | purify"></button>
-                <ng-container>
-                &nbsp;
-                <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="tryResetChanges($event)">{{undoButton}}</a>
-                </ng-container>
-                <ng-container *ngIf="resetText">
-                &nbsp;
-                <a href="#"
-                   (click)="resetDrawing(); $event.preventDefault()">{{resetText}}</a>
-                </ng-container>
-                &nbsp;
-                <span class="jsframe message"
-                      *ngIf="message"
-                      [innerHtml]="message | purify"></span>
-                <span class="jsframe message"
-                      *ngIf="console"
-                      [innerHtml]="console | purify"></span>
-            </p>
-                    <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
+          }
+          <p class="csRunMenu">
+            @if (!isOpen) {
+              <button class="timButton btn-sm" (click)="runShowTask()" [innerHtml]="showButton() | purify"></button>
+            }
+            @if (isOpen && !norun) {
+              <button class="timButton btn-sm" [disabled]="isRunning" title="(Ctrl-S)"
+                (click)="getData('getDataSave')"
+              [innerHtml]="button | purify"></button>
+            }
+            @if (saveButton) {
+              <button class="timButton btn-sm"
+                (click)="getData('getDataSave')"
+              [disabled]="disableUnchanged && !isUnSaved()" [innerHtml]="saveButton | purify"></button>
+            }
+            <ng-container>
+              &nbsp;
+              @if (undoButton && isUnSaved()) {
+                <a href="" [title]="undoTitle" (click)="tryResetChanges($event)">{{undoButton}}</a>
+              }
+            </ng-container>
+            @if (resetText) {
+              &nbsp;
+              <a href="#"
+              (click)="resetDrawing(); $event.preventDefault()">{{resetText}}</a>
+            }
+            <ng-container> &nbsp; </ng-container>
+            @if (message) {
+              <span class="jsframe message"
+              [innerHtml]="message | purify"></span>
+            }
+            @if (console) {
+              <span class="jsframe message"
+              [innerHtml]="console | purify"></span>
+            }
+          </p>
+          @if (connectionErrorMessage) {
+            <div class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
+          }
+          @if (error) {
             <span class="csRunError"
-                  *ngIf="error"
-                  [innerHtml]="error"></span>
-
-            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
+            [innerHtml]="error"></span>
+          }
+        
+          @if (footer) {
+            <p class="plgfooter" [innerHtml]="footer | purify"></p>
+          }
         </div>
-    `,
+        `,
     standalone: false,
 })
 export class JsframeComponent

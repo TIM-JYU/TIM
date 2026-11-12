@@ -195,116 +195,142 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
     selector: "tim-data-view",
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="loader" *ngIf="isLoading">
+        @if (isLoading) {
+          <div class="loader">
             <tim-loading></tim-loading>
-        </div>
-        <tim-alert class="data-view-alert" severity="info" *ngIf="showSlowLoadMessage" [closeable]="true" (closing)="hideSlowMessageDialog()">
+          </div>
+        }
+        @if (showSlowLoadMessage) {
+          <tim-alert class="data-view-alert" severity="info" [closeable]="true" (closing)="hideSlowMessageDialog()">
             <div class="message" i18n>
                 <strong>Column size computation took {{sizeComputationTime}} seconds.</strong>
                 You can speed up loading by <a href="#" class="alert-link" (click)="showTableWidthExportDialog($event)">setting
                 static column widths</a>.
             </div>
         </tim-alert>
-        <tim-alert class="data-view-alert" severity="warning" *ngIf="showIncompleteSizeMessage" [closeable]="true" (closing)="hideIncompleteSizeMessageDialog()">
+        }
+        @if (showIncompleteSizeMessage) {
+          <tim-alert class="data-view-alert" severity="warning" [closeable]="true" (closing)="hideIncompleteSizeMessageDialog()">
             <div class="message" i18n>
                 <strong>The column count has changed since the last time.</strong>
                 Remove this warning by <a href="#" class="alert-link" (click)="showTableWidthExportDialog($event, true)"> setting static column widths</a>.
             </div>
-            <tim-loading *ngIf="recomputingSize"></tim-loading>
-        </tim-alert>
+            @if (recomputingSize) {
+              <tim-loading></tim-loading>
+            }
+          </tim-alert>
+        }
         <div tabindex="-1" class="data-view" [class.virtual]="isVirtual" [style.width]="tableMaxWidth" #dataViewContainer>
-            <div class="header" #headerContainer>
-                <table class="timTableHeader" [ngStyle]="tableStyle" #headerTable>
-                    <thead #headerIdBody></thead>
-                    <tbody #filterBody  class ="filter-rows"></tbody>
-                </table>
+          <div class="header" #headerContainer>
+            <table class="timTableHeader" [ngStyle]="tableStyle" #headerTable>
+              <thead #headerIdBody></thead>
+              <tbody #filterBody  class ="filter-rows"></tbody>
+            </table>
+          </div>
+          @if (fixedColumnCount > 0) {
+            <div class="fixed-col-header" #fixedColHeaderContainer>
+              <table [ngStyle]="tableStyle" #fixedColHeaderTable>
+                <thead #fixedColHeaderIdBody></thead>
+                <tbody #fixedColFilterBody class="filter-rows"></tbody>
+              </table>
             </div>
-            <ng-container *ngIf="fixedColumnCount > 0">
-                <div class="fixed-col-header" #fixedColHeaderContainer>
-                    <table [ngStyle]="tableStyle" #fixedColHeaderTable>
-                        <thead #fixedColHeaderIdBody></thead>
-                        <tbody #fixedColFilterBody class="filter-rows"></tbody>
-                    </table>
-                </div>
-                <div class="fixed-col-data" [style.maxHeight]="tableMaxHeight" #fixedDataContainer>
-                    <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
-                           #fixedDataTable>
-                        <tbody class="content" #fixedDataBody></tbody>
-                    </table>
-                    <ng-container *ngIf="editorInFixedColumn">
-                        <ng-container *ngTemplateOutlet="editor"></ng-container>
-                    </ng-container>
-                </div>
-            </ng-container>
-            <div class="summary">
-                <table [ngStyle]="tableStyle" #summaryTable>
-                    <thead>
-                    <tr class="header-row">
-                        <td  *ngIf="this.nrColumn"
-                            class="nr-column total-nr"
-                            title="Click to show all"
-                            (click)="clearFilters()"
-                            #allVisibleCell>{{totalRows}}</td>
-                        <td *ngIf="this.cbColumn"
-                            class="cb-column">
-                            <input [(ngModel)]="cbAllVisibleRows"
-                                   (ngModelChange)="setAllVisible()"
-                                   type="checkbox"
-                                   title="Check for all visible rows">
-                        </td>
-                    </tr>
-                    </thead>
-                    <tbody class="filter-rows" [class.tiny]="tinyFilters">
-                    <tr class="filters-row" [hidden]="filterRowCount===0">
-                        <td *ngIf="this.nrColumn"
-                            class="nr-column matching-nr">
-                            <span *ngIf="totalRows != visibleRows" title="Number of matching rows">{{visibleRows}}</span>
-                            <div class="add-new-row" (click)="addFilterRow()" title="Add new filter row" >+</div>
-                        </td>
-                        <td class="cb-column" *ngIf="this.cbColumn">
-                            <input type="checkbox"
-                                   title="Check to show only checked rows"
-                                   [(ngModel)]="cbFilter"
-                                   (ngModelChange)="setFilterSelected()">
-                        </td>
-                    </tr>
-                    <tr class="filters-row" *ngFor="let frow of filterRowPlaceholders; let i = index; let last= last">
-                        <td *ngIf="this.nrColumn" 
-                            class="nr-column" style="position: relative;">
-                            <!-- if last row show - -->
-                            <div 
-                              class ="delete-row" *ngIf="last" (click)="deleteFilterRow()"
-                              title="Delete filter row">
-                              -
-                            </div>
-                            &nbsp;
-                        </td>                            
-                        <td class="cb-column" *ngIf="this.cbColumn">
-                            &nbsp;
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+            <div class="fixed-col-data" [style.maxHeight]="tableMaxHeight" #fixedDataContainer>
+              <table [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
+                #fixedDataTable>
+                <tbody class="content" #fixedDataBody></tbody>
+              </table>
+              @if (editorInFixedColumn) {
+                <ng-container *ngTemplateOutlet="editor"></ng-container>
+              }
             </div>
-            <div class="ids" #idContainer>
-                <table [ngStyle]="tableStyle" #idTable>
-                    <tbody #idBody></tbody>
-                </table>
-            </div>
-            <div tabindex="-1" class="data" [style.maxHeight]="tableMaxHeight" #mainDataContainer>
-                <table tabindex="-1"  [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
-                       #mainDataTable>
-                    <tbody tabindex="-1" class="content" #mainDataBody [class.nowrap]="noWrap"></tbody>
-                </table>
-                <ng-container *ngIf="editorInData">
-                    <ng-container *ngTemplateOutlet="editor"></ng-container>
-                </ng-container>
-            </div>
-            <ng-template #editor>
-                <ng-content></ng-content>
-            </ng-template>
+          }
+          <div class="summary">
+            <table [ngStyle]="tableStyle" #summaryTable>
+              <thead>
+                <tr class="header-row">
+                  @if (this.nrColumn) {
+                    <td
+                      class="nr-column total-nr"
+                      title="Click to show all"
+                      (click)="clearFilters()"
+                    #allVisibleCell>{{totalRows}}</td>
+                  }
+                  @if (this.cbColumn) {
+                    <td
+                      class="cb-column">
+                      <input [(ngModel)]="cbAllVisibleRows"
+                        (ngModelChange)="setAllVisible()"
+                        type="checkbox"
+                        title="Check for all visible rows">
+                    </td>
+                  }
+                </tr>
+              </thead>
+              <tbody class="filter-rows" [class.tiny]="tinyFilters">
+                <tr class="filters-row" [hidden]="filterRowCount===0">
+                  @if (this.nrColumn) {
+                    <td
+                      class="nr-column matching-nr">
+                      @if (totalRows != visibleRows) {
+                        <span title="Number of matching rows">{{visibleRows}}</span>
+                      }
+                      <div class="add-new-row" (click)="addFilterRow()" title="Add new filter row" >+</div>
+                    </td>
+                  }
+                  @if (this.cbColumn) {
+                    <td class="cb-column">
+                      <input type="checkbox"
+                        title="Check to show only checked rows"
+                        [(ngModel)]="cbFilter"
+                        (ngModelChange)="setFilterSelected()">
+                    </td>
+                  }
+                </tr>
+                @for (frow of filterRowPlaceholders; track frow; let i = $index; let last = $last) {
+                  <tr class="filters-row">
+                    @if (this.nrColumn) {
+                      <td
+                        class="nr-column" style="position: relative;">
+                        <!-- if last row show - -->
+                        @if (last) {
+                          <div
+                            class ="delete-row" (click)="deleteFilterRow()"
+                            title="Delete filter row">
+                            -
+                          </div>
+                        }
+                        <ng-container> &nbsp; </ng-container>
+                      </td>
+                    }
+                    @if (this.cbColumn) {
+                      <td class="cb-column">
+                        &nbsp;
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="ids" #idContainer>
+            <table [ngStyle]="tableStyle" #idTable>
+              <tbody #idBody></tbody>
+            </table>
+          </div>
+          <div tabindex="-1" class="data" [style.maxHeight]="tableMaxHeight" #mainDataContainer>
+            <table tabindex="-1"  [ngClass]="tableClass" [ngStyle]="tableStyle" [class.virtual]="virtualScrolling.enabled"
+              #mainDataTable>
+              <tbody tabindex="-1" class="content" #mainDataBody [class.nowrap]="noWrap"></tbody>
+            </table>
+            @if (editorInData) {
+              <ng-container *ngTemplateOutlet="editor"></ng-container>
+            }
+          </div>
+          <ng-template #editor>
+            <ng-content></ng-content>
+          </ng-template>
         </div>
-    `,
+        `,
     styleUrls: ["./data-view.component.scss", "../timTable/table-common.scss"],
     standalone: false,
 })

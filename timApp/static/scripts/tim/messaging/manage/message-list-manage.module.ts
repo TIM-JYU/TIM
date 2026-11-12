@@ -20,7 +20,7 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
         TimUtilityModule,
         TimMessageSendModule,
         TimTableModule,
-        TabsModule.forRoot(),
+        TabsModule,
     ],
 })
 export class MessageListManageModule implements DoBootstrap {

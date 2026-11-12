@@ -1051,56 +1051,66 @@ const MAX_CANVAS_AREA = 8000000;
 @Component({
     selector: "draw-canvas",
     template: `
-        <draw-toolbar *ngIf="toolBar" [(drawSettings)]="drawOptions"
-              [undo]="undo" optionsStorage="drawCanvasOptions"></draw-toolbar>
+        @if (toolBar) {
+          <draw-toolbar [(drawSettings)]="drawOptions"
+          [undo]="undo" optionsStorage="drawCanvasOptions"></draw-toolbar>
+        }
         <div style="position: relative;">
             <div style="position: absolute; top: 50%; left:-5%; display: flex; flex-flow: column; gap: 1em;
                          -ms-transform: translateY(-50%); transform: translateY(-50%); z-index: 4;">
-                <div *ngIf="bgSources.length > 1" style="display: flex; flex-flow: column;">
-                    <button title="Previous image" i18n-title class="btn btn-primary" (click)="scrollBgImage(false)">
-                        &uarr;
-                    </button>
-                    <button title="Next image" i18n-title class="btn btn-primary" (click)="scrollBgImage(true)">&darr;
-                    </button>
-                </div>
-                <div style="display: flex; flex-flow: column;">
-                    <button title="Zoom in" i18n-title class="btn btn-primary" (click)="zoom(0.1)">
-                        <i class="glyphicon glyphicon-zoom-in"></i>
-                    </button>
-                    <!-- TODO icons-->
-                    <button title="Reset zoom" i18n-title class="btn btn-primary" (click)="zoom(0)">R
-                    </button>
-                    <button title="Zoom out" i18n-title class="btn btn-primary" (click)="zoom(-0.1)">
-                        <i class="glyphicon glyphicon-zoom-out"></i>
-                    </button>
-                </div>
+            @if (bgSources.length > 1) {
+              <div style="display: flex; flex-flow: column;">
+                <button title="Previous image" i18n-title class="btn btn-primary" (click)="scrollBgImage(false)">
+                  &uarr;
+                </button>
+                <button title="Next image" i18n-title class="btn btn-primary" (click)="scrollBgImage(true)">&darr;
+                </button>
+              </div>
+            }
+            <div style="display: flex; flex-flow: column;">
+              <button title="Zoom in" i18n-title class="btn btn-primary" (click)="zoom(0.1)">
+                <i class="glyphicon glyphicon-zoom-in"></i>
+              </button>
+              <!-- TODO icons-->
+              <button title="Reset zoom" i18n-title class="btn btn-primary" (click)="zoom(0)">R
+              </button>
+              <button title="Zoom out" i18n-title class="btn btn-primary" (click)="zoom(-0.1)">
+                <i class="glyphicon glyphicon-zoom-out"></i>
+              </button>
             </div>
-            <div i18n *ngIf="loading" style="position: absolute; z-index: 1;">Loading images ({{loadedImages}}
+          </div>
+          @if (loading) {
+            <div i18n style="position: absolute; z-index: 1;">Loading images ({{loadedImages}}
                                                                               /{{bgSources.length}})
                 <tim-loading></tim-loading>
             </div>
-            <div #wrapper style="overflow: auto; position: relative; resize: both;"
-                 [style.opacity]="loading ? 0.3 : 1"
-                 [style.height.px]="getWrapperHeight(true)">
-                <div class="zoomer" style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
-                    <div #backGround style="position: absolute; display:flex; flex-direction: column;">
-                        <img alt="review image" *ngFor="let item of bgImages; let i = index"
-                             style="max-width: none; display: unset;"
-                             [src]="bgImages[i]" (load)="onImgLoad($event, i)">
-                    </div>
-                </div>
-                <div #objectContainer class="canvasObjectContainer"
-                     style="overflow: visible; position: absolute; height: 0; width: 0;">
-                </div>
-                <div class="zoomer" #canvasWrapper style="-webkit-transform-origin: 0 0;"
-                     [style.transform]="getZoomLevel()">
-                    <canvas #drawbases *ngFor="let item of canvasHeights; let i = index" class="drawbase"
-                            style="border-left:1px solid #000000; margin:-1px; border-right:1px solid #000000; margin:-1px; position: absolute;">
-                    </canvas>
-                </div>
+          }
+          <div #wrapper style="overflow: auto; position: relative; resize: both;"
+            [style.opacity]="loading ? 0.3 : 1"
+            [style.height.px]="getWrapperHeight(true)">
+            <div class="zoomer" style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
+              <div #backGround style="position: absolute; display:flex; flex-direction: column;">
+                @for (item of bgImages; track item; let i = $index) {
+                  <img alt="review image"
+                    style="max-width: none; display: unset;"
+                    [src]="bgImages[i]" (load)="onImgLoad($event, i)">
+                }
+              </div>
             </div>
+            <div #objectContainer class="canvasObjectContainer"
+              style="overflow: visible; position: absolute; height: 0; width: 0;">
+            </div>
+            <div class="zoomer" #canvasWrapper style="-webkit-transform-origin: 0 0;"
+              [style.transform]="getZoomLevel()">
+              @for (item of canvasHeights; track item; let i = $index) {
+                <canvas #drawbases class="drawbase"
+                  style="border-left:1px solid #000000; margin:-1px; border-right:1px solid #000000; margin:-1px; position: absolute;">
+                </canvas>
+              }
+            </div>
+          </div>
         </div>
-    `,
+        `,
     styleUrls: ["./draw-canvas.component.scss"],
     standalone: false,
 })

@@ -49,50 +49,57 @@ enum RefStyle {
     selector: "tim-popup-menu-dialog",
     template: `
         <tim-dialog-frame size="xs"
-                          [minimizable]="false"
-                          [mightBeAsync]="false"
-                          anchor="absolute">
-            <ng-container body>
-                <div class="flex cl">
-                    <div class="error" *ngIf="vctrl.notification" [innerText]="vctrl.notification"></div>
-                    <div class="paragraphs pastePreview" *ngIf="content" [innerHtml]="content | purify"></div>
-
-                    <div class="flex rw align-center"
-                         *ngFor="let f of actions; let first = first"
-                         [style.margin-top.px]="f.spacingBefore">
-                        <button class="timButton btn-sm flex-grow-5"
-                                focusMe
-                                [enable]="first"
-                                [innerText]="f.desc"
-                                (click)="callFunc($event, f)">
-                        </button>
-
-                        <input *ngIf="(save && (f.allowAsDefault === undefined || f.allowAsDefault)); else emptyMargin"
-                               [checked]="getChecked(f.desc)"
-                               (click)="clicked(f)"
-                               style="margin: 5px 0 5px 15px;"
-                               title="{{ getInputTitle(f) }}"
-                               type="radio">
-                        <ng-template #emptyMargin>
-                            <input type="radio" disabled style="margin: 5px 0 5px 15px; visibility: hidden">
-                        </ng-template>
-                    </div>
-
-                    <div class="flex rw btn-group"
-                         style="padding-top: 10px; margin-right: 28px"
-                         *ngIf="editbutton && editable">
-                        <button class="timButton parEditButton flex-grow-5"
-                                (click)="parModeClicked()"
-                                [class.btn-toggled]="editState === 'par'"
-                                title="Toggle advanced edit mode">
-                            <i class="glyphicon glyphicon-minus"></i>
-                            <i class="glyphicon glyphicon-pencil"></i>
-                        </button>
-                    </div>
+          [minimizable]="false"
+          [mightBeAsync]="false"
+          anchor="absolute">
+          <ng-container body>
+            <div class="flex cl">
+              @if (vctrl.notification) {
+                <div class="error" [innerText]="vctrl.notification"></div>
+              }
+              @if (content) {
+                <div class="paragraphs pastePreview" [innerHtml]="content | purify"></div>
+              }
+        
+              @for (f of actions; track f; let first = $first) {
+                <div class="flex rw align-center"
+                  [style.margin-top.px]="f.spacingBefore">
+                  <button class="timButton btn-sm flex-grow-5"
+                    focusMe
+                    [enable]="first"
+                    [innerText]="f.desc"
+                    (click)="callFunc($event, f)">
+                  </button>
+                  @if ((save && (f.allowAsDefault === undefined || f.allowAsDefault))) {
+                    <input
+                      [checked]="getChecked(f.desc)"
+                      (click)="clicked(f)"
+                      style="margin: 5px 0 5px 15px;"
+                      title="{{ getInputTitle(f) }}"
+                      type="radio">
+                  } @else {
+                    <input type="radio" disabled style="margin: 5px 0 5px 15px; visibility: hidden">
+                  }
                 </div>
-            </ng-container>
+              }
+        
+              @if (editbutton && editable) {
+                <div class="flex rw btn-group"
+                  style="padding-top: 10px; margin-right: 28px"
+                  >
+                  <button class="timButton parEditButton flex-grow-5"
+                    (click)="parModeClicked()"
+                    [class.btn-toggled]="editState === 'par'"
+                    title="Toggle advanced edit mode">
+                    <i class="glyphicon glyphicon-minus"></i>
+                    <i class="glyphicon glyphicon-pencil"></i>
+                  </button>
+                </div>
+              }
+            </div>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class PopupMenuDialogComponent extends AngularDialogComponent<

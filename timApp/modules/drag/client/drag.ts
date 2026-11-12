@@ -21,6 +21,7 @@ import {
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {TooltipIsOpenDirective} from "tim/ui/tooltip-is-open.directive";
 import type {ITimComponent} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -89,56 +90,70 @@ interface WordObject {
 @Component({
     selector: `drag-runner`,
     template: `
-        <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+        @if (markupError) {
+          <tim-markup-error [data]="markupError"></tim-markup-error>
+        }
         <div class="form-inline">
-            <div class="draggingarea">
-                <ul *ngIf="trash"
-                    class="dropword"
-                    [dndDropzone]
-                    [dndDraggable]="[]"
-                    dndEffectAllowed="all">
-                    <li>TRASHCAN</li>
-                </ul>
-                <ul *ngIf="!trash"
-                    class="dropword"
-                    [dndDropzone]="[type]"
-                    [dndHorizontal]="true"
-                    [dndDraggable]="wordObjs"
-                    [dndDisableIf]="wordObjs.length >= max"
-                    [dndEffectAllowed]="effectAllowed"
-                    (dndDrop)="handleDrop($event)"
-                    [ngStyle]="styles"
-                    [tooltip]="error"
-                    [isOpen]="error !== undefined"
-                    [ngClass]="{alertFrame: saveFailed}"
+          <div class="draggingarea">
+            @if (trash) {
+              <ul
+                class="dropword"
+                [dndDropzone]
+                [dndDraggable]="[]"
+                dndEffectAllowed="all">
+                <li>TRASHCAN</li>
+              </ul>
+            }
+            @if (!trash) {
+              <ul
+                class="dropword"
+                [dndDropzone]="[type]"
+                [dndHorizontal]="true"
+                [dndDraggable]="wordObjs"
+                [dndDisableIf]="wordObjs.length >= max"
+                [dndEffectAllowed]="effectAllowed"
+                (dndDrop)="handleDrop($event)"
+                [ngStyle]="styles"
+                [tooltip]="error"
+                [isOpen]="error !== undefined"
+                [ngClass]="{alertFrame: saveFailed}"
                 >
-                    <li class="dndPlaceholder" dndPlaceholderRef></li>
-                    <li *ngFor="let item of wordObjs; let i = index"
-                        [innerHTML]="item.word | purify"
-                        class="dragword"
-                        [dndDraggable]="item"
-                        [dndType]="item.type"
-                        (dndMoved)="handleMove(i)"
-                        (dndCanceled)="(copy !== 'target') || wordObjs.splice(i, 1)"
-                        [dndEffectAllowed]="item.effectAllowed"
-                        [ngStyle]="styles"
-                    ></li>
-                </ul>
-                <button class="timButton"
-                        *ngIf="!saveButton && saveFailed"
-                        (click)="save()">
-                    {{buttonText()}}
-                </button>
-            </div>
-            <button class="timButton"
-                    *ngIf="saveButton"
-                    (click)="save()">
+                <li class="dndPlaceholder" dndPlaceholderRef></li>
+                @for (item of wordObjs; track item; let i = $index) {
+                  <li
+                    [innerHTML]="item.word | purify"
+                    class="dragword"
+                    [dndDraggable]="item"
+                    [dndType]="item.type"
+                    (dndMoved)="handleMove(i)"
+                    (dndCanceled)="(copy !== 'target') || wordObjs.splice(i, 1)"
+                    [dndEffectAllowed]="item.effectAllowed"
+                    [ngStyle]="styles"
+                  ></li>
+                }
+              </ul>
+            }
+            @if (!saveButton && saveFailed) {
+              <button class="timButton"
+                (click)="save()">
                 {{buttonText()}}
+              </button>
+            }
+          </div>
+          @if (saveButton) {
+            <button class="timButton"
+              (click)="save()">
+              {{buttonText()}}
             </button>
+          }
         </div>
-        <div *ngIf="error && saveButton" class="error" style="font-size: 12px" [innerHtml]="error | purify"></div>
-        <div *ngIf="footer" class="plgfooter" [textContent]="footer"></div>
-    `,
+        @if (error && saveButton) {
+          <div class="error" style="font-size: 12px" [innerHtml]="error | purify"></div>
+        }
+        @if (footer) {
+          <div class="plgfooter" [textContent]="footer"></div>
+        }
+        `,
     styleUrls: ["./drag.scss"],
     standalone: false,
 })
@@ -390,7 +405,8 @@ export class DragComponent
         TimUtilityModule,
         PurifyModule,
         FormsModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
+        TooltipIsOpenDirective,
     ],
     providers: [SessionVerify, provideHttpClient(withInterceptorsFromDi())],
 })

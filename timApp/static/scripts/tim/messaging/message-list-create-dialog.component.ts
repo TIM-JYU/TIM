@@ -50,81 +50,93 @@ const NAME_RULES: Record<AnnotatedNameRequirements, string> = {
     selector: "message-list-creation",
     template: `
         <tim-dialog-frame class="form-horizontal">
-            <ng-container header i18n>
+          <ng-container header i18n>
                 Create message list
             </ng-container>
-            <ng-container body>
-                <div *ngIf="errorMessage.length > 0" class="alert alert-danger">
+          <ng-container body>
+            @if (errorMessage.length > 0) {
+              <div class="alert alert-danger">
+                <ul>
+                  @for (error of errorMessage; track error) {
+                    <li>{{error}}</li>
+                  }
+                </ul>
+              </div>
+            }
+            <form>
+              <fieldset [disabled]="creatingList">
+                <section>
+                  <label for="list-name" class="list-name-label" i18n>List name:</label>
+                  <div class="list-name-group" [class.has-error]="!nameValid">
+                    <div class="input-group">
+                      <input type="text" class="form-control" name="list-name" id="list-name"
+                        [(ngModel)]="listName"
+                        (ngModelChange)="nameTyped.next($event)"/>
+                      <div class="input-group-addon">&#64;</div>
+                      <select id="domain-select" class="form-control" name="domain-select"
+                        [(ngModel)]="domain">
+                        @for (domain of domains; track domain) {
+                          <option [disabled]="domains.length"
+                          >{{domain}}</option>
+                        }
+                      </select>
+                    </div>
+                    <tim-loading
+                    [style.visibility]="pollingAvailability ? 'visible' : 'hidden'"></tim-loading>
+                  </div>
+                  <div class="name-requirements">
+                    <p i18n>Name requirements:</p>
                     <ul>
-                        <li *ngFor="let error of errorMessage">{{error}}</li>
+                      <li>
+                        <span class="req-check" [class.ok]="!nameExists">
+                          <i class="glyphicon glyphicon-unchecked"></i>
+                          <i class="glyphicon glyphicon-ok"></i>
+                        </span>
+                        <span i18n>Must be unique</span>
+                      </li>
+                      @for (rule of rules; track rule) {
+                        <li>
+                          <span class="req-check" [class.ok]="!failedRequirements.has(rule)">
+                            <i class="glyphicon glyphicon-unchecked"></i>
+                            <i class="glyphicon glyphicon-ok"></i>
+                          </span>
+                          <span>{{rules_names[rule]}}</span>
+                        </li>
+                      }
                     </ul>
-                </div>
-                <form>
-                    <fieldset [disabled]="creatingList">
-                        <section>
-                            <label for="list-name" class="list-name-label" i18n>List name:</label>
-                            <div class="list-name-group" [class.has-error]="!nameValid">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" name="list-name" id="list-name"
-                                           [(ngModel)]="listName"
-                                           (ngModelChange)="nameTyped.next($event)"/>
-                                    <div class="input-group-addon">&#64;</div>
-                                    <select id="domain-select" class="form-control" name="domain-select"
-                                            [(ngModel)]="domain">
-                                        <option [disabled]="domains.length"
-                                                *ngFor="let domain of domains">{{domain}}</option>
-                                    </select>
-                                </div>
-                                <tim-loading
-                                        [style.visibility]="pollingAvailability ? 'visible' : 'hidden'"></tim-loading>
-                            </div>
-                            <div class="name-requirements">
-                                <p i18n>Name requirements:</p>
-                                <ul>
-                                    <li>
-                                        <span class="req-check" [class.ok]="!nameExists">
-                                            <i class="glyphicon glyphicon-unchecked"></i>
-                                            <i class="glyphicon glyphicon-ok"></i>
-                                        </span>
-                                        <span i18n>Must be unique</span>
-                                    </li>
-                                    <li *ngFor="let rule of rules">
-                                        <span class="req-check" [class.ok]="!failedRequirements.has(rule)">
-                                            <i class="glyphicon glyphicon-unchecked"></i>
-                                            <i class="glyphicon glyphicon-ok"></i>
-                                        </span>
-                                        <span>{{rules_names[rule]}}</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <span id="archives-label" i18n>Who can read the archives:</span>
-                            <ul class="archive-list" role="radiogroup" aria-labelledby="archives-label">
-                                <li *ngFor="let option of archiveOptions">
-                                    <label class="radio" for="archive-{{option.archiveType}}">
-                                        <input
-                                                name="items-radio"
-                                                type="radio"
-                                                id="archive-{{option.archiveType}}"
-                                                [value]="option.archiveType"
-                                                [(ngModel)]="archive"
-                                        />
-                                        {{option.policyName}}
-                                    </label>
-                                </li>
-                            </ul>
-                        </section>
-                    </fieldset>
-                </form>
-            </ng-container>
-            <ng-container footer>
-                <tim-loading *ngIf="creatingList"></tim-loading>
-                <button [disabled]="!canCreate || creatingList" class="timButton" type="button" (click)="newList()"
-                        i18n>
+                  </div>
+                  <span id="archives-label" i18n>Who can read the archives:</span>
+                  <ul class="archive-list" role="radiogroup" aria-labelledby="archives-label">
+                    @for (option of archiveOptions; track option) {
+                      <li>
+                        <label class="radio" for="archive-{{option.archiveType}}">
+                          <input
+                            name="items-radio"
+                            type="radio"
+                            id="archive-{{option.archiveType}}"
+                            [value]="option.archiveType"
+                            [(ngModel)]="archive"
+                            />
+                          {{option.policyName}}
+                        </label>
+                      </li>
+                    }
+                  </ul>
+                </section>
+              </fieldset>
+            </form>
+          </ng-container>
+          <ng-container footer>
+            @if (creatingList) {
+              <tim-loading></tim-loading>
+            }
+            <button [disabled]="!canCreate || creatingList" class="timButton" type="button" (click)="newList()"
+              i18n>
                     Create
                 </button>
-            </ng-container>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     styleUrls: ["message-list-create-dialog.component.scss"],
     standalone: false,
 })

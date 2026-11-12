@@ -80,51 +80,67 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
 @Component({
     selector: "tim-cs-jsav-runner",
     template: `
-<tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+@if (markupError) {
+  <tim-markup-error [data]="markupError"></tim-markup-error>
+}
 <div class="csRunDiv no-popup-menu" [class.cs-has-header]="header">
-    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-    <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
-    <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen | purify"></p>
+  @if (header) {
+    <h4 [innerHtml]="header | purify"></h4>
+  }
+  @if (stem) {
+    <p class="stem" [innerHtml]="stem | purify"></p>
+  }
+  @if (!isOpen) {
+    <p class="stem" [innerHtml]="beforeOpen | purify"></p>
+  }
 
-    <!-- The JSAV plugin itself in a sandbox -->
-    <div *ngIf="isOpen && iframesettings" id="output" class="jsFrameContainer jsavOutput">
-        <iframe #frame
-                style="border: none;"
-                id="sxFrame-jsav-div1"
-                class="jsavFrame"
-                [style.width.px]="iframesettings.width"
-                [style.height.px]="iframesettings.height"
-                [timIframeSettings]="iframesettings">
-        </iframe>
+  <!-- The JSAV plugin itself in a sandbox -->
+  @if (isOpen && iframesettings) {
+    <div id="output" class="jsFrameContainer jsavOutput">
+      <iframe #frame
+        style="border: none;"
+        id="sxFrame-jsav-div1"
+        class="jsavFrame"
+        [style.width.px]="iframesettings.width"
+        [style.height.px]="iframesettings.height"
+        [timIframeSettings]="iframesettings">
+      </iframe>
     </div>
+  }
 
-    <p class="csRunMenu">
-        <!-- The save button -->
-        <button *ngIf="isOpen"
-                [disabled]="isRunning"
-                title="(Ctrl-S)"
-                class="timButton btn-sm"
-                (click)="getData(false)"
-                [innerHtml]="button | purify"></button>
-        &nbsp;
-        <!-- The model answer button -->
-        <button *ngIf="isOpen && userCode"
-                [disabled]="isRunning"
-                title="(Ctrl-M)"
-                class="timButton btn-sm"
-                (click)="modelAnswer()"
-                [innerHtml]="modelAnswerButton | purify"></button>
-        &nbsp;
-        <!-- User-specified messages -->
-        <span class="jsav message"
-              *ngIf="message"
-              [innerHtml]="message | purify"></span>
-        &nbsp;
-        <!-- Plugin's messages -->
-        <span class="jsav message"
-              *ngIf="console"
-              [innerHtml]="console | purify"></span>
-    </p>
+  <p class="csRunMenu">
+    <!-- The save button -->
+    @if (isOpen) {
+      <button
+        [disabled]="isRunning"
+        title="(Ctrl-S)"
+        class="timButton btn-sm"
+        (click)="getData(false)"
+      [innerHtml]="button | purify"></button>
+    }
+    <ng-container> &nbsp; </ng-container>
+    <!-- The model answer button -->
+    @if (isOpen && userCode) {
+      <button
+        [disabled]="isRunning"
+        title="(Ctrl-M)"
+        class="timButton btn-sm"
+        (click)="modelAnswer()"
+      [innerHtml]="modelAnswerButton | purify"></button>
+    }
+    <ng-container> &nbsp; </ng-container>
+    <!-- User-specified messages -->
+    @if (message) {
+      <span class="jsav message"
+      [innerHtml]="message | purify"></span>
+    }
+    <ng-container> &nbsp; </ng-container>
+    <!-- Plugin's messages -->
+    @if (console) {
+      <span class="jsav message"
+      [innerHtml]="console | purify"></span>
+    }
+  </p>
 </div>
 `,
     standalone: false,

@@ -22,27 +22,39 @@ export interface IEditJsonEventOptions {
     selector: "tim-edit-json-event-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header i18n>
+          <ng-container header i18n>
                 Edit event JSON
             </ng-container>
-            <ng-container body>
-                <p i18n>Below are all events visible in this calendar in JSON format. You can add or edit events en masse.</p>
-                <p i18n>Adding <code>"delete": true</code> to an event will delete it.</p>
-                <tim-loading *ngIf="loading"></tim-loading>
-                <tim-alert *ngIf="wasSaved" severity="success" i18n>Saved!</tim-alert>
-                <tim-alert *ngIf="error">{{error}}</tim-alert>
-                <tim-alert *ngIf="htmlError"><div [innerHTML]="htmlError | purify"></div></tim-alert>
-                <cs-ace-editor [disabled]="loading" [minRows]="20" [maxRows]="30" languageMode="json" #editor></cs-ace-editor>
-            </ng-container>
-            <div footer class="dialog-button-panel">
-                <button class="timButton" (click)="saveEvents()" i18n>Save</button>
-                <button class="btn btn-default" [class.btn-danger]="!wasSaved" (click)="close(wasSaved)">
-                    <ng-container *ngIf="wasSaved" i18n>Close</ng-container>
-                    <ng-container *ngIf="!wasSaved" i18n>Close without saving</ng-container>
-                </button>
-            </div>
+          <ng-container body>
+            <p i18n>Below are all events visible in this calendar in JSON format. You can add or edit events en masse.</p>
+            <p i18n>Adding <code>"delete": true</code> to an event will delete it.</p>
+            @if (loading) {
+              <tim-loading></tim-loading>
+            }
+            @if (wasSaved) {
+              <tim-alert severity="success" i18n>Saved!</tim-alert>
+            }
+            @if (error) {
+              <tim-alert>{{error}}</tim-alert>
+            }
+            @if (htmlError) {
+              <tim-alert><div [innerHTML]="htmlError | purify"></div></tim-alert>
+            }
+            <cs-ace-editor [disabled]="loading" [minRows]="20" [maxRows]="30" languageMode="json" #editor></cs-ace-editor>
+          </ng-container>
+          <div footer class="dialog-button-panel">
+            <button class="timButton" (click)="saveEvents()" i18n>Save</button>
+            <button class="btn btn-default" [class.btn-danger]="!wasSaved" (click)="close(wasSaved)">
+              @if (wasSaved) {
+                <ng-container i18n>Close</ng-container>
+              }
+              @if (!wasSaved) {
+                <ng-container i18n>Close without saving</ng-container>
+              }
+            </button>
+          </div>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class EditJsonEventDialogComponent extends AngularDialogComponent<

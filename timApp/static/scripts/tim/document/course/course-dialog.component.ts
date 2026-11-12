@@ -21,76 +21,82 @@ const groupTagPrefix = "group:";
     selector: "tim-course-dialog",
     template: `
         <tim-dialog-frame class="overflow-visible">
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <p>Tag document as a course main page by giving its course code and subject.</p>
-                <form #f="ngForm" class="form-horizontal">
-                    <div class="form-group" timErrorState>
-                        <label for="course-code-field" class="col-sm-4 control-label">Course code:</label>
-                        <div class="col-sm-8">
-                            <input required focusMe [(ngModel)]="courseCode" name="course-code-field"
-                                   type="text" title="" autocomplete="off"
-                                   class="form-control" id="course-code-field"
-                                   placeholder="Course code using capital letters">
-                        </div>
-                        <tim-error-message></tim-error-message>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="course-selector" class="col-sm-4 control-label">Subject:
-                            <a href="/view/tim/kurssikategoriat">
-                                <span class="glyphicon glyphicon-question-sign"
-                                      tooltip="If a subject is missing from the list, click here to open the course category suggestion page.">
-                </span>
-                            </a></label>
-                        <div class="col-sm-8">
-                            <select required class="form-control" id="course-selector" [(ngModel)]="courseSubject"
-                                    title="Select the subject of the course." name="course-selector">
-                                <option *ngFor="let subject of subjects" [value]="subject">{{subject}}</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group"
-                         title="Add optional expiration date to specify how long the course is valid">
-                        <label for="expiration-selector" class="col-sm-4 control-label">Expiration date:</label>
-                        <tim-datetime-picker id="expiration-selector"
-                                             [(time)]="expires"
-                                             placeholder="Leave blank for indefinite period of validity">
-                        </tim-datetime-picker>
-                    </div>
-
-                    <div class="form-group" timErrorState>
-                        <label for="group-field" class="col-sm-4 control-label">Student group:</label>
-                        <div class="col-sm-8">
-                            <input [(ngModel)]="studentGroupName" name="group-field"
-                                   type="text" autocomplete="off"
-                                   class="form-control" id="group-field"
-                                   placeholder="Course student group name">
-                        </div>
-                        <tim-error-message></tim-error-message>
-                    </div>
-                </form>
-                <div *ngIf="successMessage" class="alert alert-success">
-                    <span class="glyphicon glyphicon-ok"></span> {{successMessage}}
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            <p>Tag document as a course main page by giving its course code and subject.</p>
+            <form #f="ngForm" class="form-horizontal">
+              <div class="form-group" timErrorState>
+                <label for="course-code-field" class="col-sm-4 control-label">Course code:</label>
+                <div class="col-sm-8">
+                  <input required focusMe [(ngModel)]="courseCode" name="course-code-field"
+                    type="text" title="" autocomplete="off"
+                    class="form-control" id="course-code-field"
+                    placeholder="Course code using capital letters">
                 </div>
-                <div *ngIf="errorMessage" class="alert alert-warning">
-                    <span class="glyphicon glyphicon-exclamation-sign"></span> {{errorMessage}}
+                <tim-error-message></tim-error-message>
+              </div>
+        
+              <div class="form-group">
+                <label for="course-selector" class="col-sm-4 control-label">Subject:
+                  <a href="/view/tim/kurssikategoriat">
+                    <span class="glyphicon glyphicon-question-sign"
+                      tooltip="If a subject is missing from the list, click here to open the course category suggestion page.">
+                    </span>
+                  </a></label>
+                  <div class="col-sm-8">
+                    <select required class="form-control" id="course-selector" [(ngModel)]="courseSubject"
+                      title="Select the subject of the course." name="course-selector">
+                      @for (subject of subjects; track subject) {
+                        <option [value]="subject">{{subject}}</option>
+                      }
+                    </select>
+                  </div>
                 </div>
+                <div class="form-group"
+                  title="Add optional expiration date to specify how long the course is valid">
+                  <label for="expiration-selector" class="col-sm-4 control-label">Expiration date:</label>
+                  <tim-datetime-picker id="expiration-selector"
+                    [(time)]="expires"
+                    placeholder="Leave blank for indefinite period of validity">
+                  </tim-datetime-picker>
+                </div>
+        
+                <div class="form-group" timErrorState>
+                  <label for="group-field" class="col-sm-4 control-label">Student group:</label>
+                  <div class="col-sm-8">
+                    <input [(ngModel)]="studentGroupName" name="group-field"
+                      type="text" autocomplete="off"
+                      class="form-control" id="group-field"
+                      placeholder="Course student group name">
+                  </div>
+                  <tim-error-message></tim-error-message>
+                </div>
+              </form>
+              @if (successMessage) {
+                <div class="alert alert-success">
+                  <span class="glyphicon glyphicon-ok"></span> {{successMessage}}
+                </div>
+              }
+              @if (errorMessage) {
+                <div class="alert alert-warning">
+                  <span class="glyphicon glyphicon-exclamation-sign"></span> {{errorMessage}}
+                </div>
+              }
             </ng-container>
             <ng-container footer>
-                <button class="timButton" [disabled]="f.invalid" (click)="registerCourse()"
-                        title="Save course meta data">Set
-                </button>
-                <button class="timButton" [disabled]="f.invalid" (click)="unregisterCourse()"
-                        title="Delete course meta data">Unset
-                </button>
-                <button class="timButton" (click)="dismiss()" title="Leave without saving unsaved changes">Close
-                </button>
+              <button class="timButton" [disabled]="f.invalid" (click)="registerCourse()"
+                title="Save course meta data">Set
+              </button>
+              <button class="timButton" [disabled]="f.invalid" (click)="unregisterCourse()"
+                title="Delete course meta data">Unset
+              </button>
+              <button class="timButton" (click)="dismiss()" title="Leave without saving unsaved changes">Close
+              </button>
             </ng-container>
-        </tim-dialog-frame>
-    `,
+          </tim-dialog-frame>
+        `,
     standalone: false,
 })
 export class CourseDialogComponent extends AngularDialogComponent<IItem, void> {
@@ -277,7 +283,7 @@ export class CourseDialogComponent extends AngularDialogComponent<IItem, void> {
         CommonModule,
         DialogModule,
         FormsModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
         DatetimePickerModule,
         TimUtilityModule,
     ],

@@ -1,236 +1,261 @@
 <div tim-draggable-fixed class="velpFixed hidden-print" save="%%PAGEID%%velpMenu" [click]="true" caption="Velp menu" id="velpSelection">
-    <div class="velpMenu draggable-content">
-        <div class="velp-minimal-controls">
-            <div class="btn-create-new-velp">
-                <button class="timButton add-velp"
-                        [disabled]="!initialized" (click)="openCreateNewVelpWindow()"><span class="glyphicon glyphicon-plus icon-plus-add-velp" style="font-size: x-small"></span>Add velp
-                </button>
-            </div>
-            <div class="velp-advanced-control">
-                <input type="checkbox" [(ngModel)]="advancedOn" (ngModelChange)="setAdvancedOnlocalStorage(advancedOn)" id="velp-advanced-checkbox">
-                <label for="velp-advanced-checkbox"> Advanced view</label>
-            </div>
-        </div>
-        <div class="velpArea velpArea-available-velps">
-            <div class="velpList">
-
-                <!-- Edit window for velps -->
-                <velp-window class="velp" style="top: 0.2em"
-                             [hidden]="!newVelp.edit"
-                             [velp]="$any(newVelp)"
-                             [index]="-1"
-                             [velpGroups]="velpGroups"
-                             [teacherRight]="vctrl.item.rights.teacher"
-                             [labels]="labels"
-                             [new]="true"
-                             [advancedOn]="advancedOn"></velp-window>
-
-                <!-- Actual velps -->
-                <div class="velp-stack draggable-content available-velps autoscroll">
-                    <velp-window *ngFor="let velp of filteredVelps; let i = index; trackBy: trackByIndex"
-                                 [advancedOn]="advancedOn"
-                                 [docId]="docId"
-                                 [index]="i"
-                                 [labels]="labels"
-                                 [new]="false"
-                                 (velpSelect)="rctrl.useVelp($event)"
-                                 [teacherRight]="vctrl.item.rights.teacher"
-                                 [velpGroups]="velpGroups"
-                                 [velp]="velp"></velp-window>
-                </div>
-            </div>
-        </div>
-        <div class="velp-menu-selected-area">
-            <label for="selection">Selected area:</label>
-            <p id="selection">
-                <span *ngIf="!rctrl.selectedElement">Nothing selected</span>
-                <span *ngIf="rctrl.selectedElement" class="velp-selected-element">
-                    <span *ngIf="rctrl.selectedArea">
-                        '{{ rctrl.getSelectedAreaBeginning() }}' of
-                    </span>
-                    <span *ngIf="rctrl.selectionIsDrawing">
-                        new drawing in review image of
-                    </span>
-                </span>
-                <span *ngIf="rctrl.selectedElement">
-                    <span *ngIf="!rctrl.getSelectedAnswerTaskName()">paragraph '{{ rctrl.getSelectedParagraphBeginning() }}'</span>
-                    <span *ngIf="rctrl.getSelectedAnswerTaskName()">answer in task '{{ rctrl.getSelectedAnswerTaskName() }}'</span>
-                </span>
-            </p>
-        </div>
-        <div [hidden]="!advancedOn" class="velp-menu-advanced-controls">
-            <tabset class="velpFill">
-
-                <!-- Velp filtering options -->
-                <tab heading="Filter velps">
-                  <div class="velp-filter-tab">
-                    <!-- LABELS -->
-                    <div id="labels">
-                        <form class="form-inline adjustForm">
-                            <div class="form-group velp-filters">
-                                <label class="formLabel" for="searchLabels">Search labels:</label>
-                                <input class="formInput" id="searchLabels" name="searchLabels" [(ngModel)]="filterLabel" placeholder="Filter labels">
-                            </div>
-                        </form>
-                        <div>
-                            <div class="labels-scrollarea">
-                                <p *ngFor="let label of filteredLabels()"
-                                   class="label tag-false"
-                                   [style.backgroundColor]="getColor(label.id)"
-                                   (click)="toggleLabel(label)">
-                                        {{ label.content }} <span class="glyphicon glyphicon-ok" [hidden]="!label.selected"></span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <form class="form-inline adjustForm">
-                            <div class="form-group velp-filters">
-                                <label class="formLabel" for="searchVelps">Search velps:</label>
-                                <input class="formInput" id="searchVelps" name="searchVelps" [(ngModel)]="filterVelp" placeholder="Filter velps">
-                            </div>
-                        </form>
-                    </div>
-                    <div>
-                        <form class="form-inline adjustForm">
-                            <div class="form-group velp-filters">
-                                <label class="formLabel" for="orderVelps">Order velps: </label>
-                                <select id="orderVelps" name="orderVelps" class="formInput" [(ngModel)]="order"
-                                        (ngModelChange)="changeOrdering(order)">
-                                    <option value="content">Alphabetical</option>
-                                    <option value="-used">Most used</option>
-                                    <option value="label">Labels</option>
-                                    <option value="-points">Highest point</option>
-                                    <option value="points">Lowest point</option>
-                                </select>
-                            </div>
-                        </form>
-                    </div>
-                    <div>
-                        <form class="form-inline adjustForm">
-                            <div class="form-group velp-filters">
-                                <label class="formLabel" for="displayVelps">Displayed velps: </label>
-                                <select class="formInput" id="displayVelps" name="displayVelps" [(ngModel)]="displayedVelpGroupsScope"
-                                        (ngModelChange)="changeDisplayedVelpGroupsScope(displayedVelpGroupsScope)">
-                                    <option [ngValue]="0">Whole document</option>
-                                    <option [ngValue]="1">Selected paragraph</option>
-                                </select>
-                            </div>
-                        </form>
-                    </div>
-                  </div>
-                </tab>
-
-                <!-- Velp groups -->
-                <tab heading="Velp groups">
-                    <div class="velp-groups-tab">
-                        <div class="velpSummary autoscroll">
-                            <form style="border-bottom: 1px solid gainsboro">
-                                <label for="velpGroupArea">Velp group area:</label>
-                                <fieldset>
-                                    <select class="formInput" id="velpGroupArea" name="velpGroupArea" [(ngModel)]="groupAttachment.target_type" (ngModelChange)="updateVelpList()">
-                                        <option [ngValue]="0" id="selDoc">Whole document</option>
-                                        <option [ngValue]="1" id="selPar" [class.disabled]="rctrl.selectedElement == null" [disabled]="rctrl.selectedElement == null">
-                                            Selected paragraph
-                                        </option>
-                                    </select>
-                                </fieldset>
-                            </form>
-                            <div class="velp-groups-table velp-groups-resize">
-                                <table class="fulldiv">
-                                    <tbody>
-                                    <tr>
-                                        <th>
-                                            <input id="velp-group-table-cb-show" type="checkbox" [(ngModel)]="settings.selectedAllShows" (ngModelChange)="changeAllVelpGroupSelections('show')">
-                                            <label class="comment-info small glyphicon glyphicon-eye-open" for="velp-group-table-cb-show" title="Show">
-                                            </label>
-                                        </th>
-                                        <th>
-                                            <input id="velp-group-table-cb-default"
-                                                   type="checkbox"
-                                                   [(ngModel)]="settings.selectedAllDefault"
-                                                   [disabled]="!vctrl.item.rights.manage"
-                                                   (ngModelChange)="changeAllVelpGroupSelections('default')">
-                                            <label for="velp-group-table-cb-default" title="Default" class="comment-info small" [class.disabled]="!vctrl.item.rights.manage">
-                                                <span class="glyphicon glyphicon-check"></span>
-                                            </label>
-                                        </th>
-                                        <th><span class="small">Velp group</span></th>
-                                        <th><span class="small glyphicon glyphicon-trash" title="Delete velp group"></span></th>
-                                    </tr>
-                                    <tr *ngFor="let group of velpGroups" [hidden]="group.id < 0">
-                                        <td>
-                                            <input type="checkbox" [(ngModel)]="group.show" (ngModelChange)="changeVelpGroupSelection(group, 'show')">
-                                        </td>
-                                        <td>
-                                            <input type="checkbox" [(ngModel)]="group.default" [disabled]="!vctrl.item.rights.manage" (ngModelChange)="changeVelpGroupSelection(group, 'default')">
-                                        </td>
-                                        <td>
-                                            <a href="/manage/{{ $any(group).location }}">{{ group.name }}</a>
-                                        </td>
-                                        <td>
-                                            <span (click)="deleteVelpGroup(group)"
-                                                  *ngIf="group.edit_access && !isDefaultLockedGroup(group)"
-                                                  class="glyphicon glyphicon-trash clickable-icon" title="Delete velp group '{{ group.name }}'"></span>
-                                            <span *ngIf="!group.edit_access && !isDefaultLockedGroup(group)"
-                                                  class="glyphicon glyphicon-trash lightgray"
-                                                  [tooltip]="toolTipMessages.deleteVelpGroupInsufficientRights" placement="auto"></span>
-                                            <span *ngIf="isDefaultLockedGroup(group)"
-                                                  class="glyphicon glyphicon-lock"
-                                                  [tooltip]="toolTipMessages.deleteVelpGroupLockedGroup" placement="auto"></span>
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="collapsible-menu">
-                            <details>
-                                <summary>New velp group</summary>
-                                <div class="collapsible-menu-open-content">
-                                    <form (ngSubmit)="addVelpGroup(addVelpGroupForm)" #addVelpGroupForm="ngForm">
-                                        <div class="velp-groups-new-group-control">
-                                            <label for="new-velp-group-name">Group name: </label>
-                                            <input id="new-velp-group-name" name="newVelpGroupName" type="text" [(ngModel)]="newVelpGroup.name" placeholder="Velp group name" required>
-                                        </div>
-                                        <div class="velp-groups-new-group-control">
-                                            <label for="velpGroupSaveToSelect">Save to: </label>
-                                            <fieldset>
-                                                <select name="velpGroupSaveToSelect" id="velpGroupSaveToSelect"
-                                                        [(ngModel)]="newVelpGroup.target_type"
-                                                        class="formInput">
-                                                    <option [ngValue]="0">Personal collection</option>
-                                                    <option [ngValue]="1" [disabled]="!vctrl.item.rights.editable">Document</option>
-                                                    <option [ngValue]="2" [disabled]="!vctrl.item.rights.editable">Folder</option>
-                                                </select>
-                                            </fieldset>
-                                        </div>
-                                        <div class="velp-groups-new-group-control">
-                                            <input type="submit" class="timButton" value="Create velp group">
-                                            <p [hidden]="!(submitted.velpGroup && addVelpGroupForm.invalid)"
-                                               class="error">
-                                                Velp group name is required!
-                                            </p>
-                                        </div>
-                                    </form>
-                                </div>
-                            </details>
-                        </div>
-                    </div>
-                </tab>
-
-                <!-- SUMMARY -->
-                <tab heading="Summary">
-                    <div class="velp-summary-tab">
-                        <velp-summary
-                                [annotations]="rctrl.annotations"
-                                (annotationselected)="rctrl.toggleAnnotation($event, true)"
-                                [selectedUser]="vctrl.selectedUser"
-                        >
-                        </velp-summary>
-                    </div>
-                </tab>
-            </tabset>
-        </div>
+  <div class="velpMenu draggable-content">
+    <div class="velp-minimal-controls">
+      <div class="btn-create-new-velp">
+        <button class="timButton add-velp"
+          [disabled]="!initialized" (click)="openCreateNewVelpWindow()"><span class="glyphicon glyphicon-plus icon-plus-add-velp" style="font-size: x-small"></span>Add velp
+        </button>
+      </div>
+      <div class="velp-advanced-control">
+        <input type="checkbox" [(ngModel)]="advancedOn" (ngModelChange)="setAdvancedOnlocalStorage(advancedOn)" id="velp-advanced-checkbox">
+        <label for="velp-advanced-checkbox"> Advanced view</label>
+      </div>
     </div>
+    <div class="velpArea velpArea-available-velps">
+      <div class="velpList">
+
+        <!-- Edit window for velps -->
+        <velp-window class="velp" style="top: 0.2em"
+          [hidden]="!newVelp.edit"
+          [velp]="$any(newVelp)"
+          [index]="-1"
+          [velpGroups]="velpGroups"
+          [teacherRight]="vctrl.item.rights.teacher"
+          [labels]="labels"
+          [new]="true"
+        [advancedOn]="advancedOn"></velp-window>
+
+        <!-- Actual velps -->
+        <div class="velp-stack draggable-content available-velps autoscroll">
+          @for (velp of filteredVelps; track i; let i = $index) {
+            <velp-window
+              [advancedOn]="advancedOn"
+              [docId]="docId"
+              [index]="i"
+              [labels]="labels"
+              [new]="false"
+              (velpSelect)="rctrl.useVelp($event)"
+              [teacherRight]="vctrl.item.rights.teacher"
+              [velpGroups]="velpGroups"
+            [velp]="velp"></velp-window>
+          }
+        </div>
+      </div>
+    </div>
+    <div class="velp-menu-selected-area">
+      <label for="selection">Selected area:</label>
+      <p id="selection">
+        @if (!rctrl.selectedElement) {
+          <span>Nothing selected</span>
+        }
+        @if (rctrl.selectedElement) {
+          <span class="velp-selected-element">
+            @if (rctrl.selectedArea) {
+              <span>
+                '{{ rctrl.getSelectedAreaBeginning() }}' of
+              </span>
+            }
+            @if (rctrl.selectionIsDrawing) {
+              <span>
+                new drawing in review image of
+              </span>
+            }
+          </span>
+        }
+        @if (rctrl.selectedElement) {
+          <span>
+            @if (!rctrl.getSelectedAnswerTaskName()) {
+              <span>paragraph '{{ rctrl.getSelectedParagraphBeginning() }}'</span>
+            }
+            @if (rctrl.getSelectedAnswerTaskName()) {
+              <span>answer in task '{{ rctrl.getSelectedAnswerTaskName() }}'</span>
+            }
+          </span>
+        }
+      </p>
+    </div>
+    <div [hidden]="!advancedOn" class="velp-menu-advanced-controls">
+      <tabset class="velpFill">
+
+        <!-- Velp filtering options -->
+        <tab heading="Filter velps">
+          <div class="velp-filter-tab">
+            <!-- LABELS -->
+            <div id="labels">
+              <form class="form-inline adjustForm">
+                <div class="form-group velp-filters">
+                  <label class="formLabel" for="searchLabels">Search labels:</label>
+                  <input class="formInput" id="searchLabels" name="searchLabels" [(ngModel)]="filterLabel" placeholder="Filter labels">
+                </div>
+              </form>
+              <div>
+                <div class="labels-scrollarea">
+                  @for (label of filteredLabels(); track label) {
+                    <p
+                      class="label tag-false"
+                      [style.backgroundColor]="getColor(label.id)"
+                      (click)="toggleLabel(label)">
+                      {{ label.content }} <span class="glyphicon glyphicon-ok" [hidden]="!label.selected"></span>
+                    </p>
+                  }
+                </div>
+              </div>
+            </div>
+            <div>
+              <form class="form-inline adjustForm">
+                <div class="form-group velp-filters">
+                  <label class="formLabel" for="searchVelps">Search velps:</label>
+                  <input class="formInput" id="searchVelps" name="searchVelps" [(ngModel)]="filterVelp" placeholder="Filter velps">
+                </div>
+              </form>
+            </div>
+            <div>
+              <form class="form-inline adjustForm">
+                <div class="form-group velp-filters">
+                  <label class="formLabel" for="orderVelps">Order velps: </label>
+                  <select id="orderVelps" name="orderVelps" class="formInput" [(ngModel)]="order"
+                    (ngModelChange)="changeOrdering(order)">
+                    <option value="content">Alphabetical</option>
+                    <option value="-used">Most used</option>
+                    <option value="label">Labels</option>
+                    <option value="-points">Highest point</option>
+                    <option value="points">Lowest point</option>
+                  </select>
+                </div>
+              </form>
+            </div>
+            <div>
+              <form class="form-inline adjustForm">
+                <div class="form-group velp-filters">
+                  <label class="formLabel" for="displayVelps">Displayed velps: </label>
+                  <select class="formInput" id="displayVelps" name="displayVelps" [(ngModel)]="displayedVelpGroupsScope"
+                    (ngModelChange)="changeDisplayedVelpGroupsScope(displayedVelpGroupsScope)">
+                    <option [ngValue]="0">Whole document</option>
+                    <option [ngValue]="1">Selected paragraph</option>
+                  </select>
+                </div>
+              </form>
+            </div>
+          </div>
+        </tab>
+
+        <!-- Velp groups -->
+        <tab heading="Velp groups">
+          <div class="velp-groups-tab">
+            <div class="velpSummary autoscroll">
+              <form style="border-bottom: 1px solid gainsboro">
+                <label for="velpGroupArea">Velp group area:</label>
+                <fieldset>
+                  <select class="formInput" id="velpGroupArea" name="velpGroupArea" [(ngModel)]="groupAttachment.target_type" (ngModelChange)="updateVelpList()">
+                    <option [ngValue]="0" id="selDoc">Whole document</option>
+                    <option [ngValue]="1" id="selPar" [class.disabled]="rctrl.selectedElement == null" [disabled]="rctrl.selectedElement == null">
+                      Selected paragraph
+                    </option>
+                  </select>
+                </fieldset>
+              </form>
+              <div class="velp-groups-table velp-groups-resize">
+                <table class="fulldiv">
+                  <tbody>
+                    <tr>
+                      <th>
+                        <input id="velp-group-table-cb-show" type="checkbox" [(ngModel)]="settings.selectedAllShows" (ngModelChange)="changeAllVelpGroupSelections('show')">
+                        <label class="comment-info small glyphicon glyphicon-eye-open" for="velp-group-table-cb-show" title="Show">
+                        </label>
+                      </th>
+                      <th>
+                        <input id="velp-group-table-cb-default"
+                          type="checkbox"
+                          [(ngModel)]="settings.selectedAllDefault"
+                          [disabled]="!vctrl.item.rights.manage"
+                          (ngModelChange)="changeAllVelpGroupSelections('default')">
+                        <label for="velp-group-table-cb-default" title="Default" class="comment-info small" [class.disabled]="!vctrl.item.rights.manage">
+                          <span class="glyphicon glyphicon-check"></span>
+                        </label>
+                      </th>
+                      <th><span class="small">Velp group</span></th>
+                      <th><span class="small glyphicon glyphicon-trash" title="Delete velp group"></span></th>
+                    </tr>
+                    @for (group of velpGroups; track group) {
+                      <tr [hidden]="group.id < 0">
+                        <td>
+                          <input type="checkbox" [(ngModel)]="group.show" (ngModelChange)="changeVelpGroupSelection(group, 'show')">
+                        </td>
+                        <td>
+                          <input type="checkbox" [(ngModel)]="group.default" [disabled]="!vctrl.item.rights.manage" (ngModelChange)="changeVelpGroupSelection(group, 'default')">
+                        </td>
+                        <td>
+                          <a href="/manage/{{ $any(group).location }}">{{ group.name }}</a>
+                        </td>
+                        <td>
+                          @if (group.edit_access && !isDefaultLockedGroup(group)) {
+                            <span (click)="deleteVelpGroup(group)"
+                            class="glyphicon glyphicon-trash clickable-icon" title="Delete velp group '{{ group.name }}'"></span>
+                          }
+                          @if (!group.edit_access && !isDefaultLockedGroup(group)) {
+                            <span
+                              class="glyphicon glyphicon-trash lightgray"
+                            [tooltip]="toolTipMessages.deleteVelpGroupInsufficientRights" placement="auto"></span>
+                          }
+                          @if (isDefaultLockedGroup(group)) {
+                            <span
+                              class="glyphicon glyphicon-lock"
+                            [tooltip]="toolTipMessages.deleteVelpGroupLockedGroup" placement="auto"></span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="collapsible-menu">
+              <details>
+                <summary>New velp group</summary>
+                <div class="collapsible-menu-open-content">
+                  <form (ngSubmit)="addVelpGroup(addVelpGroupForm)" #addVelpGroupForm="ngForm">
+                    <div class="velp-groups-new-group-control">
+                      <label for="new-velp-group-name">Group name: </label>
+                      <input id="new-velp-group-name" name="newVelpGroupName" type="text" [(ngModel)]="newVelpGroup.name" placeholder="Velp group name" required>
+                    </div>
+                    <div class="velp-groups-new-group-control">
+                      <label for="velpGroupSaveToSelect">Save to: </label>
+                      <fieldset>
+                        <select name="velpGroupSaveToSelect" id="velpGroupSaveToSelect"
+                          [(ngModel)]="newVelpGroup.target_type"
+                          class="formInput">
+                          <option [ngValue]="0">Personal collection</option>
+                          <option [ngValue]="1" [disabled]="!vctrl.item.rights.editable">Document</option>
+                          <option [ngValue]="2" [disabled]="!vctrl.item.rights.editable">Folder</option>
+                        </select>
+                      </fieldset>
+                    </div>
+                    <div class="velp-groups-new-group-control">
+                      <input type="submit" class="timButton" value="Create velp group">
+                      <p [hidden]="!(submitted.velpGroup && addVelpGroupForm.invalid)"
+                        class="error">
+                        Velp group name is required!
+                      </p>
+                    </div>
+                  </form>
+                </div>
+              </details>
+            </div>
+          </div>
+        </tab>
+
+        <!-- SUMMARY -->
+        <tab heading="Summary">
+          <div class="velp-summary-tab">
+            <velp-summary
+              [annotations]="rctrl.annotations"
+              (annotationselected)="rctrl.toggleAnnotation($event, true)"
+              [selectedUser]="vctrl.selectedUser"
+              >
+            </velp-summary>
+          </div>
+        </tab>
+      </tabset>
+    </div>
+  </div>
 </div>

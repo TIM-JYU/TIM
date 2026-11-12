@@ -28,6 +28,7 @@ import {
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {TooltipIsOpenDirective} from "tim/ui/tooltip-is-open.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -85,49 +86,69 @@ const NumericfieldAll = t.intersection([
     selector: "tim-numericfield-runner",
     template: `
 <div class="numericfieldNoSaveDiv inline-form">
-    <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-    <p class="stem" *ngIf="stem" [innerHtml]="stem | purify"></p>
-    <div class="form-inline">
-     <label><span>
-      <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
-      <span *ngIf="!isPlainText()" [class.noarrows]="!arrows">
-        <input #inputField type="number"
-               [style.width.em]="cols"
-               step="{{ stepCheck() }}"
-               class="form-control"
-               [(ngModel)]="numericvalue"
-               (blur)="autoSave()"
-               (keydown.enter)="saveAndRefocus()"
-               (keydown.control.s)="saveAndPreventDefault($event)"
-               (keydown.meta.s)="saveAndPreventDefault($event)"
-               (ngModelChange)="updateInput()"
-               [readonly]="readonly"
-               [tooltip]="errormessage"
-               [isOpen]="errormessage !== undefined"
-               [disabled]="attrsall['preview']"
-               placeholder="{{inputplaceholder}}"
-               [ngClass]="{warnFrame: isUnSaved(), alertFrame: redAlert}"
-               [ngStyle]="styles">
-               <button class="timButton"
-                        *ngIf="!hasButton() && saveFailed"
-                        (click)="saveText()">
-                    {{buttonText()}}
-               </button>
-      </span>
-      <span *ngIf="isPlainText()" class="plaintext" [style.width.em]="cols" [ngStyle]="styles">{{numericvalue}} </span>
-     </span></label>
-    </div>
+  @if (markupError) {
+    <tim-markup-error [data]="markupError!"></tim-markup-error>
+  }
+  @if (header) {
+    <h4 [innerHtml]="header | purify"></h4>
+  }
+  @if (stem) {
+    <p class="stem" [innerHtml]="stem | purify"></p>
+  }
+  <div class="form-inline">
+    <label><span>
+      @if (inputstem) {
+        <span class="inputstem" [innerHtml]="inputstem | purify"></span>
+      }
+      @if (!isPlainText()) {
+        <span [class.noarrows]="!arrows">
+          <input #inputField type="number"
+            [style.width.em]="cols"
+            step="{{ stepCheck() }}"
+            class="form-control"
+            [(ngModel)]="numericvalue"
+            (blur)="autoSave()"
+            (keydown.enter)="saveAndRefocus()"
+            (keydown.control.s)="saveAndPreventDefault($event)"
+            (keydown.meta.s)="saveAndPreventDefault($event)"
+            (ngModelChange)="updateInput()"
+            [readonly]="readonly"
+            [tooltip]="errormessage"
+            [isOpen]="errormessage !== undefined"
+            [disabled]="attrsall['preview']"
+            placeholder="{{inputplaceholder}}"
+            [ngClass]="{warnFrame: isUnSaved(), alertFrame: redAlert}"
+            [ngStyle]="styles">
+          @if (!hasButton() && saveFailed) {
+            <button class="timButton"
+              (click)="saveText()">
+              {{buttonText()}}
+            </button>
+          }
+        </span>
+      }
+      @if (isPlainText()) {
+        <span class="plaintext" [style.width.em]="cols" [ngStyle]="styles">{{numericvalue}} </span>
+      }
+    </span></label>
+  </div>
+  @if (!isPlainText() && hasButton()) {
     <button class="timButton"
-            *ngIf="!isPlainText() && hasButton()"
-            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
-            (click)="saveText()">
-        {{buttonText()}}
+      [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
+      (click)="saveText()">
+      {{buttonText()}}
     </button>
-    <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event);">{{undoButton}}</a>
-    <p class="savedtext" *ngIf="!hideSavedText && hasButton()">Saved!</p>
-    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
-</div> `,
+  }
+  @if (undoButton && isUnSaved()) {
+    <a href="" title="{{undoTitle}}" (click)="tryResetChanges($event);">{{undoButton}}</a>
+  }
+  @if (!hideSavedText && hasButton()) {
+    <p class="savedtext">Saved!</p>
+  }
+  @if (footer) {
+    <p [innerHtml]="footer | purify" class="plgfooter"></p>
+  }
+</div>`,
     styleUrls: ["./numericfield-plugin.component.scss"],
     standalone: false,
 })
@@ -605,7 +626,8 @@ export class NumericfieldPluginComponent
         TimUtilityModule,
         FormsModule,
         PurifyModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
+        TooltipIsOpenDirective,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],
 })

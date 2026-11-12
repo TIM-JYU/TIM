@@ -48,27 +48,31 @@ const defaultButtonText: string = $localize`Show map`;
     selector: "tim-gamification-map",
     template: `
 <div class="no-highlight hidden-print">
-    <button class="timButton"
-            (click)="clickShowMap()"
-            [disabled]="loading">{{buttonText}}</button>
-    <tim-loading *ngIf="loading"></tim-loading>
-    <tim-alert *ngIf="errorMessage">
-        {{errorMessage}}
+  <button class="timButton"
+    (click)="clickShowMap()"
+  [disabled]="loading">{{buttonText}}</button>
+  @if (loading) {
+    <tim-loading></tim-loading>
+  }
+  @if (errorMessage) {
+    <tim-alert>
+      {{errorMessage}}
     </tim-alert>
-    <div class="uiContainer" [hidden]="!displayMap || errorMessage">
-        <table>
-            <tr><td>Goals <input type="checkbox" class="showFrames" (click)="clickShowFrames()"></td></tr>
-            <tr><td>Zoom </td><td><input type="range" max="1" min="0.3" step="0.05" class="mapZoom"
-            [(ngModel)]="scaleInput" (ngModelChange)="update()"></td></tr>
-            <tr><td>Goal Transparency</td><td><input type="range" max="1" min="0" step="0.05" class="alphaRange"
-            [(ngModel)]="alpha" (ngModelChange)="update()"></td></tr>
-        </table>
-    </div>
-    <div class="mapContainer" [hidden]="!displayMap" (click)="clickCanvas($event)"
-        style="position:relative; z-index:0;">
-        <p class="infoBoxTitle" style="position: absolute;"></p>
-        <p class="infoBoxDescription" style="position: absolute;"></p>
-    </div>
+  }
+  <div class="uiContainer" [hidden]="!displayMap || errorMessage">
+    <table>
+      <tr><td>Goals <input type="checkbox" class="showFrames" (click)="clickShowFrames()"></td></tr>
+      <tr><td>Zoom </td><td><input type="range" max="1" min="0.3" step="0.05" class="mapZoom"
+    [(ngModel)]="scaleInput" (ngModelChange)="update()"></td></tr>
+    <tr><td>Goal Transparency</td><td><input type="range" max="1" min="0" step="0.05" class="alphaRange"
+  [(ngModel)]="alpha" (ngModelChange)="update()"></td></tr>
+</table>
+</div>
+<div class="mapContainer" [hidden]="!displayMap" (click)="clickCanvas($event)"
+  style="position:relative; z-index:0;">
+  <p class="infoBoxTitle" style="position: absolute;"></p>
+  <p class="infoBoxDescription" style="position: absolute;"></p>
+</div>
 </div>
 `,
     standalone: false,

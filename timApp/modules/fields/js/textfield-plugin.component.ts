@@ -28,6 +28,7 @@ import {
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {TooltipIsOpenDirective} from "tim/ui/tooltip-is-open.directive";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
@@ -109,79 +110,105 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
     selector: "tim-textfield-runner",
     template: `
 <div class="textfieldNoSaveDiv inline-form">
-    <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-    <p class="stem" [class.textarea-stem]="isTextArea()" *ngIf="stem" [innerHTML]="stem | purify"></p>
-    <form #f class="form-inline">
-     <label><span>
-      <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
-        <span *ngIf="!isPlainText() && !isDownloadButton">
-        <input type="text"
-               *ngIf="!isTextArea()"
-               class="form-control"
-               [(ngModel)]="userword"
-               (blur)="autoSave()"
-               (keydown.enter)="saveAndRefocus()"
-               (keydown.control.s)="saveAndPreventDefault($event)"
-               (keydown.meta.s)="saveAndPreventDefault($event)"
-               (ngModelChange)="updateInput()"
-               [ngModelOptions]="{standalone: true}"
-               [pattern]="getPattern()"
-               [readonly]="readonly"
-               [tooltip]="errormessage"
-               [isOpen]="errormessage !== undefined && !hasButton()"
-               [disabled]="attrsall['preview']"
-               [placeholder]="placeholder"
-               [class.warnFrame]="isUnSaved()"
-               [class.alertFrame]="redAlert"
-               [ngStyle]="styles"
-               [style.width.em]="cols"
-               >
-       <textarea
-               [rows]="rows"
-               *ngIf="isTextArea()"
-               class="form-control textarea"
-               [(ngModel)]="userword"
-               [ngModelOptions]="{standalone: true}"
-               (blur)="autoSave()"
-               (keydown.control.s)="saveAndPreventDefault($event)"
-               (keydown.meta.s)="saveAndPreventDefault($event)"
-               (keydown)="tryAutoGrow()"
-               (keyup)="tryAutoGrow()"
-               (ngModelChange)="updateInput()"
-               [readonly]="readonly"
-               [tooltip]="errormessage"
-               [isOpen]="errormessage !== undefined && !hasButton()"
-               [placeholder]="placeholder"
-               [disabled]="attrsall['preview']"
-               [class.warnFrame]="isUnSaved()"
-               [class.alertFrame]="redAlert"
-               [ngStyle]="styles"
-               [style.width.em]="cols">
-               </textarea>
-               <button class="timButton"
-                        *ngIf="!hasButton() && saveFailed"
-                        (click)="saveText()">
-                    {{buttonText()}}
-               </button>
-         </span>
-         <span #plainTextSpan *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify"
-               class="plaintext" [style.width.em]="cols" style="max-width: 100%" [ngStyle]="styles"
-               [tooltip]="errormessage" [isOpen]="errormessage !== undefined && !hasButton()"></span>
-         <a *ngIf="isDownloadButton" class="timButton" [href]="userWordBlobUrl" [download]="downloadButtonFile">{{downloadButton}}</a>
-         </span></label>
-    </form>
-    <div *ngIf="errormessage && hasButton()" class="error" style="font-size: 12px" [innerHtml]="errormessage | purify"></div>
+  @if (markupError) {
+    <tim-markup-error [data]="markupError!"></tim-markup-error>
+  }
+  @if (header) {
+    <h4 [innerHtml]="header | purify"></h4>
+  }
+  @if (stem) {
+    <p class="stem" [class.textarea-stem]="isTextArea()" [innerHTML]="stem | purify"></p>
+  }
+  <form #f class="form-inline">
+    <label><span>
+      @if (inputstem) {
+        <span class="inputstem" [innerHtml]="inputstem | purify"></span>
+      }
+      @if (!isPlainText() && !isDownloadButton) {
+        <span>
+          @if (!isTextArea()) {
+            <input type="text"
+              class="form-control"
+              [(ngModel)]="userword"
+              (blur)="autoSave()"
+              (keydown.enter)="saveAndRefocus()"
+              (keydown.control.s)="saveAndPreventDefault($event)"
+              (keydown.meta.s)="saveAndPreventDefault($event)"
+              (ngModelChange)="updateInput()"
+              [ngModelOptions]="{standalone: true}"
+              [pattern]="getPattern()"
+              [readonly]="readonly"
+              [tooltip]="errormessage"
+              [isOpen]="errormessage !== undefined && !hasButton()"
+              [disabled]="attrsall['preview']"
+              [placeholder]="placeholder"
+              [class.warnFrame]="isUnSaved()"
+              [class.alertFrame]="redAlert"
+              [ngStyle]="styles"
+              [style.width.em]="cols"
+              >
+          }
+          @if (isTextArea()) {
+            <textarea
+              [rows]="rows"
+              class="form-control textarea"
+              [(ngModel)]="userword"
+              [ngModelOptions]="{standalone: true}"
+              (blur)="autoSave()"
+              (keydown.control.s)="saveAndPreventDefault($event)"
+              (keydown.meta.s)="saveAndPreventDefault($event)"
+              (keydown)="tryAutoGrow()"
+              (keyup)="tryAutoGrow()"
+              (ngModelChange)="updateInput()"
+              [readonly]="readonly"
+              [tooltip]="errormessage"
+              [isOpen]="errormessage !== undefined && !hasButton()"
+              [placeholder]="placeholder"
+              [disabled]="attrsall['preview']"
+              [class.warnFrame]="isUnSaved()"
+              [class.alertFrame]="redAlert"
+              [ngStyle]="styles"
+              [style.width.em]="cols">
+            </textarea>
+          }
+          @if (!hasButton() && saveFailed) {
+            <button class="timButton"
+              (click)="saveText()">
+              {{buttonText()}}
+            </button>
+          }
+        </span>
+      }
+      @if (isPlainText() && !isDownloadButton) {
+        <span #plainTextSpan [innerHtml]="userword | purify"
+          class="plaintext" [style.width.em]="cols" style="max-width: 100%" [ngStyle]="styles"
+        [tooltip]="errormessage" [isOpen]="errormessage !== undefined && !hasButton()"></span>
+      }
+      @if (isDownloadButton) {
+        <a class="timButton" [href]="userWordBlobUrl" [download]="downloadButtonFile">{{downloadButton}}</a>
+      }
+    </span></label>
+  </form>
+  @if (errormessage && hasButton()) {
+    <div class="error" style="font-size: 12px" [innerHtml]="errormessage | purify"></div>
+  }
+  @if (!isPlainText() && hasButton()) {
     <button class="timButton"
-            *ngIf="!isPlainText() && hasButton()"
-            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
-            (click)="saveText()">
-        {{buttonText()}}
+      [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
+      (click)="saveText()">
+      {{buttonText()}}
     </button>
-    <a href="" *ngIf="undoButton && isUnSaved() && undoButton" title="{{undoTitle}}"
-            (click)="tryResetChanges($event);">{{undoButton}}</a>    
-    <p class="savedtext" *ngIf="!hideSavedText && hasButton()">Saved!</p>
-    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
+  }
+  @if (undoButton && isUnSaved() && undoButton) {
+    <a href="" title="{{undoTitle}}"
+    (click)="tryResetChanges($event);">{{undoButton}}</a>
+  }
+  @if (!hideSavedText && hasButton()) {
+    <p class="savedtext">Saved!</p>
+  }
+  @if (footer) {
+    <p [innerHtml]="footer | purify" class="plgfooter"></p>
+  }
 </div>
 `,
     styleUrls: ["textfield-plugin.component.scss"],
@@ -733,7 +760,8 @@ export class TextfieldPluginComponent
         TimUtilityModule,
         FormsModule,
         PurifyModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
+        TooltipIsOpenDirective,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],
 })

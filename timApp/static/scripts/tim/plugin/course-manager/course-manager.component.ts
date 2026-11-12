@@ -3,7 +3,7 @@ import {Input, NgModule} from "@angular/core";
 import {Component} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
+
 import {type AngularError, type Result, toPromise} from "tim/util/utils";
 import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
 
@@ -15,32 +15,36 @@ interface TemplateData {
 @Component({
     selector: "tim-course-manager",
     styleUrls: ["./course-manager.component.scss"],
-    imports: [CsUtilityModule, FormsModule, CommonModule],
+    imports: [CsUtilityModule, FormsModule],
     template: `
         <div class="tim-course-manager-container">
-            <div class="container">
-                <form (ngSubmit)="onSubmit()" #f="ngForm">
-                    <input name="template" class="form-control" type="text"
-                           (ngModelChange)="setWarning('template')"
-                           [(ngModel)]="copyPath"
-                           [placeholder]="'Copy from path, eg. courses/camp'"
-                           [class.warnFrame]="checkWarning('template')"/>
-                    <input name="name" class="form-control" type="text"
-                           (ngModelChange)="setWarning('name')"
-                           [(ngModel)]="coursePath"
-                           [placeholder]="'Path for a copy'"
-                           [class.warnFrame]="checkWarning('name')"/>
-                    <button type="submit" class="btn">Create <span class="glyphicon glyphicon-send"></span></button>
-                </form>
+          <div class="container">
+            <form (ngSubmit)="onSubmit()" #f="ngForm">
+              <input name="template" class="form-control" type="text"
+                (ngModelChange)="setWarning('template')"
+                [(ngModel)]="copyPath"
+                [placeholder]="'Copy from path, eg. courses/camp'"
+                [class.warnFrame]="checkWarning('template')"/>
+              <input name="name" class="form-control" type="text"
+                (ngModelChange)="setWarning('name')"
+                [(ngModel)]="coursePath"
+                [placeholder]="'Path for a copy'"
+                [class.warnFrame]="checkWarning('name')"/>
+              <button type="submit" class="btn">Create <span class="glyphicon glyphicon-send"></span></button>
+            </form>
+          </div>
+          @if (isCourseCreated) {
+            <div class="alert alert-success"><span
+              class="msg-icon glyphicon glyphicon-ok"></span> <a [href]="folderCreatedUrl">Link to the course</a>
             </div>
-            <div class="alert alert-success" *ngIf="isCourseCreated"><span
-                    class="msg-icon glyphicon glyphicon-ok"></span> <a [href]="folderCreatedUrl">Link to the course</a>
-            </div>
-            <div *ngIf="fail" class="alert alert-warning flex"><span
-                    class="msg-icon glyphicon glyphicon-info-sign"></span>
-                <p>{{ failMessage }}</p></div>
+          }
+          @if (fail) {
+            <div class="alert alert-warning flex"><span
+            class="msg-icon glyphicon glyphicon-info-sign"></span>
+            <p>{{ failMessage }}</p></div>
+          }
         </div>
-    `,
+        `,
 })
 export class CourseManagerComponent implements OnInit {
     @Input() placeholder: string = "";

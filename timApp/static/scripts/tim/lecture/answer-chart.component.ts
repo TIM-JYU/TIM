@@ -164,24 +164,36 @@ interface ChartConfig {
 @Component({
     selector: "tim-answer-chart",
     template: `
-        <div *ngIf="!isText && chartData as cd" style="flex: 1; min-height: 0">
+        @if (!isText && chartData; as cd) {
+          <div style="flex: 1; min-height: 0">
             <canvas baseChart
-                    [datasets]="cd.datasets"
-                    [labels]="cd.config.data.labels"
-                    [options]="chartOptions"
-                    [legend]="cd.config.options.plugins?.legend?.display ?? false"
-                    [type]="'bar'">
+              [datasets]="cd.datasets"
+              [labels]="cd.config.data.labels"
+              [options]="chartOptions"
+              [legend]="cd.config.options.plugins?.legend?.display ?? false"
+              [type]="'bar'">
             </canvas>
-        </div>
-        <div *ngIf="isText">
-            <p *ngFor="let t of textAnswers" [innerText]="t"></p>
-        </div>
-        <p *ngIf="answers as ans">Total answers: {{ ans.length }}</p>
-        <p *ngIf="answers">Total points: {{ getTotalPoints() }}</p>
-        <div *ngIf="!isText">
+          </div>
+        }
+        @if (isText) {
+          <div>
+            @for (t of textAnswers; track t) {
+              <p [innerText]="t"></p>
+            }
+          </div>
+        }
+        @if (answers; as ans) {
+          <p>Total answers: {{ ans.length }}</p>
+        }
+        @if (answers) {
+          <p>Total points: {{ getTotalPoints() }}</p>
+        }
+        @if (!isText) {
+          <div>
             <button class="timButton btn-xs" (click)="toggleAxis()">Change chart orientation</button>
-        </div>
-    `,
+          </div>
+        }
+        `,
     styleUrls: ["./answer-chart.component.scss"],
     standalone: false,
 })

@@ -7,7 +7,7 @@ import * as t from "io-ts";
 import {int} from "@zxing/library/es2015/customTypings";
 import type {Result, AngularError} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
+
 import {Users} from "tim/user/userService";
 import type {ICurrentUser} from "tim/user/IUser";
 import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
@@ -53,100 +53,113 @@ interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
 @Component({
     selector: "tim-user-profile",
     styleUrls: ["./user-profile.component.scss"],
-    imports: [CsUtilityModule, FormsModule, CommonModule],
+    imports: [CsUtilityModule, FormsModule],
     template: `
-        <div *ngIf="profileVisible" class="tim-user-profile-container">
+        @if (profileVisible) {
+          <div class="tim-user-profile-container">
             <div class="profile-heading">
-                <h2>Profile</h2>
-                <button *ngIf="viewMode === 'SHOW' && profileData.edit_access" class="timButton corner-button"
-                        type="button" (click)="modifyUserProfile()">
-                    <span class="glyphicon glyphicon-wrench"></span></button>
-            </div>
-            <div class="container">
+              <h2>Profile</h2>
+              @if (viewMode === 'SHOW' && profileData.edit_access) {
+                <button class="timButton corner-button"
+                  type="button" (click)="modifyUserProfile()">
+                  <span class="glyphicon glyphicon-wrench"></span></button>
+                }
+              </div>
+              <div class="container">
                 <div class="left-column">
-                    <img id="tim-user-profile-picture" [src]="profileData.profile_picture_path" alt="profilepic"/>
-                    <ng-container *ngIf="viewMode == 'EDIT' && editAccess" body>
-                        <div>
-                            <file-select-manager class="small"
-                                                 [dragAndDrop]="dragAndDrop"
-                                                 [uploadUrl]="uploadUrl"
-                                                 [stem]="stem"
-                                                 (file)="onFileLoad($event)"
-                                                 (upload)="onUpload($event)"
-                                                 (uploadDone)="onUploadDone($event)"
-                                                 [accept]="'image/*'">
-                            </file-select-manager>
-                        </div>
+                  <img id="tim-user-profile-picture" [src]="profileData.profile_picture_path" alt="profilepic"/>
+                  @if (viewMode == 'EDIT' && editAccess) {
+                    <ng-container body>
+                      <div>
+                        <file-select-manager class="small"
+                          [dragAndDrop]="dragAndDrop"
+                          [uploadUrl]="uploadUrl"
+                          [stem]="stem"
+                          (file)="onFileLoad($event)"
+                          (upload)="onUpload($event)"
+                          (uploadDone)="onUploadDone($event)"
+                          [accept]="'image/*'">
+                        </file-select-manager>
+                      </div>
                     </ng-container>
+                  }
                 </div>
                 <div class="right-column">
-                    <ng-container *ngIf="viewMode === 'EDIT' && editAccess" body>
-                        <form (ngSubmit)="onSubmit()" #f="ngForm" class="form">
-                            <span class="textfield">
-                                <label>Description</label>
-                            <textarea name="description" class="form-control textarea"
-                                      (ngModelChange)="setWarning('description')"
-                                      [class.warnFrame]="checkWarning('description')"
-                                      [(ngModel)]="profileData.profile_description"></textarea></span>
-
-                            <span class="textfield">
-                                <label>Links</label>
-                            <input #i name="link" class="form-control" type="text"
-                                   *ngFor="let item of profileData.profile_links; index as i; trackBy: linkTrackBy"
-                                   (ngModelChange)="setWarning(i.toString())"
-                                   [(ngModel)]="profileData.profile_links[i]"
-                                   [class.warnFrame]="checkWarning(i.toString())"/>
-                                <label>Group</label>
+                  @if (viewMode === 'EDIT' && editAccess) {
+                    <ng-container body>
+                      <form (ngSubmit)="onSubmit()" #f="ngForm" class="form">
+                        <span class="textfield">
+                          <label>Description</label>
+                          <textarea name="description" class="form-control textarea"
+                            (ngModelChange)="setWarning('description')"
+                            [class.warnFrame]="checkWarning('description')"
+                          [(ngModel)]="profileData.profile_description"></textarea></span>
+                          <span class="textfield">
+                            <label>Links</label>
+                            @for (item of profileData.profile_links; track linkTrackBy(i, item); let i = $index) {
+                              <input #i name="link" class="form-control" type="text"
+                                (ngModelChange)="setWarning(i.toString())"
+                                [(ngModel)]="profileData.profile_links[i]"
+                                [class.warnFrame]="checkWarning(i.toString())"/>
+                            }
+                            <label>Group</label>
                             <input #group name="group" class="form-control" type="text"
-                                   (ngModelChange)="setWarning(group.toString())"
-                                   [(ngModel)]="profileData.course_group_name"
-                                   [class.warnFrame]="checkWarning(group.toString())"/>
-</span>
-                            <button type="submit" class="btn">Save <span class="glyphicon glyphicon-send"></span>
-                            </button>
-                        </form>
+                              (ngModelChange)="setWarning(group.toString())"
+                              [(ngModel)]="profileData.course_group_name"
+                              [class.warnFrame]="checkWarning(group.toString())"/>
+                          </span>
+                          <button type="submit" class="btn">Save <span class="glyphicon glyphicon-send"></span>
+                        </button>
+                      </form>
                     </ng-container>
-                    <ng-container *ngIf="!editAccess">
-                        <h3>Description</h3>
-                        <p>
-                            {{ profileData.profile_description }}
-                        </p>
-                        <h3>Links</h3>
-                        <ng-container *ngFor="let item of profileData.profile_links">
-                            <p><a [href]="item">{{ item }}</a></p>
-                        </ng-container>
-                    </ng-container>
+                  }
+                  @if (!editAccess) {
+                    <h3>Description</h3>
+                    <p>
+                      {{ profileData.profile_description }}
+                    </p>
+                    <h3>Links</h3>
+                    @for (item of profileData.profile_links; track item) {
+                      <p><a [href]="item">{{ item }}</a></p>
+                    }
+                  }
                 </div>
-
                 <!-- <div (click)="showTextInput()">Inputti</div> -->
-            </div>
-            <div class="container">
+              </div>
+              <div class="container">
                 <div class="left-column">
-                    <h2>Hello, {{ profileData.realname }}!</h2>
-                    <ul>
-                        <li>Username: {{ profileData.username }}</li>
-                        <li>Email: {{ profileData.email }}</li>
-                    </ul>
+                  <h2>Hello, {{ profileData.realname }}!</h2>
+                  <ul>
+                    <li>Username: {{ profileData.username }}</li>
+                    <li>Email: {{ profileData.email }}</li>
+                  </ul>
                 </div>
                 <div class="right-column">
-                    <h2>Your group: {{ myGroupName }}</h2>
-                    <ul>
-                        <li
-                                *ngFor="let member of myGroupMembers;">
-                            {{ member.name }}
-                        </li>
-                    </ul>
+                  <h2>Your group: {{ myGroupName }}</h2>
+                  <ul>
+                    @for (member of myGroupMembers; track member) {
+                      <li
+                        >
+                        {{ member.name }}
+                      </li>
+                    }
+                  </ul>
                 </div>
+              </div>
             </div>
-        </div>
-        <div *ngIf="!profileVisible" class="alert alert-warning flex"><span
-                class="msg-icon glyphicon glyphicon-info-sign"></span>
+          }
+          @if (!profileVisible) {
+            <div class="alert alert-warning flex"><span
+            class="msg-icon glyphicon glyphicon-info-sign"></span>
             <p>{{ profileVisibleMsg }}</p></div>
-        <div *ngIf="!profileVisible && profileId == user?.id" class="alert alert-info flex"><span
-                class="msg-icon glyphicon glyphicon-info-sign"></span>
+          }
+          @if (!profileVisible && profileId == user?.id) {
+            <div class="alert alert-info flex"><span
+            class="msg-icon glyphicon glyphicon-info-sign"></span>
             <p>Create a profile here. <button class="timButton" (click)="createProfile()">Create</button></p></div>
-
-    `,
+          }
+        
+        `,
 })
 export class UserProfileComponent implements OnInit {
     @Input() documentId: int = 0;

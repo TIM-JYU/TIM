@@ -382,131 +382,163 @@ function scrollElementVisibleInParent(
     selector: "tim-tape",
     template: `
         <div class="no-highlight robotMainDiv fullinv">
-            <div class="tapeAndRobotDiv">
-                <div class="outputbelt">
-                    <div class="outputvalues">
-                        <div class="output">
-                            <div *ngFor="let n of state.output" class="tapeItem">{{n}}</div>
-                        </div>
-                    </div>
-                    <img alt="output" src="/static/images/tape/output.png"/>
-                    <span>Output</span>
+          <div class="tapeAndRobotDiv">
+            <div class="outputbelt">
+              <div class="outputvalues">
+                <div class="output">
+                  @for (n of state.output; track n) {
+                    <div class="tapeItem">{{n}}</div>
+                  }
                 </div>
-                <div class="robotDiv">
-                    <div class="handItem">
-                        <div class="tapeItem" [innerText]="getHand()"></div>
-                    </div>
-                    <div class="robotImage">
-                        <img alt="robot" src="/static/images/tape/robot.png"/>
-                        <div class="robotRunButtons">
-                            <button class="timButton" (click)="step()"><span>Step</span></button>
-                            <button class="timButton" (click)="run()"><span [innerText]="getRunButtonText()"></span>
-                            </button>
-                            <button class="timButton" (click)="reset()"><span>Reset</span></button>
-                        </div>
-                    </div>
-                </div>
-                <div class="inputbelt">
-                    <div class="inputvalues">
-                    <span class="input">
-                        <div *ngFor="let n of state.input" class="tapeItem">{{n}}</div>
-                    </span>
-                    </div>
-                    <img alt="input" src="/static/images/tape/input.png"/>
-                    <span>Input</span>
-                </div>
+              </div>
+              <img alt="output" src="/static/images/tape/output.png"/>
+              <span>Output</span>
             </div>
-            <div class="memoryArea">
-                <div>Memory:</div>
-                <div *ngFor="let n of state.memory; let i = index" class="memoryContainer">
-                    <div [innerText]="n" class="memoryValue"></div>
-                    <div [innerText]="getMemoryText(i)" class="memoryIndex"></div>
-                </div>
+            <div class="robotDiv">
+              <div class="handItem">
+                <div class="tapeItem" [innerText]="getHand()"></div>
+              </div>
+              <div class="robotImage">
+                <img alt="robot" src="/static/images/tape/robot.png"/>
+                <div class="robotRunButtons">
+                  <button class="timButton" (click)="step()"><span>Step</span></button>
+                  <button class="timButton" (click)="run()"><span [innerText]="getRunButtonText()"></span>
+                </button>
+                <button class="timButton" (click)="reset()"><span>Reset</span></button>
+              </div>
             </div>
-            <div class="programArea">
-            <span class="commandListContainer newCommandList" *ngIf="!data.hideCommands">
-                Commands:
-                <ul class="list-unstyled listBox">
-                <li *ngFor="let c of possibleCommandList; let i = index" class="command"
+          </div>
+          <div class="inputbelt">
+            <div class="inputvalues">
+              <span class="input">
+                @for (n of state.input; track n) {
+                  <div class="tapeItem">{{n}}</div>
+                }
+              </span>
+            </div>
+            <img alt="input" src="/static/images/tape/input.png"/>
+            <span>Input</span>
+          </div>
+        </div>
+        <div class="memoryArea">
+          <div>Memory:</div>
+          @for (n of state.memory; track n; let i = $index) {
+            <div class="memoryContainer">
+              <div [innerText]="n" class="memoryValue"></div>
+              <div [innerText]="getMemoryText(i)" class="memoryIndex"></div>
+            </div>
+          }
+        </div>
+        <div class="programArea">
+          @if (!data.hideCommands) {
+            <span class="commandListContainer newCommandList">
+              Commands:
+              <ul class="list-unstyled listBox">
+                @for (c of possibleCommandList; track c; let i = $index) {
+                  <li class="command"
                     [ngStyle]="{'color': getNewCommandColor(i)}"
-                    (click)="onCommandClick(i)">{{c.name}}</li>
-                </ul>
+                  (click)="onCommandClick(i)">{{c.name}}</li>
+                }
+              </ul>
             </span>
-                <div class="commandAddArea" *ngIf="!data.hideCommands">
-                    <div class="commandParamArea">
-                     <span class="commandParameterArea" *ngIf="showNewCommandParameter">
-                        <span>{{newCommandParameterText}}</span>
-                        <input size="5em" [(ngModel)]="newCommandParameter">
-                     </span>
-                    </div>
-                    <div class="commandButtons">
-                        <button class="timButton" (click)="insertCommandButtonClick()">
-                            <span>
-                                Insert above 
-                                <i class="glyphicon glyphicon-triangle-right"></i>
-                            </span>
-                        </button>
-                        <button class="timButton" (click)="removeCommand()"
-                                [disabled]="selectedCommandIndex == (commandList.length + 1)">
-                            <span>
-                                Remove selected
-                            </span>
-                        </button>
-                        <button class="timButton" (click)="copyAll()" *ngIf="!data.hideCopyAll">
-                            <span>Copy all</span>
-                        </button>
-                        <button class="timButton" (click)="copyToPlugin()" *ngIf="data.copyToCsPlugin">Copy to task</button>
-                        <!-- <button class="timButton" (click)="paste()"><span>Paste</span></button> -->
-                    </div>
-                </div>
-                <span class="commandListContainer">
-                Program:
-                <textarea #textAreaRobotProgram class="robotEditArea textAreaRobotProgram" [(ngModel)]="programAsText"
-                          *ngIf="textmode"></textarea>
-                <ul class="cmditems list-unstyled listBox programCommandList" *ngIf="!textmode">
-                <li *ngFor="let c of commandList; let i = index" class="command" [attr.data-command]="c.command.name"
+          }
+          @if (!data.hideCommands) {
+            <div class="commandAddArea">
+              <div class="commandParamArea">
+                @if (showNewCommandParameter) {
+                  <span class="commandParameterArea">
+                    <span>{{newCommandParameterText}}</span>
+                    <input size="5em" [(ngModel)]="newCommandParameter">
+                  </span>
+                }
+              </div>
+              <div class="commandButtons">
+                <button class="timButton" (click)="insertCommandButtonClick()">
+                  <span>
+                    Insert above
+                    <i class="glyphicon glyphicon-triangle-right"></i>
+                  </span>
+                </button>
+                <button class="timButton" (click)="removeCommand()"
+                  [disabled]="selectedCommandIndex == (commandList.length + 1)">
+                  <span>
+                    Remove selected
+                  </span>
+                </button>
+                @if (!data.hideCopyAll) {
+                  <button class="timButton" (click)="copyAll()">
+                    <span>Copy all</span>
+                  </button>
+                }
+                @if (data.copyToCsPlugin) {
+                  <button class="timButton" (click)="copyToPlugin()">Copy to task</button>
+                }
+                <!-- <button class="timButton" (click)="paste()"><span>Paste</span></button> -->
+              </div>
+            </div>
+          }
+          <span class="commandListContainer">
+            Program:
+            @if (textmode) {
+              <textarea #textAreaRobotProgram class="robotEditArea textAreaRobotProgram" [(ngModel)]="programAsText"
+              ></textarea>
+            }
+            @if (!textmode) {
+              <ul class="cmditems list-unstyled listBox programCommandList">
+                @for (c of commandList; track c; let i = $index) {
+                  <li class="command" [attr.data-command]="c.command.name"
                     [class.activeCommand]="i == selectedCommandIndex"
                     (click)="selectedCommandIndex = i"
-                    [ngStyle]="{'color': getCommandColor(i), 'background-color': getCommandBackgroundColor(i)}">{{c.getName()}}</li>
+                  [ngStyle]="{'color': getCommandColor(i), 'background-color': getCommandBackgroundColor(i)}">{{c.getName()}}</li>
+                }
                 <li class="command lastCommand"
-                    [ngStyle]="{'color': getCommandColor(commandList.length + 1), 'background-color': getCommandBackgroundColor(commandList.length + 1)}"
-                    [class.activeCommand]="(commandList.length + 1) == selectedCommandIndex"
-                    (click)="selectedCommandIndex = (commandList.length + 1)">// end</li>
-                </ul>
-                <p class="red" *ngIf="hasInvalidCommands">Some commands are invalid, they will be ignored</p>
-                    <!--- <select [(ngModel)]="selected" size="10">
-                    <option *ngFor="let c of commandList" [ngStyle]="{'color': getCommandColor($index)}">{{c.getName()}}</option>
-                    </select> --->
-            </span>
-                <div class="robotPresets">
-                    <div class="presetInput" *ngIf="!data.hidePresetInput">
-                        <div class="commandParamArea">
-                         <span>
-                            <span>Preset input:</span>
-                            <input size="15em" [(ngModel)]="inputString">
-                         </span>
-                        </div>
-                    </div>
-                    <div class="presetInput" *ngIf="!data.hidePresetMem">
-                        <div class="commandParamArea">
-                         <span>
-                            <span>Preset memory:</span>
-                            <input size="15em" [(ngModel)]="memString">
-                         </span>
-                        </div>
-                    </div>
-                    <span *ngIf="!data.hideTextMode">
-                    <label>
-                        <input type="checkbox" [(ngModel)]="textmodeCB" class="belttextbox" name="textmode"
-                               value="textmode"
-                               (click)="changeMode()"/>
-                    Text mode
-                    </label>
+                  [ngStyle]="{'color': getCommandColor(commandList.length + 1), 'background-color': getCommandBackgroundColor(commandList.length + 1)}"
+                  [class.activeCommand]="(commandList.length + 1) == selectedCommandIndex"
+                (click)="selectedCommandIndex = (commandList.length + 1)">// end</li>
+              </ul>
+            }
+            @if (hasInvalidCommands) {
+              <p class="red">Some commands are invalid, they will be ignored</p>
+            }
+            <!--- <select [(ngModel)]="selected" size="10">
+            <option *ngFor="let c of commandList" [ngStyle]="{'color': getCommandColor($index)}">{{c.getName()}}</option>
+          </select> --->
+        </span>
+        <div class="robotPresets">
+          @if (!data.hidePresetInput) {
+            <div class="presetInput">
+              <div class="commandParamArea">
+                <span>
+                  <span>Preset input:</span>
+                  <input size="15em" [(ngModel)]="inputString">
                 </span>
-                </div>
+              </div>
             </div>
+          }
+          @if (!data.hidePresetMem) {
+            <div class="presetInput">
+              <div class="commandParamArea">
+                <span>
+                  <span>Preset memory:</span>
+                  <input size="15em" [(ngModel)]="memString">
+                </span>
+              </div>
+            </div>
+          }
+          @if (!data.hideTextMode) {
+            <span>
+              <label>
+                <input type="checkbox" [(ngModel)]="textmodeCB" class="belttextbox" name="textmode"
+                  value="textmode"
+                  (click)="changeMode()"/>
+                Text mode
+              </label>
+            </span>
+          }
         </div>
-    `,
+        </div>
+        </div>
+        `,
     styleUrls: ["tape-plugin.component.scss"],
     standalone: false,
 })

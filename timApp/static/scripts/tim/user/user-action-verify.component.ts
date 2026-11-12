@@ -134,33 +134,41 @@ const VERIFY_RETURN_URLS: Record<VerificationType, string | undefined> = {
 @Component({
     selector: "tim-user-action-verify",
     template: `
-        <tim-alert *ngIf="verifyGlobals.verifyError" i18n>
+        @if (verifyGlobals.verifyError) {
+          <tim-alert i18n>
             Cannot verify: {{verifyGlobals.verifyError}}
         </tim-alert>
-        <tim-alert *ngIf="verificationResult" [severity]="verificationResult.severity">
+        }
+        @if (verificationResult) {
+          <tim-alert [severity]="verificationResult.severity">
             {{verificationResult.message}}
-            <a *ngIf="verificationResult.returnUrl && verifyReturnUrl"
-               [href]="verificationResult.returnUrl">
+            @if (verificationResult.returnUrl && verifyReturnUrl) {
+              <a
+                [href]="verificationResult.returnUrl">
                 {{verifyReturnUrl}}
-            </a>
-        </tim-alert>
+              </a>
+            }
+          </tim-alert>
+        }
         <bootstrap-panel [class.hidden]="verifyGlobals.verifyError || verificationResult" title="Verify action" i18n-title>
-            <div>
-                <ng-container #infoContainer></ng-container>
-            </div>
-            <p class="verify-prompt" i18n>
+          <div>
+            <ng-container #infoContainer></ng-container>
+          </div>
+          <p class="verify-prompt" i18n>
                 Please verify or deny the action. You will not be able to access this page once you select either
                 option.
             </p>
-            <form>
-                <fieldset [disabled]="processing || verifyComplete">
-                    <button class="btn btn-danger" (click)="verify($event, false)" i18n>Decline</button>
-                    <tim-loading *ngIf="processing"></tim-loading>
-                    <button class="timButton" (click)="verify($event, true)" i18n>Accept</button>
-                </fieldset>
-            </form>
+          <form>
+            <fieldset [disabled]="processing || verifyComplete">
+              <button class="btn btn-danger" (click)="verify($event, false)" i18n>Decline</button>
+              @if (processing) {
+                <tim-loading></tim-loading>
+              }
+              <button class="timButton" (click)="verify($event, true)" i18n>Accept</button>
+            </fieldset>
+          </form>
         </bootstrap-panel>
-    `,
+        `,
     styleUrls: ["user-action-verify.component.scss"],
     standalone: false,
 })

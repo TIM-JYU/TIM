@@ -19,35 +19,41 @@ export interface IDiffParams {
     selector: "tim-diff-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{data.title}}
-            </ng-container>
-            <ng-container body>
-                <tim-text-diff [left]="data.left"
-                               [right]="data.right"
-                               format="LineByLine"
-                               [showToolbar]="data.showToolbar">
-                </tim-text-diff>
-            </ng-container>
-            <div footer style="text-align: left">
-                <button class="btn btn-default"
-                        (click)="copy(data.left)">Copy
-                    <ng-container *ngIf="!isSame()">old</ng-container>
-                </button>
-                &ngsp;
-                <button *ngIf="!isSame()"
-                        class="btn btn-default"
-                        (click)="copy(data.right)">
-                    Copy new
-                </button>
-                &ngsp;
-                <ng-container *ngIf="copied">Copied</ng-container>
-                <button class="btn btn-default pull-right" (click)="close(undefined)">
-                    Close
-                </button>
-            </div>
+          <ng-container header>
+            {{data.title}}
+          </ng-container>
+          <ng-container body>
+            <tim-text-diff [left]="data.left"
+              [right]="data.right"
+              format="LineByLine"
+              [showToolbar]="data.showToolbar">
+            </tim-text-diff>
+          </ng-container>
+          <div footer style="text-align: left">
+            <button class="btn btn-default"
+              (click)="copy(data.left)">Copy
+              @if (!isSame()) {
+                old
+              }
+            </button>
+            &ngsp;
+            @if (!isSame()) {
+              <button
+                class="btn btn-default"
+                (click)="copy(data.right)">
+                Copy new
+              </button>
+            }
+            <ng-container> &ngsp; </ng-container>
+            @if (copied) {
+              Copied
+            }
+            <button class="btn btn-default pull-right" (click)="close(undefined)">
+              Close
+            </button>
+          </div>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class DiffDialogComponent extends AngularDialogComponent<

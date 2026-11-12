@@ -23,64 +23,93 @@ const MAX_DISPLAY_LENGTH = 210;
 @Component({
     selector: "tim-message",
     template: `
-        <ng-container *ngIf="showMessage">
-            <tim-alert *ngIf="errorMessage">
-                {{errorMessage}}
+        @if (showMessage) {
+          @if (errorMessage) {
+            <tim-alert>
+              {{errorMessage}}
             </tim-alert>
-            <div class="timMessageDisplay">
-                <tim-close-button *ngIf="!isGlobal" class="closeButton" (click)="closeMessage()"></tim-close-button>
-                <p class="messageInformation" *ngIf="message.sender">
-                    <span class="from" i18n>From: </span>
-                    <span class="sender">{{message.sender}}</span>
-                    <!-- TODO Display what group the message is related to
-                    <span class="group" *ngIf="messageToGroup">, {{group}}</span>
-                    -->
-                </p>
-                <p class="messageDate" *ngIf="message.created">
-                    <span i18n>Sent: </span>
-                    <span class="sentDate">{{messageDate}}</span>
-                </p>
-                <p class="messageHeading">{{message.message_subject}}</p>
-                <div class="fullMessageContent" *ngIf="showFullContent">
-                    <div class="fullContentText" [innerHTML]="message.message_body"></div>
-                    <p class="toggleReadMore" *ngIf="messageOverMaxLength">
-                        <a (click)="toggleDisplayedContentLength()" i18n>Read less</a>
-                    </p>
+          }
+          <div class="timMessageDisplay">
+            @if (!isGlobal) {
+              <tim-close-button class="closeButton" (click)="closeMessage()"></tim-close-button>
+            }
+            @if (message.sender) {
+              <p class="messageInformation">
+                <span class="from" i18n>From: </span>
+                <span class="sender">{{message.sender}}</span>
+                <!-- TODO Display what group the message is related to
+                <span class="group" *ngIf="messageToGroup">, {{group}}</span>
+                -->
+              </p>
+            }
+            @if (message.created) {
+              <p class="messageDate">
+                <span i18n>Sent: </span>
+                <span class="sentDate">{{messageDate}}</span>
+              </p>
+            }
+            <p class="messageHeading">{{message.message_subject}}</p>
+            @if (showFullContent) {
+              <div class="fullMessageContent">
+                <div class="fullContentText" [innerHTML]="message.message_body"></div>
+                @if (messageOverMaxLength) {
+                  <p class="toggleReadMore">
+                    <a (click)="toggleDisplayedContentLength()" i18n>Read less</a>
+                  </p>
+                }
+              </div>
+            }
+            @if (!showFullContent) {
+              <div class="cutMessageContent">
+                <div class="shownContentText" [innerHTML]="shownContent"></div>
+                <p class="toggleReadMore"><a (click)="toggleDisplayedContentLength()" i18n>Read more</a></p>
+              </div>
+            }
+            <div class="buttonArea">
+              @if (message.can_reply) {
+                <button class="timButton" (click)="reply()" i18n>Reply</button>
+              }
+            </div>
+            @if (showReply && message.sender) {
+              <div class="replyArea">
+                <p class="replyTo">To: {{message.sender}}</p>
+                <textarea class="replyTextarea" id="reply-message" name="reply-message"
+                [(ngModel)]="replyMessage"></textarea>
+                <div class="sent">
+                  <button class="timButton" [disabled]="!canSendReply" (click)="sendReply()" i18n>Send</button>
+                  @if (replySent) {
+                    <span class="replySent" i18n>Sent!</span>
+                  }
                 </div>
-                <div class="cutMessageContent" *ngIf="!showFullContent">
-                    <div class="shownContentText" [innerHTML]="shownContent"></div>
-                    <p class="toggleReadMore"><a (click)="toggleDisplayedContentLength()" i18n>Read more</a></p>
-                </div>
-                <div class="buttonArea">
-                    <button class="timButton" *ngIf="message.can_reply" (click)="reply()" i18n>Reply</button>
-                </div>
-                <div class="replyArea" *ngIf="showReply && message.sender">
-                    <p class="replyTo">To: {{message.sender}}</p>
-                    <textarea class="replyTextarea" id="reply-message" name="reply-message"
-                              [(ngModel)]="replyMessage"></textarea>
-                    <div class="sent">
-                        <button class="timButton" [disabled]="!canSendReply" (click)="sendReply()" i18n>Send</button>
-                        <span class="replySent" *ngIf="replySent" i18n>Sent!</span>
-                    </div>
-                </div>
-                <form class="readReceiptArea">
-                    <button class="timButton btn-sm mark-as-read"
-                            *ngIf="message.can_mark_as_read"
-                            (click)="markAsRead()"
-                            [disabled]="!canMarkAsRead || markedAsRead" title="Marks message as read and permanently hides it" i18n-title i18n>
+              </div>
+            }
+            <form class="readReceiptArea">
+              @if (message.can_mark_as_read) {
+                <button class="timButton btn-sm mark-as-read"
+                  (click)="markAsRead()"
+                  [disabled]="!canMarkAsRead || markedAsRead" title="Marks message as read and permanently hides it" i18n-title i18n>
                         Mark as read
                     </button>
-                    <span class="readReceiptLink" *ngIf="markedAsRead" i18n>
+              }
+              @if (markedAsRead) {
+                <span class="readReceiptLink" i18n>
                         Read receipt can be cancelled in <a href="/view/{{message.doc_path}}">the message document</a>
                     </span>
-                    <button class="timButton hide-message" (click)="closeMessage()" *ngIf="message.can_hide">
-                        <ng-container *ngIf="!markedAsRead" i18n>Hide</ng-container>
-                        <ng-container *ngIf="markedAsRead" i18n>Close</ng-container>
-                    </button>
-                </form>
-            </div>
-        </ng-container>
-    `,
+              }
+              @if (message.can_hide) {
+                <button class="timButton hide-message" (click)="closeMessage()">
+                  @if (!markedAsRead) {
+                    <ng-container i18n>Hide</ng-container>
+                  }
+                  @if (markedAsRead) {
+                    <ng-container i18n>Close</ng-container>
+                  }
+                </button>
+              }
+            </form>
+          </div>
+        }
+        `,
     styleUrls: ["tim-message.component.scss"],
     standalone: false,
 })

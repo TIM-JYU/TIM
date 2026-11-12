@@ -665,217 +665,289 @@ export enum ClearSort {
     changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
         <div #timTableRunDiv [ngClass]="{csRunDiv: taskBorders, 'no-overflow': dataView}"
-             [class.cs-has-header]="data.header"
-             class="timTableRunDiv no-popup-menu"
-             (mouseenter)="handleMouseEnter()"
-             (touchstart)="handleMouseEnter()"
+          [class.cs-has-header]="data.header"
+          class="timTableRunDiv no-popup-menu"
+          (mouseenter)="handleMouseEnter()"
+          (touchstart)="handleMouseEnter()"
              [ngStyle]="dataView ? {} : {
                 'max-height': maxRows,
                 'width': maxCols
              }"
-        >
-            <h4 *ngIf="data.header" [innerHtml]="data.header | purify"></h4>
-            <p *ngIf="data.stem" class="stem" [innerHtml]="data.stem | purify"></p>
-            <div tabindex="-1" class="timTableContentDiv no-highlight"
-                 [ngClass]="{disableSelect: disableSelect}">
-                <div class="buttonsCol">
-                    <button class="timButton" title="Remove column"
-                            [disabled]="isPreview()"
-                            *ngIf="delColEnabled()"
-                            (click)="handleClickRemoveColumn()"><span class="glyphicon glyphicon-minus"></span></button>
-                    <button class="timButton" title="Add column" *ngIf="addColEnabled()"
-                            [disabled]="isPreview()"
-                            (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
+          >
+          @if (data.header) {
+            <h4 [innerHtml]="data.header | purify"></h4>
+          }
+          @if (data.stem) {
+            <p class="stem" [innerHtml]="data.stem | purify"></p>
+          }
+          <div tabindex="-1" class="timTableContentDiv no-highlight"
+            [ngClass]="{disableSelect: disableSelect}">
+            <div class="buttonsCol">
+              @if (delColEnabled()) {
+                <button class="timButton" title="Remove column"
+                  [disabled]="isPreview()"
+                  (click)="handleClickRemoveColumn()"><span class="glyphicon glyphicon-minus"></span></button>
+                }
+                @if (addColEnabled()) {
+                  <button class="timButton" title="Add column"
+                    [disabled]="isPreview()"
+                    (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
+                  }
                 </div>
-                <ng-container *ngIf="dataView; else tableView">
-                    <!--suppress TypeScriptUnresolvedReference -->
-                    <tim-data-view [virtualScrolling]="dataViewVScrolling"
-                                   [modelProvider]="this"
+                @if (dataView) {
+                  <!--suppress TypeScriptUnresolvedReference -->
+                  <tim-data-view [virtualScrolling]="dataViewVScrolling"
+                    [modelProvider]="this"
                                    [tableClass]="{editable: isInEditMode() && !isInForcedEditMode(),
                                                 forcedEditable: isInForcedEditMode(),
                                                 timTableTable: true}"
-                                   [tableStyle]="stylingForTable(data.table)"
-                                   [id]="data.table.id"
-                                   [columnIdStart]="nrColStart"
-                                   [tableMaxHeight]="maxRows"
-                                   [tableMaxWidth]="dataView!.tableWidth"
-                                   [fixedColumnCount]="dataView!.fixedColumns"
-                                   [headerStyle]="headersStyle"
-                                   [reportSlowLoad]="dataView!.reportSlowLoad"
-                                   #dataViewComponent>
-                        <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
-                    </tim-data-view>
-                </ng-container>
-                <ng-template #tableView>
-                    <table #tableElem 
+                    [tableStyle]="stylingForTable(data.table)"
+                    [id]="data.table.id"
+                    [columnIdStart]="nrColStart"
+                    [tableMaxHeight]="maxRows"
+                    [tableMaxWidth]="dataView!.tableWidth"
+                    [fixedColumnCount]="dataView!.fixedColumns"
+                    [headerStyle]="headersStyle"
+                    [reportSlowLoad]="dataView!.reportSlowLoad"
+                    #dataViewComponent>
+                    <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
+                  </tim-data-view>
+                } @else {
+                  <table #tableElem
                            [ngClass]="{editable: isInEditMode() && !isInForcedEditMode(),
                                                   forcedEditable: isInForcedEditMode()}"
-                           class="timTableTable"
-                           tabindex="0"
-
-                           [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">
-                        <col class="nr-column" *ngIf="data.nrColumn"/>
-                        <col class="cb-column" *ngIf="data.cbColumn"/>
-                        <col *ngFor="let c of columns; let i = index" [span]="c.span" [id]="c.id"
-                             [ngStyle]="stylingForColumn(c, i)"/>
-                        <thead>
-                        <tr *ngIf="data.charRow"> <!--Char coordinate row -->
-                            <td class="nr-column charRow" *ngIf="data.nrColumn"></td>
-                            <td class="cb-column charRow" *ngIf="data.cbColumn"></td>
+                    class="timTableTable"
+                    tabindex="0"
+                    [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">
+                    @if (data.nrColumn) {
+                      <col class="nr-column"/>
+                    }
+                    @if (data.cbColumn) {
+                      <col class="cb-column"/>
+                    }
+                    @for (c of columns; track c; let i = $index) {
+                      <col [span]="c.span" [id]="c.id"
+                        [ngStyle]="stylingForColumn(c, i)"/>
+                    }
+                    <thead>
+                      @if (data.charRow) {
+                        <tr> <!--Char coordinate row -->
+                          @if (data.nrColumn) {
+                            <td class="nr-column charRow"></td>
+                          }
+                          @if (data.cbColumn) {
+                            <td class="cb-column charRow"></td>
+                          }
+                          @for (c of cellDataMatrix[0]; track c; let coli = $index) {
                             <td class="charRow" [hidden]="!showColumn(coli)"
-                                *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
-                                <span [innerText]="coliToLetters(coli)"></span>
+                              [attr.span]="c.span">
+                              <span [innerText]="coliToLetters(coli)"></span>
                             </td>
+                          }
                         </tr>
-                        <tr *ngIf="data.headers"> <!-- Header row -->
-                            <td class="nr-column total-nr" *ngIf="data.nrColumn"
-                                (click)="handleClickClearFilters()"
-                                title="Total number of rows. Click to show all"
+                      }
+                      @if (data.headers) {
+                        <tr> <!-- Header row -->
+                          @if (data.nrColumn) {
+                            <td class="nr-column total-nr"
+                              (click)="handleClickClearFilters()"
+                              title="Total number of rows. Click to show all"
                             >{{totalRows}}</td>
-                            <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbAllFilter"
-                                                             (ngModelChange)="handleChangeCheckbox(-1)"
-                                                             title="Check for all visible rows">
+                          }
+                          @if (data.cbColumn) {
+                            <td><input type="checkbox" [(ngModel)]="cbAllFilter"
+                              (ngModelChange)="handleChangeCheckbox(-1)"
+                              title="Check for all visible rows">
                             </td>
+                          }
+                          @for (c of data.headers; track c; let coli = $index) {
                             <td class="headers"
-                                *ngFor="let c of data.headers; let coli = index"
-                                [hidden]="!showColumn(coli)"
-                                (click)="handleClickHeader(coli)"
-                                title="Click to sort"
-                                [ngStyle]="headersStyle">{{c}}<span
-                                    [ngStyle]="sortSymbolStyle[coli]">{{sortSymbol[coli]}}</span>
-                            </td>
-                        </tr>
-                        </thead>
-                        <tbody class="filter-rows" [class.tiny]="isTinyFilters()">
-                        <tr *ngIf="filterRow>0" class="filters-row" [class.tiny]="isTinyFilters()" [class.is-last]="filterRow === 1"> <!-- Filter row -->
-                            <td class="nr-column matching-nr" *ngIf="data.nrColumn">
-                                <span title="Number of matching rows"
-                                    *ngIf="hiddenRowCount">{{visibleRowCount}}</span>
-                                 <div  class="add-new-row" (click)="addFilterRow()" title="Add new filter row" >+</div>
-                            </td>
-                            <td class="cb-column" *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbFilter"
-                                                             (ngModelChange)="handleChangeFilter()"
-                                                             title="Check to show only checked rows"></td>
-
-                            <td [hidden]="!showColumn(coli)" class="filter"
-                                *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
-                                <div class="filterdiv">
-                                    <input type="text" class="filter-input"
-                                           (ngModelChange)="handleChangeFilter()"
-                                           (focus)="filterInputFocused()"
-                                           [(ngModel)]="filters[0][coli]"
-                                           title="Write filter condition">
-                                </div>
-                            </td>
-                        </tr> 
-                        <tr class="filters-row" [class.tiny]="isTinyFilters()" *ngFor="let frow of otherFilterRows; let i = index; let last= last" [class.is-last]="last">
-                            <td class="nr-column" *ngIf="data.nrColumn" style="position: relative;">
-                                <!-- Jos on viimeinen rivi, näytä klikattava miinus -->
-                                <div class="delete-row" *ngIf="last" (click)="deleteFilterRow()"
-                                  title="Delete filter row">
-                                  -
-                                </div>
-                            </td>                            
-                            <td  class="cb-column" *ngIf="data.cbColumn"></td>
-
-                            <td  class="filter" [hidden]="!showColumn(coli)"
-                                *ngFor="let c of cellDataMatrix[0]; let coli = index" [attr.span]="c.span">
-                                <div class="filterdiv">
-                                    <input type="text" class="filter-input"
-                                           (ngModelChange)="handleChangeFilter()"
-                                           (focus)="filterInputFocused()"
-                                           [(ngModel)]="filters[frow.index][coli]"
-                                           title="Write filter condition">
-                                </div>
-                            </td>
-                        </tr>
-                        <!-- Now the matrix -->
-                        <tr *ngFor="let rowi of visibleRowIndices; let i = index"
-                            [style]="stylingForRow(rowi)"
-                            [class]="classForRow(rowi)"
+                              [hidden]="!showColumn(coli)"
+                              (click)="handleClickHeader(coli)"
+                              title="Click to sort"
+                              [ngStyle]="headersStyle">{{c}}<span
+                            [ngStyle]="sortSymbolStyle[coli]">{{sortSymbol[coli]}}</span>
+                          </td>
+                        }
+                      </tr>
+                    }
+                  </thead>
+                  <tbody class="filter-rows" [class.tiny]="isTinyFilters()">
+                    @if (filterRow>0) {
+                      <tr class="filters-row" [class.tiny]="isTinyFilters()" [class.is-last]="filterRow === 1"> <!-- Filter row -->
+                        @if (data.nrColumn) {
+                          <td class="nr-column matching-nr">
+                            @if (hiddenRowCount) {
+                              <span title="Number of matching rows"
+                              >{{visibleRowCount}}</span>
+                            }
+                            <div  class="add-new-row" (click)="addFilterRow()" title="Add new filter row" >+</div>
+                          </td>
+                        }
+                        @if (data.cbColumn) {
+                          <td class="cb-column"><input type="checkbox" [(ngModel)]="cbFilter"
+                            (ngModelChange)="handleChangeFilter()"
+                          title="Check to show only checked rows"></td>
+                        }
+                        @for (c of cellDataMatrix[0]; track c; let coli = $index) {
+                          <td [hidden]="!showColumn(coli)" class="filter"
+                            [attr.span]="c.span">
+                            <div class="filterdiv">
+                              <input type="text" class="filter-input"
+                                (ngModelChange)="handleChangeFilter()"
+                                (focus)="filterInputFocused()"
+                                [(ngModel)]="filters[0][coli]"
+                                title="Write filter condition">
+                            </div>
+                          </td>
+                        }
+                      </tr>
+                    }
+                    @for (frow of otherFilterRows; track frow; let i = $index; let last = $last) {
+                      <tr class="filters-row" [class.tiny]="isTinyFilters()" [class.is-last]="last">
+                        @if (data.nrColumn) {
+                          <td class="nr-column" style="position: relative;">
+                            <!-- Jos on viimeinen rivi, näytä klikattava miinus -->
+                            @if (last) {
+                              <div class="delete-row" (click)="deleteFilterRow()"
+                                title="Delete filter row">
+                                -
+                              </div>
+                            }
+                          </td>
+                        }
+                        @if (data.cbColumn) {
+                          <td  class="cb-column"></td>
+                        }
+                        @for (c of cellDataMatrix[0]; track c; let coli = $index) {
+                          <td  class="filter" [hidden]="!showColumn(coli)"
+                            [attr.span]="c.span">
+                            <div class="filterdiv">
+                              <input type="text" class="filter-input"
+                                (ngModelChange)="handleChangeFilter()"
+                                (focus)="filterInputFocused()"
+                                [(ngModel)]="filters[frow.index][coli]"
+                                title="Write filter condition">
+                            </div>
+                          </td>
+                        }
+                      </tr>
+                    }
+                    <!-- Now the matrix -->
+                    @for (rowi of visibleRowIndices; track rowi; let i = $index) {
+                      <tr
+                        [style]="stylingForRow(rowi)"
+                        [class]="classForRow(rowi)"
                         >
-                            <td class="nr-column" *ngIf="data.nrColumn">{{rowNumbers[i]}}</td>
-                            <td class="cb-column" *ngIf="data.cbColumn">
-                                <input type="checkbox" [(ngModel)]="cbs[rowi]"
-                                       (ngModelChange)="handleChangeCheckbox(rowi)">
+                        @if (data.nrColumn) {
+                          <td class="nr-column">{{rowNumbers[i]}}</td>
+                        }
+                        @if (data.cbColumn) {
+                          <td class="cb-column">
+                            <input type="checkbox" [(ngModel)]="cbs[rowi]"
+                              (ngModelChange)="handleChangeCheckbox(rowi)">
+                          </td>
+                        }
+                        @for (td of cellDataMatrix[rowi]; track td; let coli = $index) {
+                          @if (!td.underSpanOf) {
+                            <td
+                              [hidden]="!showColumn(coli)"
+                              [class]="classForCell(rowi, coli)"
+                              [attr.colspan]="td.colspan"
+                              [attr.rowspan]="td.rowspan"
+                              [style]="stylingForCell(rowi, coli)"
+                              (click)="handleClickCell(rowi, coli, $event)"
+                              [innerHtml]="td.cell | purify">
+                              <!--                                <div [innerHtml]="td.cell"></div>-->
                             </td>
-                            <ng-container *ngFor="let td of cellDataMatrix[rowi]; let coli = index">
-                                <td *ngIf="!td.underSpanOf"
-                                    [hidden]="!showColumn(coli)"
-                                    [class]="classForCell(rowi, coli)"
-                                    [attr.colspan]="td.colspan"
-                                    [attr.rowspan]="td.rowspan"
-                                    [style]="stylingForCell(rowi, coli)"
-                                    (click)="handleClickCell(rowi, coli, $event)"
-                                    [innerHtml]="td.cell | purify">
-                                    <!--                                <div [innerHtml]="td.cell"></div>-->
-                                </td>
-                            </ng-container> <!-- one cell -->
-                        </tr> <!-- the matrix -->
-                        </tbody>
+                          }
+                          } <!-- one cell -->
+                        </tr>
+                        } <!-- the matrix -->
+                      </tbody>
                     </table>
-                </ng-template>
-                <div class="buttonsRow">
-                    <button class="timButton" title="Remove row" *ngIf="delRowEnabled()"
-                            [disabled]="isPreview()"
-                            (click)="handleClickRemoveRow()"><span
-                            class="glyphicon glyphicon-minus"></span></button>
-                    <button class="timButton" title="Add row" *ngIf="addRowEnabled()"
-                            [disabled]="isPreview()"
-                            (click)="handleClickAddRow()"><span
-                            class="glyphicon glyphicon-plus" [innerText]="addRowButtonText"></span></button>
-                </div>
-                <ng-container *ngIf="!dataView">
+                  }
+                  <div class="buttonsRow">
+                    @if (delRowEnabled()) {
+                      <button class="timButton" title="Remove row"
+                        [disabled]="isPreview()"
+                        (click)="handleClickRemoveRow()"><span
+                      class="glyphicon glyphicon-minus"></span></button>
+                    }
+                    @if (addRowEnabled()) {
+                      <button class="timButton" title="Add row"
+                        [disabled]="isPreview()"
+                        (click)="handleClickAddRow()"><span
+                      class="glyphicon glyphicon-plus" [innerText]="addRowButtonText"></span></button>
+                    }
+                  </div>
+                  @if (!dataView) {
                     <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
-                </ng-container>
-                <ng-template #inlineEditorTemplate>
-                    <div #inlineEditor class="timTableEditor inlineEditorDiv no-highlight" *ngIf="currentCell">
+                  }
+                  <ng-template #inlineEditorTemplate>
+                    @if (currentCell) {
+                      <div #inlineEditor class="timTableEditor inlineEditorDiv no-highlight">
                         <textarea class="editInput" #editInput autocomplete="off" rows="1"
-                               (blur)="smallEditorLostFocus($event)" 
-                               (keydown)="handleKeyDownSmallEditor($event)"
-                               (keyup)="handleKeyUpSmallEditor($event)"
-                           [(ngModel)]="currentCell!.editedCellContent"
+                          (blur)="smallEditorLostFocus($event)"
+                          (keydown)="handleKeyDownSmallEditor($event)"
+                          (keyup)="handleKeyUpSmallEditor($event)"
+                          [(ngModel)]="currentCell!.editedCellContent"
                         ></textarea>
-                    <span #inlineEditorButtons
+                        <span #inlineEditorButtons
                           class="inlineEditorButtons"
                           style="position: absolute; width: max-content"
                           [hidden]="hide.editorButtons">
-                    <span [hidden]="hide.editorPosition" [innerHtml]="editorPosition"
+                          <span [hidden]="hide.editorPosition" [innerHtml]="editorPosition"
                           (click)="handleClickEditorPosition()" style="background: yellow;"></span>
-                    <button
+                          <button
                             #buttonOpenBigEditor class="timButton buttonOpenBigEditor"
                             (click)="handleClickOpenBigEditor()"><span class="glyphicon glyphicon-pencil"></span>
-                    </button>
-                    <button class="timButton buttonCloseSmallEditor"
+                          </button>
+                          <button class="timButton buttonCloseSmallEditor"
                             (click)="handleClickCancelSmallEditor()"><tim-close-button></tim-close-button>
-                    </button>
-                    <button class="timButton buttonAcceptEdit"
+                          </button>
+                          <button class="timButton buttonAcceptEdit"
                             (click)="handleClickAcceptSmallEditor()"><span class="glyphicon glyphicon-ok"></span>
-                    </button>
-                    </span>
+                          </button>
+                        </span>
+                      </div>
+                    }
+                  </ng-template>
                 </div>
-                    </ng-template>
-            </div>
-            <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton && !isLocked()">
-                <p class="csRunMenu">
-                    <button class="timButton" [disabled]="disableUnchanged && !editedInternal" *ngIf="(task && hasButton) || saveFailed"
-                            (click)="handleClickSave()">{{button}}</button>
-                    &nbsp;
-                    <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
-                       (click)="tryResetChanges($event)">{{undoButton}}</a>
-                    <span [hidden]="!result">{{result}}</span>
-                    <a href="#" *ngIf="canReset"
-                       (click)="initCode(true); $event.preventDefault()">{{ resetText }} </a>
-                </p>
-            </div>
-            <p class="plgfooter" *ngIf="data.footer" [innerHtml]="data.footer | purify"></p>
-            <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px"
-                 [innerHtml]="connectionErrorMessage"></div>
-        </div>
-        <div class="timTableError">
-            <pre class="error" *ngIf="error" [innerText]="error"></pre>
-        </div>
-    `,
+                @if (task && !data.hideSaveButton && !isLocked()) {
+                  <div class="csRunMenuArea">
+                    <p class="csRunMenu">
+                      @if ((task && hasButton) || saveFailed) {
+                        <button class="timButton" [disabled]="disableUnchanged && !editedInternal"
+                        (click)="handleClickSave()">{{button}}</button>
+                      }
+                      <ng-container> &nbsp; </ng-container>
+                      @if (undoButton && isUnSaved()) {
+                        <a href="" [title]="undoTitle"
+                        (click)="tryResetChanges($event)">{{undoButton}}</a>
+                      }
+                      <span [hidden]="!result">{{result}}</span>
+                      @if (canReset) {
+                        <a href="#"
+                        (click)="initCode(true); $event.preventDefault()">{{ resetText }} </a>
+                      }
+                    </p>
+                  </div>
+                }
+                @if (data.footer) {
+                  <p class="plgfooter" [innerHtml]="data.footer | purify"></p>
+                }
+                @if (connectionErrorMessage) {
+                  <div class="error" style="font-size: 12px"
+                  [innerHtml]="connectionErrorMessage"></div>
+                }
+              </div>
+              <div class="timTableError">
+                @if (error) {
+                  <pre class="error" [innerText]="error"></pre>
+                }
+              </div>
+        `,
     styleUrls: ["./tim-table.component.scss", "./table-common.scss"],
     standalone: false,
 })

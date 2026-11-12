@@ -8,6 +8,7 @@ import {
     ApplicationRef,
     createComponent,
     NgZone,
+    provideZoneChangeDetection,
     reflectComponentType,
 } from "@angular/core";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -99,7 +100,9 @@ function getModuleRef(moduleType: Type<unknown>) {
         // Each module is its own Angular application with its own zone, like the main application.
         const bootstrap = () =>
             platformBrowserDynamic()
-                .bootstrapModule(moduleType)
+                .bootstrapModule(moduleType, {
+                    applicationProviders: [provideZoneChangeDetection()],
+                })
                 .then((moduleRef) => {
                     addRefreshTarget(
                         moduleRef.injector.get(ApplicationRef),

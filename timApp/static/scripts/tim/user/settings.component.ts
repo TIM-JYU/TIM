@@ -53,10 +53,12 @@ import {notifyUserPrefsChanged} from "tim/sidebarmenu/tabs/settings-tab.componen
 @Component({
     selector: "settings-button-panel",
     template: `
-        <tim-loading *ngIf="saving"></tim-loading>
+        @if (saving) {
+          <tim-loading></tim-loading>
+        }
         <button class="timButton" [disabled]="saving" (click)="save()" i18n>Save changes</button>
         <ng-content></ng-content>
-    `,
+        `,
     styleUrls: ["settings-button-panel.component.scss"],
     standalone: false,
 })
@@ -143,523 +145,615 @@ type StyleSelectionType =
     template: `
         <h1 i18n>TIM settings</h1>
         <div class="form">
-            <bootstrap-form-panel [disabled]="saving" title="Preferred language" i18n-title anchorId="prefs_language"
-                                  [showHeadingAnchors]="true">
-                <div class="flex cl">
-                    <tim-language-selector [(language)]="settings.language"></tim-language-selector>
-                    <settings-button-panel [saved]="submit" [reloadAfterSave]="true"></settings-button-panel>
-                </div>
-            </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title anchorId="prefs_styles"
-                                  [showHeadingAnchors]="true">
-                <tim-alert *ngIf="styleError">
-                    <strong>{{ styleError.title }}</strong>
-                    <p>{{ styleError.message }}</p>
-                </tim-alert>
-                <tabset #stylesTabs>
-                    <tab heading="Selected styles" i18n-heading>
-                        <div class="info-box">
-                            <p i18n>
+          <bootstrap-form-panel [disabled]="saving" title="Preferred language" i18n-title anchorId="prefs_language"
+            [showHeadingAnchors]="true">
+            <div class="flex cl">
+              <tim-language-selector [(language)]="settings.language"></tim-language-selector>
+              <settings-button-panel [saved]="submit" [reloadAfterSave]="true"></settings-button-panel>
+            </div>
+          </bootstrap-form-panel>
+          <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title anchorId="prefs_styles"
+            [showHeadingAnchors]="true">
+            @if (styleError) {
+              <tim-alert>
+                <strong>{{ styleError.title }}</strong>
+                <p>{{ styleError.message }}</p>
+              </tim-alert>
+            }
+            <tabset #stylesTabs>
+              <tab heading="Selected styles" i18n-heading>
+                <div class="info-box">
+                  <p i18n>
                                 Styles that you currently use are listed here.
                                 You can review and remove styles that you use.
                             </p>
-                            <p i18n>
+                  <p i18n>
                                 You can also reorder styles by dragging them in the list below.
                                 Reordering the styles will change their priority which might affect the final generated
                                 theme for TIM.
                             </p>
-                        </div>
-                        <div class="style-loader" *ngIf="currentStyles === undefined">
-                            <tim-loading></tim-loading>
-                            <ng-container i18n>Loading active styles, please wait</ng-container>
-                        </div>
-                        <ng-container *ngIf="currentStyles !== undefined">
-                            <div class="info-box" *ngIf="currentStyles.length == 0">
-                                <small i18n>
+                </div>
+                @if (currentStyles === undefined) {
+                  <div class="style-loader">
+                    <tim-loading></tim-loading>
+                    <ng-container i18n>Loading active styles, please wait</ng-container>
+                  </div>
+                }
+                @if (currentStyles !== undefined) {
+                  @if (currentStyles.length == 0) {
+                    <div class="info-box">
+                      <small i18n>
                                     You have no styles selected. You can add styles via the <a
                                         (click)="changeStyleTab(1)">Available styles</a> tab.
                                 </small>
-                            </div>
-                            <div *ngIf="currentStyles.length > 0" class="current-styles" [dndDropzone]="['userStyle']"
-                                 [dndEffectAllowed]="'move'"
-                                 (dndDrop)="onStyleDrop($event, 'active')">
-                                <div class="drag-placeholder" dndPlaceholderRef></div>
-                                <div *ngFor="let style of currentStyles"
-                                     [dndDraggable]="style.docId"
-                                     [dndEffectAllowed]="'move'"
-                                     [dndDisableDragIf]="saving"
-                                     dndType="userStyle">
-                                    <i class="glyphicon glyphicon-sort sort-handle" [class.disabled]="saving"
-                                       dndHandle></i>
-                                    <div class="style-info">
-                                        <h4>
-                                            <a class="style-header" href="/view/{{style.path}}">{{ style.name }}</a>
-                                            <span *ngIf="style.type == 'official'" class="label label-primary" i18n>Official</span>
-                                            <span *ngIf="style.type == 'deleted'" class="label label-default" i18n>Deleted</span>
-                                        </h4>
-                                        <p class="style-description">{{ style.description }}</p>
-                                    </div>
-                                    <div class="style-actions">
-                                        <button class="btn btn-danger" title="Delete style"
-                                                (click)="deleteSelectedStyle(style, 'active')" i18n-title>
-                                            <i class="glyphicon glyphicon-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </ng-container>
-                    </tab>
-                    <tab heading="Quick select styles" i18n-heading>
-                        <div class="info-box">
-                            <p i18n>
+                  </div>
+                }
+                @if (currentStyles.length > 0) {
+                  <div class="current-styles" [dndDropzone]="['userStyle']"
+                    [dndEffectAllowed]="'move'"
+                    (dndDrop)="onStyleDrop($event, 'active')">
+                    <div class="drag-placeholder" dndPlaceholderRef></div>
+                    @for (style of currentStyles; track style) {
+                      <div
+                        [dndDraggable]="style.docId"
+                        [dndEffectAllowed]="'move'"
+                        [dndDisableDragIf]="saving"
+                        dndType="userStyle">
+                        <i class="glyphicon glyphicon-sort sort-handle" [class.disabled]="saving"
+                        dndHandle></i>
+                        <div class="style-info">
+                          <h4>
+                            <a class="style-header" href="/view/{{style.path}}">{{ style.name }}</a>
+                            @if (style.type == 'official') {
+                              <span class="label label-primary" i18n>Official</span>
+                            }
+                            @if (style.type == 'deleted') {
+                              <span class="label label-default" i18n>Deleted</span>
+                            }
+                          </h4>
+                          <p class="style-description">{{ style.description }}</p>
+                        </div>
+                        <div class="style-actions">
+                          <button class="btn btn-danger" title="Delete style"
+                            (click)="deleteSelectedStyle(style, 'active')" i18n-title>
+                            <i class="glyphicon glyphicon-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            </tab>
+            <tab heading="Quick select styles" i18n-heading>
+              <div class="info-box">
+                <p i18n>
                                 Styles that are available in the Quick select menu (in the Settings menu on the left of
                                 the page) are listed here.
                                 You can review and remove styles that you use.
                             </p>
-                            <p i18n>
+                <p i18n>
                                 You can also reorder styles by dragging them in the list below.
                             </p>
-                        </div>
-                        <div class="style-loader" *ngIf="currentQuickStyles === undefined">
-                            <tim-loading></tim-loading>
-                            <ng-container i18n>Loading active styles, please wait</ng-container>
-                        </div>
-                        <ng-container *ngIf="currentQuickStyles !== undefined">
-                            <div class="info-box" *ngIf="currentQuickStyles.length == 0">
-                                <small i18n>
+              </div>
+              @if (currentQuickStyles === undefined) {
+                <div class="style-loader">
+                  <tim-loading></tim-loading>
+                  <ng-container i18n>Loading active styles, please wait</ng-container>
+                </div>
+              }
+              @if (currentQuickStyles !== undefined) {
+                @if (currentQuickStyles.length == 0) {
+                  <div class="info-box">
+                    <small i18n>
                                     You have no quick styles selected. You can add styles via the <a
                                         (click)="changeStyleTab(1)">Available styles</a> tab.
                                 </small>
-                            </div>
-                            <div *ngIf="currentQuickStyles.length > 0" class="current-styles"
-                                 [dndDropzone]="['userStyle']"
-                                 [dndEffectAllowed]="'move'"
-                                 (dndDrop)="onStyleDrop($event, 'quick')">
-                                <div class="drag-placeholder" dndPlaceholderRef></div>
-                                <div *ngFor="let style of currentQuickStyles"
-                                     [dndDraggable]="style.docId"
-                                     [dndEffectAllowed]="'move'"
-                                     [dndDisableDragIf]="saving"
-                                     dndType="userStyle">
-                                    <i class="glyphicon glyphicon-sort sort-handle" [class.disabled]="saving"
-                                       dndHandle></i>
-                                    <div class="style-info">
-                                        <h4>
-                                            <a class="style-header" href="/view/{{style.path}}">{{ style.name }}</a>
-                                            <span *ngIf="style.type == 'official'" class="label label-primary" i18n>Official</span>
-                                            <span *ngIf="style.type == 'deleted'" class="label label-default" i18n>Deleted</span>
-                                        </h4>
-                                        <p class="style-description">{{ style.description }}</p>
-                                    </div>
-                                    <div class="style-actions">
-                                        <button class="btn btn-danger" title="Delete style"
-                                                (click)="deleteSelectedStyle(style, 'quick')" i18n-title>
-                                            <i class="glyphicon glyphicon-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </ng-container>
-                    </tab>
-                    <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()"
-                         (deselect)="resetSelectedStyles()" i18n-heading>
-                        <div class="info-box">
-                            <p i18n>
+                </div>
+              }
+              @if (currentQuickStyles.length > 0) {
+                <div class="current-styles"
+                  [dndDropzone]="['userStyle']"
+                  [dndEffectAllowed]="'move'"
+                  (dndDrop)="onStyleDrop($event, 'quick')">
+                  <div class="drag-placeholder" dndPlaceholderRef></div>
+                  @for (style of currentQuickStyles; track style) {
+                    <div
+                      [dndDraggable]="style.docId"
+                      [dndEffectAllowed]="'move'"
+                      [dndDisableDragIf]="saving"
+                      dndType="userStyle">
+                      <i class="glyphicon glyphicon-sort sort-handle" [class.disabled]="saving"
+                      dndHandle></i>
+                      <div class="style-info">
+                        <h4>
+                          <a class="style-header" href="/view/{{style.path}}">{{ style.name }}</a>
+                          @if (style.type == 'official') {
+                            <span class="label label-primary" i18n>Official</span>
+                          }
+                          @if (style.type == 'deleted') {
+                            <span class="label label-default" i18n>Deleted</span>
+                          }
+                        </h4>
+                        <p class="style-description">{{ style.description }}</p>
+                      </div>
+                      <div class="style-actions">
+                        <button class="btn btn-danger" title="Delete style"
+                          (click)="deleteSelectedStyle(style, 'quick')" i18n-title>
+                          <i class="glyphicon glyphicon-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </tab>
+          <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()"
+            (deselect)="resetSelectedStyles()" i18n-heading>
+            <div class="info-box">
+              <p i18n>
                                 The table below lists all styles available on TIM.
                                 You can preview and add new styles using the table below.
                             </p>
-                            <ul>
-                                <li i18n><strong>Official styles</strong> are maintained and supported by TIM
+              <ul>
+                <li i18n><strong>Official styles</strong> are maintained and supported by TIM
                                     maintainers.
                                 </li>
-                                <li i18n><strong>User-made styles</strong> are made and maintained by TIM's users. For
+              <li i18n><strong>User-made styles</strong> are made and maintained by TIM's users. For
                                     more information, see <a href="/view/tim/ohjeita/styles">style authoring guide</a>.
                                 </li>
-                            </ul>
-                            <p i18n>To remove styles or edit their ordering, use the <a (click)="changeStyleTab(0)">Selected
+          </ul>
+          <p i18n>To remove styles or edit their ordering, use the <a (click)="changeStyleTab(0)">Selected
                                 styles</a> tab.</p>
-                            <p i18n><strong>Note:</strong> Your current styles will be temporarily disabled while
+          <p i18n><strong>Note:</strong> Your current styles will be temporarily disabled while
                                 previewing.</p>
-                        </div>
-                        <div class="style-loader" *ngIf="tableData.table.rows === undefined">
-                            <tim-loading></tim-loading>
-                            <ng-container i18n>Loading available styles, please wait</ng-container>
-                        </div>
-                        <ng-container *ngIf="tableData.table.rows !== undefined">
-                            <div class="info-box" *ngIf="tableData.table.rows.length == 0">
-                                <small i18n>
+        </div>
+        @if (tableData.table.rows === undefined) {
+          <div class="style-loader">
+            <tim-loading></tim-loading>
+            <ng-container i18n>Loading available styles, please wait</ng-container>
+          </div>
+        }
+        @if (tableData.table.rows !== undefined) {
+          @if (tableData.table.rows.length == 0) {
+            <div class="info-box">
+              <small i18n>
                                     No styles available.
                                 </small>
-                            </div>
-                            <ng-container *ngIf="tableData.table.rows.length > 0">
-                                <div class="checkbox">
-                                    <label>
-                                        <input type="checkbox" id="style-show-user-made" name="style-show-user-made"
-                                               [ngModel]="showUserStyles"
-                                               (ngModelChange)="changeUserStyleVisibility($event)">
-                                        <ng-container i18n>Show user-made styles</ng-container>
-                                    </label>
-                                </div>
-                                <tim-table class="style-listing" *ngIf="availableTab.active"
-                                           [data]="tableData"></tim-table>
-                                <div class="button-panel">
-                                    <button class="timButton" [disabled]="!cbCount"
-                                            (click)="addSelectedStylesTo('active')"
-                                            i18n>
+            </div>
+          }
+          @if (tableData.table.rows.length > 0) {
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="style-show-user-made" name="style-show-user-made"
+                  [ngModel]="showUserStyles"
+                  (ngModelChange)="changeUserStyleVisibility($event)">
+                <ng-container i18n>Show user-made styles</ng-container>
+              </label>
+            </div>
+            @if (availableTab.active) {
+              <tim-table class="style-listing"
+              [data]="tableData"></tim-table>
+            }
+            <div class="button-panel">
+              <button class="timButton" [disabled]="!cbCount"
+                (click)="addSelectedStylesTo('active')"
+                i18n>
                                         Add to Selected styles
                                     </button>
-                                    <button class="timButton" [disabled]="!cbCount"
-                                            (click)="addSelectedStylesTo('quick')"
-                                            i18n>
+              <button class="timButton" [disabled]="!cbCount"
+                (click)="addSelectedStylesTo('quick')"
+                i18n>
                                         Add to Quick select
                                     </button>
-                                    <button class="timButton" [disabled]="!cbCount" (click)="resetSelectedStyles()"
-                                            i18n>
+              <button class="timButton" [disabled]="!cbCount" (click)="resetSelectedStyles()"
+                i18n>
                                         Clear preview
                                     </button>
-                                </div>
-                            </ng-container>
-                        </ng-container>
-                    </tab>
-                    <tab heading="Custom CSS" i18n-heading>
-                        <div class="info-box">
-                            <p i18n>
+            </div>
+          }
+        }
+        </tab>
+        <tab heading="Custom CSS" i18n-heading>
+          <div class="info-box">
+            <p i18n>
                                 You can define your personal custom styles using CSS.
                                 The styles are applied to all TIM pages and all devices you use.
                             </p>
-                            <p i18n>
+            <p i18n>
                                 For extended styling using SCSS, refer to <a href="/view/tim/ohjeita/styles">style
                                 authoring guide</a>.
                             </p>
-                        </div>
-                        <div class="form-group">
-                            <label for="custom_css" i18n>Custom CSS</label>
-                            <textarea id="custom_css" name="custom_css" class="form-control"
-                                      [(ngModel)]="settings.custom_css"></textarea>
-                        </div>
-                        <settings-button-panel [saved]="submit">
-                            <button class="btn btn-default" (click)="addPrintSettings()" i18n>Add Print Settings
+        </div>
+        <div class="form-group">
+          <label for="custom_css" i18n>Custom CSS</label>
+          <textarea id="custom_css" name="custom_css" class="form-control"
+          [(ngModel)]="settings.custom_css"></textarea>
+        </div>
+        <settings-button-panel [saved]="submit">
+          <button class="btn btn-default" (click)="addPrintSettings()" i18n>Add Print Settings
                             </button>
-                        </settings-button-panel>
-                    </tab>
-                </tabset>
-                <div class="style-loader" *ngIf="loadingUserStyle">
-                    <tim-loading></tim-loading>
-                    <ng-container i18n>Compiling style, please wait</ng-container>
-                </div>
-            </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Editor" i18n-title anchorId="prefs_editor"
-                                  [showHeadingAnchors]="true">
-                <div class="checkbox">
-                    <label>
-                        <input type="checkbox" name="use_document_word_list"
-                               [(ngModel)]="settings.use_document_word_list">
-                        <ng-container i18n>Use words from the document in ACE editor autocomplete</ng-container>
-                    </label>
-                </div>
-                <label>
-                    <ng-container i18n>ACE editor additional word list for autocomplete (1 word per line)</ng-container>
-                    <textarea rows="15" class="form-control" name="word_list"
-                              [(ngModel)]="settings.word_list"></textarea>
-                </label>
-                <settings-button-panel [saved]="submit"></settings-button-panel>
-            </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Notifications" i18n-title anchorId="prefs_notifications"
-                                  [showHeadingAnchors]="true">
-                <h4 i18n>Subscribed items</h4>
-                <p *ngIf="notifications.length > 0" i18n>You get emails from the following documents and folders:</p>
-                <p *ngIf="notifications.length === 0" i18n>You haven't subscribed to any documents or folders.</p>
-                <ul>
-                    <li *ngFor="let n of notifications">
-                        <a href="/manage/{{n.item.path}}">
-                            <span *ngIf="n.item.isFolder" class="glyphicon glyphicon-folder-open"></span>
-                            {{ n.item.title }}</a>
-                        <i *ngIf="isDocModify(n)"
-                           class="notification-icon glyphicon glyphicon-pencil"
-                           title="Document modifications" i18n-title></i>
-                        <i *ngIf="isCommentAdd(n)"
-                           class="notification-icon glyphicon glyphicon-send"
-                           title="New comments" i18n-title></i>
-                        <i *ngIf="isCommentModify(n)"
-                           class="notification-icon glyphicon glyphicon-comment"
-                           title="Comment modifications" i18n-title></i>
-                        <i *ngIf="isAnswerAdd(n)"
-                           class="notification-icon glyphicon glyphicon-open-file"
-                           title="Answer posts" i18n-title></i>
-                        <i *ngIf="isAnnotationAdd(n)"
-                           class="notification-icon glyphicon glyphicon-send"
-                           title="New velps" i18n-title></i>
-                        <i *ngIf="isAnnotationModify(n)"
-                           class="notification-icon glyphicon glyphicon-comment"
-                           title="Velp modifications" i18n-title></i>
-                    </li>
-                </ul>
-                <button (click)="getAllNotifications()"
-                        class="timButton"
-                        *ngIf="showGetAllNotifications()" i18n>
+        </settings-button-panel>
+        </tab>
+        </tabset>
+        @if (loadingUserStyle) {
+          <div class="style-loader">
+            <tim-loading></tim-loading>
+            <ng-container i18n>Compiling style, please wait</ng-container>
+          </div>
+        }
+        </bootstrap-form-panel>
+        <bootstrap-form-panel [disabled]="saving" title="Editor" i18n-title anchorId="prefs_editor"
+          [showHeadingAnchors]="true">
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" name="use_document_word_list"
+                [(ngModel)]="settings.use_document_word_list">
+              <ng-container i18n>Use words from the document in ACE editor autocomplete</ng-container>
+            </label>
+          </div>
+          <label>
+            <ng-container i18n>ACE editor additional word list for autocomplete (1 word per line)</ng-container>
+            <textarea rows="15" class="form-control" name="word_list"
+            [(ngModel)]="settings.word_list"></textarea>
+          </label>
+          <settings-button-panel [saved]="submit"></settings-button-panel>
+        </bootstrap-form-panel>
+        <bootstrap-form-panel [disabled]="saving" title="Notifications" i18n-title anchorId="prefs_notifications"
+          [showHeadingAnchors]="true">
+          <h4 i18n>Subscribed items</h4>
+          @if (notifications.length > 0) {
+            <p i18n>You get emails from the following documents and folders:</p>
+          }
+          @if (notifications.length === 0) {
+            <p i18n>You haven't subscribed to any documents or folders.</p>
+          }
+          <ul>
+            @for (n of notifications; track n) {
+              <li>
+                <a href="/manage/{{n.item.path}}">
+                  @if (n.item.isFolder) {
+                    <span class="glyphicon glyphicon-folder-open"></span>
+                  }
+                {{ n.item.title }}</a>
+                @if (isDocModify(n)) {
+                  <i
+                    class="notification-icon glyphicon glyphicon-pencil"
+                  title="Document modifications" i18n-title></i>
+                }
+                @if (isCommentAdd(n)) {
+                  <i
+                    class="notification-icon glyphicon glyphicon-send"
+                  title="New comments" i18n-title></i>
+                }
+                @if (isCommentModify(n)) {
+                  <i
+                    class="notification-icon glyphicon glyphicon-comment"
+                  title="Comment modifications" i18n-title></i>
+                }
+                @if (isAnswerAdd(n)) {
+                  <i
+                    class="notification-icon glyphicon glyphicon-open-file"
+                  title="Answer posts" i18n-title></i>
+                }
+                @if (isAnnotationAdd(n)) {
+                  <i
+                    class="notification-icon glyphicon glyphicon-send"
+                  title="New velps" i18n-title></i>
+                }
+                @if (isAnnotationModify(n)) {
+                  <i
+                    class="notification-icon glyphicon glyphicon-comment"
+                  title="Velp modifications" i18n-title></i>
+                }
+              </li>
+            }
+          </ul>
+          @if (showGetAllNotifications()) {
+            <button (click)="getAllNotifications()"
+              class="timButton"
+              i18n>
                     Show all
                 </button>
-                <h4 i18n>Exclusion list</h4>
-                <p i18n>
+          }
+          <h4 i18n>Exclusion list</h4>
+          <p i18n>
                     Sometimes you may want to subscribe to emails from a folder but exclude some documents within it.
                     Using the list below you can specify which folders and documents should be excluded from your email
                     subscriptions.
                 </p>
-                <p i18n>Type one regular expression per line that should match any part of the path of the folder or
+          <p i18n>Type one regular expression per line that should match any part of the path of the folder or
                     document,
                     e.g. <code>/ht/</code> would match any path with <code>/ht/</code> in it.</p>
-                <div class="form-group">
-        <textarea class="form-control" name="email_exclude" rows="5" [(ngModel)]="settings.email_exclude">
-        </textarea>
-                </div>
-                <settings-button-panel [saved]="submit"></settings-button-panel>
-            </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Menus" i18n-title anchorId="prefs_menus"
-                                  [showHeadingAnchors]="true">
-                <div class="form-view">
-                    <label for="max-toc-size" class="input-group-label" i18n>
+            <div class="form-group">
+              <textarea class="form-control" name="email_exclude" rows="5" [(ngModel)]="settings.email_exclude">
+              </textarea>
+            </div>
+            <settings-button-panel [saved]="submit"></settings-button-panel>
+          </bootstrap-form-panel>
+          <bootstrap-form-panel [disabled]="saving" title="Menus" i18n-title anchorId="prefs_menus"
+            [showHeadingAnchors]="true">
+            <div class="form-view">
+              <label for="max-toc-size" class="input-group-label" i18n>
                         Collapse document index with more than
                     </label>
-                    <div class="form-item">
-                        <div class="input-group">
-                            <input type="number" name="max_uncollapsed_toc_items" min="0" class="form-control"
-                                   id="max-toc-size" placeholder="40 (default)" i18n-placeholder
-                                   [(ngModel)]="settings.max_uncollapsed_toc_items">
-                            <span class="input-group-addon" i18n>items</span>
-                        </div>
-                        <button class="timButton" (click)="settings.max_uncollapsed_toc_items = null" i18n>
+              <div class="form-item">
+                <div class="input-group">
+                  <input type="number" name="max_uncollapsed_toc_items" min="0" class="form-control"
+                    id="max-toc-size" placeholder="40 (default)" i18n-placeholder
+                    [(ngModel)]="settings.max_uncollapsed_toc_items">
+                  <span class="input-group-addon" i18n>items</span>
+                </div>
+                <button class="timButton" (click)="settings.max_uncollapsed_toc_items = null" i18n>
                             Clear
                         </button>
-                    </div>
-                    
-                    <span i18n>Header menu (Navigation bar)</span>
-                    <div>
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" name="header_menu_default_visibility"
-                                       [(ngModel)]="settings.always_show_header_menu"
-                                       [disabled]="saving">
-                                <ng-container i18n>Always show navigation bar (unless overridden in document settings)</ng-container>
-                            </label>
-                        </div>
-                    </div>
-                    <span i18n>Opening settings</span>
-                    <div>
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" name="disable_menu_hover"
-                                       [(ngModel)]="settings.disable_menu_hover"
-                                       [disabled]="saving">
-                                <ng-container i18n>Disable opening menus with mouse hover</ng-container>
-                            </label>
-                        </div>
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" name="remember_last_sidebar_menu_tab"
-                                       [(ngModel)]="settings.remember_last_sidebar_menu_tab"
-                                       [disabled]="saving">
-                                <ng-container i18n>Side bar menu: remember the last selected tab</ng-container>
-                            </label>
-                        </div>
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" name="remember_last_sidebar_menu_state"
-                                       [(ngModel)]="settings.remember_last_sidebar_menu_state"
-                                       [disabled]="saving">
-                                <ng-container i18n>Side bar menu: remember the last open state</ng-container>
-                            </label>
-                        </div>
-                    </div>
-                    <label for="par-menu-position" i18n>Paragraph menu position</label>
-                    <div class="select-option" id="par-menu-pos-option">
-                        <div>
-                            <select [(ngModel)]="settings.parmenu_position" id="par-menu-position">
-                                <option [ngValue]="ParMenuHandlePosition.Left">
-                                    <ng-container i18n>Left</ng-container>
-                                </option>
-                                <!-- Current default setting is on the right of the paragraph -->
-                                <option [ngValue]="ParMenuHandlePosition.Right">
-                                    <ng-container i18n>Right</ng-container>
-                                </option>
-                            </select>
-                        </div>
-                        <span style="padding-left: 1em;" [ngSwitch]="settings.parmenu_position">
-                            <ng-container *ngSwitchCase="ParMenuHandlePosition.Left" i18n>
-                                Left of the active paragraph, marked with a vertical blue bar.</ng-container> 
-                            <ng-container *ngSwitchCase="ParMenuHandlePosition.Right" i18n>
+              </div>
+        
+              <span i18n>Header menu (Navigation bar)</span>
+              <div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" name="header_menu_default_visibility"
+                      [(ngModel)]="settings.always_show_header_menu"
+                      [disabled]="saving">
+                    <ng-container i18n>Always show navigation bar (unless overridden in document settings)</ng-container>
+                  </label>
+                </div>
+              </div>
+              <span i18n>Opening settings</span>
+              <div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" name="disable_menu_hover"
+                      [(ngModel)]="settings.disable_menu_hover"
+                      [disabled]="saving">
+                    <ng-container i18n>Disable opening menus with mouse hover</ng-container>
+                  </label>
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" name="remember_last_sidebar_menu_tab"
+                      [(ngModel)]="settings.remember_last_sidebar_menu_tab"
+                      [disabled]="saving">
+                    <ng-container i18n>Side bar menu: remember the last selected tab</ng-container>
+                  </label>
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" name="remember_last_sidebar_menu_state"
+                      [(ngModel)]="settings.remember_last_sidebar_menu_state"
+                      [disabled]="saving">
+                    <ng-container i18n>Side bar menu: remember the last open state</ng-container>
+                  </label>
+                </div>
+              </div>
+              <label for="par-menu-position" i18n>Paragraph menu position</label>
+              <div class="select-option" id="par-menu-pos-option">
+                <div>
+                  <select [(ngModel)]="settings.parmenu_position" id="par-menu-position">
+                    <option [ngValue]="ParMenuHandlePosition.Left">
+                      <ng-container i18n>Left</ng-container>
+                    </option>
+                    <!-- Current default setting is on the right of the paragraph -->
+                    <option [ngValue]="ParMenuHandlePosition.Right">
+                      <ng-container i18n>Right</ng-container>
+                    </option>
+                  </select>
+                </div>
+                <span style="padding-left: 1em;">
+                  @switch (settings.parmenu_position) {
+                    @case (ParMenuHandlePosition.Left) {
+                      <ng-container i18n>
+                                Left of the active paragraph, marked with a vertical blue bar.</ng-container>
+                    }
+                    @case (ParMenuHandlePosition.Right) {
+                      <ng-container i18n>
                                 Right of the active paragraph, marked with a pencil icon.</ng-container>
-                        </span>
-                    </div>
-                </div>
-                <settings-button-panel [saved]="submit"></settings-button-panel>
-            </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Other settings" i18n-title anchorId="prefs_misc"
-                                  [showHeadingAnchors]="true">
-                <div class="checkbox" id="othersettings">
-                    <label>
-                    <input type="checkbox" name="auto_mark_all_read" [(ngModel)]="settings.auto_mark_all_read"
-                           [disabled]="saving">
-                    <ng-container i18n>Automatically mark document as read when opening it for the first time
+                    }
+                  }
+                </span>
+              </div>
+            </div>
+            <settings-button-panel [saved]="submit"></settings-button-panel>
+          </bootstrap-form-panel>
+          <bootstrap-form-panel [disabled]="saving" title="Other settings" i18n-title anchorId="prefs_misc"
+            [showHeadingAnchors]="true">
+            <div class="checkbox" id="othersettings">
+              <label>
+                <input type="checkbox" name="auto_mark_all_read" [(ngModel)]="settings.auto_mark_all_read"
+                  [disabled]="saving">
+                <ng-container i18n>Automatically mark document as read when opening it for the first time
                     </ng-container>
-                    </label>
-                </div>
-                <div class="checkbox"  id="othersettings_badges">
-                    <label>
-                    <input type="checkbox" name="display_dir_list_badges" [(ngModel)]="settings.display_dir_list_badges"
-                           [disabled]="saving">
-                    <ng-container i18n>Directory listing: Display access badges for folder items.
+              </label>
+            </div>
+            <div class="checkbox"  id="othersettings_badges">
+              <label>
+                <input type="checkbox" name="display_dir_list_badges" [(ngModel)]="settings.display_dir_list_badges"
+                  [disabled]="saving">
+                <ng-container i18n>Directory listing: Display access badges for folder items.
                     </ng-container>
-                    </label>
-                </div>
-                <div class="checkbox" id="othersettings_tags">
-                    <label>
-                    <input type="checkbox" name="display_dir_list_tags" [(ngModel)]="settings.display_dir_list_tags"
-                           [disabled]="saving">
-                    <ng-container i18n>Directory listing: Display document tags for folder items.
+              </label>
+            </div>
+            <div class="checkbox" id="othersettings_tags">
+              <label>
+                <input type="checkbox" name="display_dir_list_tags" [(ngModel)]="settings.display_dir_list_tags"
+                  [disabled]="saving">
+                <ng-container i18n>Directory listing: Display document tags for folder items.
                     </ng-container>
-                    </label>
-                </div>
-                <settings-button-panel [saved]="submit">
-                    <button class="btn btn-default" (click)="clearLocalStorage()" i18n>Clear local settings storage
+              </label>
+            </div>
+            <settings-button-panel [saved]="submit">
+              <button class="btn btn-default" (click)="clearLocalStorage()" i18n>Clear local settings storage
                     </button>
-                    <span *ngIf="storageClear" i18n>Local storage cleared.</span>
-                </settings-button-panel>
-            </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Your account information" i18n-title
-                                  anchorId="prefs_account" [showHeadingAnchors]="true">
-                <div class="account-info">
-                    <label for="account-name" i18n>Username</label>
-                    <div><input id="account-name" class="form-control" type="text" [value]="user.name" disabled>
-                    </div>
-                    <label for="account-id" i18n>Account ID</label>
-                    <div><input id="account-id" class="form-control" type="text" [value]="user.id" disabled></div>
-                    <label for="account-real-name" i18n>Full name</label>
-                    <div><input id="account-real-name" class="form-control" type="text" [value]="user.real_name"
-                                disabled></div>
-                    <label for="account-email-primary" i18n>Primary email</label>
-                    <div>
-                        <select id="account-email-primary" name="primary-email-select" class="form-control"
-                                [(ngModel)]="primaryEmail">
-                            <ng-container *ngFor="let contact of userEmailContacts">
-                                <option *ngIf="contact.verified"
-                                        [ngValue]="contact">{{ contact.contact }}
-                                </option>
-                            </ng-container>
-                        </select>
-                        <div class="small">
-                            <strong class="text-success" *ngIf="primaryChangeVerificationSent" i18n>
+              @if (storageClear) {
+                <span i18n>Local storage cleared.</span>
+              }
+            </settings-button-panel>
+          </bootstrap-form-panel>
+          <bootstrap-form-panel [disabled]="saving" title="Your account information" i18n-title
+            anchorId="prefs_account" [showHeadingAnchors]="true">
+            <div class="account-info">
+              <label for="account-name" i18n>Username</label>
+              <div><input id="account-name" class="form-control" type="text" [value]="user.name" disabled>
+              </div>
+              <label for="account-id" i18n>Account ID</label>
+              <div><input id="account-id" class="form-control" type="text" [value]="user.id" disabled></div>
+              <label for="account-real-name" i18n>Full name</label>
+              <div><input id="account-real-name" class="form-control" type="text" [value]="user.real_name"
+              disabled></div>
+              <label for="account-email-primary" i18n>Primary email</label>
+              <div>
+                <select id="account-email-primary" name="primary-email-select" class="form-control"
+                  [(ngModel)]="primaryEmail">
+                  @for (contact of userEmailContacts; track contact) {
+                    @if (contact.verified) {
+                      <option
+                        [ngValue]="contact">{{ contact.contact }}
+                      </option>
+                    }
+                  }
+                </select>
+                <div class="small">
+                  @if (primaryChangeVerificationSent) {
+                    <strong class="text-success" i18n>
                                 A verification email was sent to the current primary email.
                             </strong>
-                            <p i18n>
+                  }
+                  <p i18n>
                                 Primary email is used to send you notifications and message list messages.
                             </p>
-                            <p *ngIf="contactOrigins[primaryEmail.origin]; let originInfo" i18n>
+                  @if (contactOrigins[primaryEmail.origin]; as originInfo) {
+                    <p i18n>
                                 This email is managed by <strong
                                     [style.color]="originInfo.bgColor">{{ originInfo.name }}</strong>.
                                 The address will be automatically updated by the system.
                             </p>
-                        </div>
-                    </div>
-                    <ng-container *ngFor="let entry of userContactEntries">
-                        <span class="form-label">{{ channelNames[entry[0]] }}</span>
-                        <div class="contact-collection">
-                            <div class="contact-info" *ngFor="let contact of entry[1]">
-                                <input type="text" class="form-control" [value]="contact.contact" disabled>
-                                <span title="You will receive any TIM mail to this address." i18n-title
-                                      *ngIf="contact.primary"
-                                      class="primary-badge" i18n>Primary</span>
-                                <span *ngIf="contactOrigins[contact.origin]; let originInfo"
-                                      title="This email is managed by {{originInfo.name}}. You cannot delete managed contacts yourself."
-                                      i18n-title
-                                      [style.backgroundColor]="originInfo.bgColor"
-                                      [style.color]="originInfo.textColor">{{ originInfo.name }}</span>
-                                <span title="This email is verified to be owned by you." i18n-title
-                                      *ngIf="contact.verified"
-                                      class="verified-badge" i18n>Verified</span>
-                                <button *ngIf="!contact.verified" class="btn btn-default"
-                                        (click)="resendVerification(contact)"
-                                        [disabled]="verificationSentSet.has(contact)">
-                                    <ng-container
-                                            *ngIf="!verificationSentSet.has(contact); else verificationSentMessage"
-                                            i18n>
+                }
+              </div>
+            </div>
+            @for (entry of userContactEntries; track entry) {
+              <span class="form-label">{{ channelNames[entry[0]] }}</span>
+              <div class="contact-collection">
+                @for (contact of entry[1]; track contact) {
+                  <div class="contact-info">
+                    <input type="text" class="form-control" [value]="contact.contact" disabled>
+                    @if (contact.primary) {
+                      <span title="You will receive any TIM mail to this address." i18n-title
+                      class="primary-badge" i18n>Primary</span>
+                    }
+                    @if (contactOrigins[contact.origin]; as originInfo) {
+                      <span
+                        title="This email is managed by {{originInfo.name}}. You cannot delete managed contacts yourself."
+                        i18n-title
+                        [style.backgroundColor]="originInfo.bgColor"
+                      [style.color]="originInfo.textColor">{{ originInfo.name }}</span>
+                    }
+                    @if (contact.verified) {
+                      <span title="This email is verified to be owned by you." i18n-title
+                      class="verified-badge" i18n>Verified</span>
+                    }
+                    @if (!contact.verified) {
+                      <button class="btn btn-default"
+                        (click)="resendVerification(contact)"
+                        [disabled]="verificationSentSet.has(contact)">
+                        @if (!verificationSentSet.has(contact)) {
+                          <ng-container
+                            i18n>
                                         Resend verification
                                     </ng-container>
-                                    <ng-template #verificationSentMessage i18n>
+                        } @else {
+                          <ng-container i18n>
                                         Verification sent!
-                                    </ng-template>
-                                </button>
-                                <button class="btn btn-danger" type="button"
-                                        [disabled]="!canRemoveContact(contact)"
-                                        (click)="deleteContact(contact)">
-                                    <i class="glyphicon glyphicon-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </ng-container>
-                    <ng-container>
-                        <span class="form-label">
-                            <ng-container i18n>Machine translator API Keys</ng-container>
-                            <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key">
-                                <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;"
-                                      title="Help with machine translation setup" i18n-title></span>
-                            </a>
-                        </span>
-                        <div class="contact-collection">
-                            <div class="contact-info" *ngFor="let APIkey of userAPIKeys">
-                                <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
-                                <input type="text" class="form-control buttonBorder" [value]="APIkey.translator"
-                                       disabled>
-                                <div *ngIf="APIkey.quotaChecked" class="stacked quotaProgressBar">
-                                    <progressbar tooltip="{{APIkey.usedQuota}} / {{APIkey.availableQuota}}"
-                                                 [value]="APIkey.usedQuota" [max]="APIkey.availableQuota"></progressbar>
-                                </div>
-                                <button *ngIf="!APIkey.quotaChecked" class="btn" type="button"
-                                        (click)="checkQuota(APIkey)" i18n>
+                                    </ng-container>
+                        }
+                      </button>
+                    }
+                    <button class="btn btn-danger" type="button"
+                      [disabled]="!canRemoveContact(contact)"
+                      (click)="deleteContact(contact)">
+                      <i class="glyphicon glyphicon-trash"></i>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+            <ng-container>
+              <span class="form-label">
+                <ng-container i18n>Machine translator API Keys</ng-container>
+                <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key">
+                  <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;"
+                  title="Help with machine translation setup" i18n-title></span>
+                </a>
+              </span>
+              <div class="contact-collection">
+                @for (APIkey of userAPIKeys; track APIkey) {
+                  <div class="contact-info">
+                    <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
+                    <input type="text" class="form-control buttonBorder" [value]="APIkey.translator"
+                      disabled>
+                    @if (APIkey.quotaChecked) {
+                      <div class="stacked quotaProgressBar">
+                        <progressbar tooltip="{{APIkey.usedQuota}} / {{APIkey.availableQuota}}"
+                        [value]="APIkey.usedQuota" [max]="APIkey.availableQuota"></progressbar>
+                      </div>
+                    }
+                    @if (!APIkey.quotaChecked) {
+                      <button class="btn" type="button"
+                        (click)="checkQuota(APIkey)" i18n>
                                     Check key's quota
                                 </button>
-                                <button *ngIf="APIkey.quotaChecked" class="btn" type="button"
-                                        (click)="checkQuota(APIkey)">
-                                    <i class="glyphicon glyphicon-refresh"></i>
-                                </button>
-                                <button class="btn btn-danger" type="button"
-                                        (click)="deleteKey(APIkey)">
-                                    <i class="glyphicon glyphicon-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </ng-container>
-                </div>
-                <settings-button-panel [saved]="saveUserAccountInfo">
-                    <button class="timButton" (click)="openContactInfoDialog()" i18n>Add new contact</button>
-                    <button class="timButton" (click)="openAPIKeyDialog()" i18n>Add new API key</button>
-                </settings-button-panel>
-            </bootstrap-form-panel>
-            <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title anchorId="prefs_delAcc"
-                                  [showHeadingAnchors]="true">
-                <button class="timButton btn-danger"
-                        (click)="beginDeleteAccount()"
-                        *ngIf="!deletingAccount" i18n>Delete account...
+                    }
+                    @if (APIkey.quotaChecked) {
+                      <button class="btn" type="button"
+                        (click)="checkQuota(APIkey)">
+                        <i class="glyphicon glyphicon-refresh"></i>
+                      </button>
+                    }
+                    <button class="btn btn-danger" type="button"
+                      (click)="deleteKey(APIkey)">
+                      <i class="glyphicon glyphicon-trash"></i>
+                    </button>
+                  </div>
+                }
+              </div>
+            </ng-container>
+          </div>
+          <settings-button-panel [saved]="saveUserAccountInfo">
+            <button class="timButton" (click)="openContactInfoDialog()" i18n>Add new contact</button>
+            <button class="timButton" (click)="openAPIKeyDialog()" i18n>Add new API key</button>
+          </settings-button-panel>
+        </bootstrap-form-panel>
+        <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title anchorId="prefs_delAcc"
+          [showHeadingAnchors]="true">
+          @if (!deletingAccount) {
+            <button class="timButton btn-danger"
+              (click)="beginDeleteAccount()"
+              i18n>Delete account...
                 </button>
-                <div *ngIf="deletingAccount">
-                    <ng-container i18n>
+          }
+          @if (deletingAccount) {
+            <div>
+              <ng-container i18n>
                         To delete your account, please type your username ({{ user.name }}) in the field below
                         and then click "Delete account now".
                     </ng-container>
-                    <div class="form-inline">
-                        <input class="form-control"
-                               type="text"
-                               name="deleteConfirmName"
-                               [(ngModel)]="deleteConfirmName">
-                        <button [disabled]="user.name !== deleteConfirmName"
-                                class="timButton btn-danger"
-                                (click)="deleteAccount()" i18n>Delete account now
+              <div class="form-inline">
+                <input class="form-control"
+                  type="text"
+                  name="deleteConfirmName"
+                  [(ngModel)]="deleteConfirmName">
+                <button [disabled]="user.name !== deleteConfirmName"
+                  class="timButton btn-danger"
+                  (click)="deleteAccount()" i18n>Delete account now
                         </button>
-                        <button class="timButton btn-default" (click)="deletingAccount = false" i18n>Cancel</button>
-                    </div>
-                </div>
-            </bootstrap-form-panel>
+                <button class="timButton btn-default" (click)="deletingAccount = false" i18n>Cancel</button>
+              </div>
+            </div>
+          }
+        </bootstrap-form-panel>
         </div>
-    `,
+        `,
     styleUrls: ["settings.component.scss"],
     standalone: false,
 })
@@ -1514,9 +1608,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         TimUtilityModule,
         FormsModule,
         DndModule,
-        TooltipModule.forRoot(),
-        TabsModule.forRoot(),
-        ProgressbarModule.forRoot(),
+        TooltipModule,
+        TabsModule,
+        ProgressbarModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],
 })

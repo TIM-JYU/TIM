@@ -28,34 +28,46 @@ interface GroupInfo {
     selector: "tim-group-select-list",
     template: `
         <div class="item-group">
-            <div class="checkbox" *ngIf="hasMultipleGroups">
-                <label>
-                    <input type="checkbox" [indeterminate]="someSelected" [ngModel]="allSelected" (ngModelChange)="toggleAllSelected($event)">
-                    {{name}}
-                </label>
+          @if (hasMultipleGroups) {
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" [indeterminate]="someSelected" [ngModel]="allSelected" (ngModelChange)="toggleAllSelected($event)">
+                {{name}}
+              </label>
             </div>
-            <tim-alert *ngIf="searchError" i18n>
+          }
+          @if (searchError) {
+            <tim-alert i18n>
                 Could not find the group. Make sure the group exists and you have at least "edit" permissions to it.
                 Details: {{searchError}}
             </tim-alert>
-            <div class="with-searchbar" [class.input-group]="manualAdd" *ngIf="hasSearchBar">
-                <input class="form-control" type="text" [placeholder]="searchPlaceholder" [ngModel]="searchFilter" (ngModelChange)="onSearchInput($event)">
-                <span class="input-group-btn" *ngIf="manualAdd">
-                    <button class="btn btn-default" [disabled]="searchFilter.trim().length == 0" (click)="tryAddGroup()" i18n>Add</button>
+          }
+          @if (hasSearchBar) {
+            <div class="with-searchbar" [class.input-group]="manualAdd">
+              <input class="form-control" type="text" [placeholder]="searchPlaceholder" [ngModel]="searchFilter" (ngModelChange)="onSearchInput($event)">
+              @if (manualAdd) {
+                <span class="input-group-btn">
+                  <button class="btn btn-default" [disabled]="searchFilter.trim().length == 0" (click)="tryAddGroup()" i18n>Add</button>
                 </span>
+              }
             </div>
-            <div [class.item-list]="hasMultipleGroups" [class.with-searchbar]="hasSearchBar">
-                <div class="checkbox" *ngFor="let group of filteredGroups">
-                    <label>
-                        <input type="checkbox" [ngModel]="group.selected" (ngModelChange)="onSelectGroupChange(group, $event)"> {{group.name}}
-                    </label>
-                </div>
-                <div *ngIf="selectableGroups.length == 0">
-                    <p class="small" i18n>Add groups by using the search box above and pressing "Add".</p>
-                </div>
-            </div>
+          }
+          <div [class.item-list]="hasMultipleGroups" [class.with-searchbar]="hasSearchBar">
+            @for (group of filteredGroups; track group) {
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" [ngModel]="group.selected" (ngModelChange)="onSelectGroupChange(group, $event)"> {{group.name}}
+                </label>
+              </div>
+            }
+            @if (selectableGroups.length == 0) {
+              <div>
+                <p class="small" i18n>Add groups by using the search box above and pressing "Add".</p>
+              </div>
+            }
+          </div>
         </div>
-    `,
+        `,
     styleUrls: ["./active-group-lock-dialog.component.scss"],
     standalone: false,
 })
@@ -185,40 +197,42 @@ export class GroupSelectListComponent implements OnInit, OnChanges {
     selector: "tim-active-group-lock-dialog",
     template: `
         <tim-dialog-frame [minimizable]="false" size="lg">
-            <ng-container header>
-                <ng-container i18n>Switch active groups</ng-container>
-            </ng-container>
-            <ng-container body>
-                <p i18n>
+          <ng-container header>
+            <ng-container i18n>Switch active groups</ng-container>
+          </ng-container>
+          <ng-container body>
+            <p i18n>
                     You can change active groups by selecting groups from the lists below.
                     Changing active groups allows you to preview the documents as a member of other groups.
                 </p>
-                <div *ngIf="loading" class="flex justify-center"><tim-loading></tim-loading></div>
-                <tim-group-select-list [class.loading]="loading"
-                        name="Special groups" i18n-name
-                        [selectableGroups]="specialGroups"
-                        [(selectedGroups)]="activeGroups"></tim-group-select-list>
-                <tim-group-select-list [class.loading]="loading"
-                        name="Managed groups you are a member of" i18n-name
-                        [selectableGroups]="groupsWithMembershipsManaged"
-                        [(selectedGroups)]="activeGroups"></tim-group-select-list>
-                <tim-group-select-list [class.loading]="loading"
-                        name="Unmanaged groups you are a member of" i18n-name
-                        [selectableGroups]="groupsWithMembershipsUnmanaged"
-                        [(selectedGroups)]="activeGroups"></tim-group-select-list>
-                <tim-group-select-list [class.loading]="loading"
-                        name="Other groups (manual search)" i18n-name
-                        [selectableGroups]="groupsWithAccess"
-                        [manualAdd]="true"
-                        [(selectedGroups)]="activeGroups"></tim-group-select-list>
-            </ng-container>
-            <ng-container footer>
-                <button class="timButton" (click)="reset()" i18n>Reset</button>
-                <button class="timButton" (click)="apply()" i18n>Apply</button>
-                <button class="timButton" (click)="dismiss()" i18n>Close</button>
-            </ng-container>
+            @if (loading) {
+              <div class="flex justify-center"><tim-loading></tim-loading></div>
+            }
+            <tim-group-select-list [class.loading]="loading"
+              name="Special groups" i18n-name
+              [selectableGroups]="specialGroups"
+            [(selectedGroups)]="activeGroups"></tim-group-select-list>
+            <tim-group-select-list [class.loading]="loading"
+              name="Managed groups you are a member of" i18n-name
+              [selectableGroups]="groupsWithMembershipsManaged"
+            [(selectedGroups)]="activeGroups"></tim-group-select-list>
+            <tim-group-select-list [class.loading]="loading"
+              name="Unmanaged groups you are a member of" i18n-name
+              [selectableGroups]="groupsWithMembershipsUnmanaged"
+            [(selectedGroups)]="activeGroups"></tim-group-select-list>
+            <tim-group-select-list [class.loading]="loading"
+              name="Other groups (manual search)" i18n-name
+              [selectableGroups]="groupsWithAccess"
+              [manualAdd]="true"
+            [(selectedGroups)]="activeGroups"></tim-group-select-list>
+          </ng-container>
+          <ng-container footer>
+            <button class="timButton" (click)="reset()" i18n>Reset</button>
+            <button class="timButton" (click)="apply()" i18n>Apply</button>
+            <button class="timButton" (click)="dismiss()" i18n>Close</button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     styleUrls: ["./active-group-lock-dialog.component.scss"],
     standalone: false,
 })

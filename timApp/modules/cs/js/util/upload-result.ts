@@ -6,26 +6,40 @@ import {DomSanitizer} from "@angular/platform-browser";
 @Component({
     selector: "cs-upload-result",
     template: `
-    <ng-container *ngIf="src_ && type_">
-        <p *ngIf="type_ != 'unknown'" class="smalllink">
-            <a [href]="src_" [title]="type_">{{name}}</a>
+    @if (src_ && type_) {
+      @if (type_ != 'unknown') {
+        <p class="smalllink">
+          <a [href]="src_" [title]="type_">{{name}}</a>
         </p>
-        <p *ngIf="type_ == 'unknown'">
-            Ladattu:
-            <a [href]="src_" [title]="type_">{{name}}</a>
+      }
+      @if (type_ == 'unknown') {
+        <p>
+          Ladattu:
+          <a [href]="src_" [title]="type_">{{name}}</a>
         </p>
-        <ng-container [ngSwitch]="type_">
-            <img *ngSwitchCase="'image'" [src]="src_"/>
-            <video *ngSwitchCase="'video'" [src]="src_" controls></video>
-            <audio *ngSwitchCase="'audio'" [src]="src_" controls></audio>
-            <div *ngSwitchCase="'text'" style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;">
-                <iframe [src]="src_" width="800" sandbox></iframe>
-            </div>
-            <div *ngSwitchCase="'other'" style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:1200px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;">
-                <iframe [src]="src_" width="800" height="900"></iframe>
-            </div>
-        </ng-container>
-    </ng-container>`,
+      }
+      @switch (type_) {
+        @case ('image') {
+          <img [src]="src_"/>
+        }
+        @case ('video') {
+          <video [src]="src_" controls></video>
+        }
+        @case ('audio') {
+          <audio [src]="src_" controls></audio>
+        }
+        @case ('text') {
+          <div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:900px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;">
+            <iframe [src]="src_" width="800" sandbox></iframe>
+          </div>
+        }
+        @case ('other') {
+          <div style="overflow: auto; -webkit-overflow-scrolling: touch; max-height:1200px; -webkit-box-pack: center; -webkit-box-align: center; display: -webkit-box;">
+            <iframe [src]="src_" width="800" height="900"></iframe>
+          </div>
+        }
+      }
+    }`,
     standalone: false,
 })
 export class UploadResultComponent {

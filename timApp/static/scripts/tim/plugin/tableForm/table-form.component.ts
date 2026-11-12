@@ -236,126 +236,167 @@ const sortLang = "fi";
     selector: "tableform-runner",
     // changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
-        <div class="tableform" *ngIf="showTable">
-            <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
-            <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-            <p *ngIf="stem" [innerHtml]="stem | purify"></p>
-            <tim-table *ngIf="tableCheck()" [data]="data"
-                       [taskid]="getTaskId()"></tim-table>
-
+        @if (showTable) {
+          <div class="tableform">
+            @if (markupError) {
+              <tim-markup-error [data]="markupError!"></tim-markup-error>
+            }
+            @if (header) {
+              <h4 [innerHtml]="header | purify"></h4>
+            }
+            @if (stem) {
+              <p [innerHtml]="stem | purify"></p>
+            }
+            @if (tableCheck()) {
+              <tim-table [data]="data"
+              [taskid]="getTaskId()"></tim-table>
+            }
             <div class="hidden-print">
-                <tim-alert *ngIf="actionInfo" severity="info" [closeable]="true"
-                           (closing)="resetActionInfoText()">
-                    <p class="action-info-content">{{actionInfo}}</p>
+              @if (actionInfo) {
+                <tim-alert severity="info" [closeable]="true"
+                  (closing)="resetActionInfoText()">
+                  <p class="action-info-content">{{actionInfo}}</p>
                 </tim-alert>
+              }
+              @if ((tableCheck() && !autosave && !locked) || saveFailed) {
                 <button class="timButton"
-                        *ngIf="(tableCheck() && !autosave && !locked) || saveFailed"
-                        (click)="saveText()">
-                    {{ buttonText() }}
+                  (click)="saveText()">
+                  {{ buttonText() }}
                 </button>
+              }
+              @if (addUsersButton) {
                 <button class="timButton"
-                        *ngIf="addUsersButton"
-                        (click)="addUsers()"
-                >
-                    {{ addUsersButton }}
+                  (click)="addUsers()"
+                  >
+                  {{ addUsersButton }}
                 </button>
+              }
+              @if (reportCheck()) {
                 <button class="timButton"
-                        *ngIf="reportCheck()"
-                        (click)="generateReport()">
-                    {{ reportButton() }}
+                  (click)="generateReport()">
+                  {{ reportButton() }}
                 </button>
+              }
+              @if (hideButtonText) {
                 <button class="timButton"
-                        (click)="closeTable()"
-                        *ngIf="hideButtonText">
-                    {{ hideButtonText }}
+                  (click)="closeTable()"
+                  >
+                  {{ hideButtonText }}
                 </button>
+              }
+              @if (forceUpdateButtonText) {
                 <button class="timButton"
-                        (click)="forceUpdateTable()"
-                        *ngIf="forceUpdateButtonText">
-                    {{ forceUpdateButtonText }}
+                  (click)="forceUpdateTable()"
+                  >
+                  {{ forceUpdateButtonText }}
                 </button>
+              }
+              @if (removeUsersButtonText && cbCount) {
                 <button class="timButton"
-                        (click)="removeUsers()"
-                        *ngIf="removeUsersButtonText && cbCount">
-                    {{ removeUsersButtonText }}
+                  (click)="removeUsers()"
+                  >
+                  {{ removeUsersButtonText }}
                 </button>
+              }
+              @if (userListButtonText && cbCount) {
                 <button class="timButton"
-                        (click)="listUsernames()"
-                        *ngIf="userListButtonText && cbCount">
-                    {{ userListButtonText }}
+                  (click)="listUsernames()"
+                  >
+                  {{ userListButtonText }}
                 </button>
+              }
+              @if (emailUsersButtonText && cbCount) {
                 <button class="timButton"
-                        (click)="emailUsers()"
-                        *ngIf="emailUsersButtonText && cbCount">
-                    {{ emailUsersButtonText }}
+                  (click)="emailUsers()"
+                  >
+                  {{ emailUsersButtonText }}
                 </button>
-                <div class="email-indices" *ngIf="emailColIndices.length > 1 && emailUsersButtonText && cbCount && recipientList">
-                    <span>Email cols: {{emailColIndices}}. &nbsp;</span>
-                    <label class="use-first-email">Use only first email <input type="checkbox" [(ngModel)]="useFirstEmail" (change)="emailUsers()"></label>&nbsp;
+              }
+              @if (emailColIndices.length > 1 && emailUsersButtonText && cbCount && recipientList) {
+                <div class="email-indices">
+                  <span>Email cols: {{emailColIndices}}. &nbsp;</span>
+                  <label class="use-first-email">Use only first email <input type="checkbox" [(ngModel)]="useFirstEmail" (change)="emailUsers()"></label>&nbsp;
                 </div>
-                <ng-container *ngIf="runScripts">
-                    <button class="timButton"
-                            *ngFor="let s of runScripts"
-                            [hidden]="(!s.all && !cbCount) || s.onMemberAdd"
-                            (click)="runJsRunner(s)">
-                        {{ s.button }}
-                    </button>
-                </ng-container>
-                <ng-container *ngIf="sisugroups && cbCount">
-                    <button class="timButton"
-                            (click)="orderSisuGroups()"
-                            [disabled]="loading">
-                        Confirm groups
-                    </button>&nbsp;
-                    <tim-loading *ngIf="loading"></tim-loading>
-                </ng-container>
+              }
+              @if (runScripts) {
+                @for (s of runScripts; track s) {
+                  <button class="timButton"
+                    [hidden]="(!s.all && !cbCount) || s.onMemberAdd"
+                    (click)="runJsRunner(s)">
+                    {{ s.button }}
+                  </button>
+                }
+              }
+              @if (sisugroups && cbCount) {
+                <button class="timButton"
+                  (click)="orderSisuGroups()"
+                  [disabled]="loading">
+                  Confirm groups
+                </button>&nbsp;
+                @if (loading) {
+                  <tim-loading></tim-loading>
+                }
+              }
             </div>
-            <div class="csRunDiv tableUsers" style="padding: 1em;" *ngIf="userlist"> <!-- userlist -->
+            @if (userlist) {
+              <div class="csRunDiv tableUsers" style="padding: 1em;"> <!-- userlist -->
                 <tim-close-button (click)="userlist=''"></tim-close-button>
                 <p>Separator:
-                    <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="-"
-                                  (change)="listUsernames()">-</label>&nbsp;
-                    <label><input type="radio" name="listsep" [(ngModel)]="listSep" value=","
-                                  (change)="listUsernames()">,</label>&nbsp;
-                    <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="|"
-                                  (change)="listUsernames()">|</label>&nbsp;
-                    <label><input type="radio" name="listsep" [(ngModel)]="listSep" value=";"
-                                  (change)="listUsernames()">;</label>&nbsp;
-                    <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="\n"
-                                  (change)="listUsernames()">\\n</label>&nbsp;
-                    <label title="Use this if username can include other username">
-                           <input type="radio" name="listsep" [(ngModel)]="listSep" value="$|^"
-                                  (change)="listUsernames()">^$</label>&nbsp;
-                </p>
-                <label><input type="checkbox" [(ngModel)]="listName" (change)="listUsernames()">Name</label>&nbsp;
-                <label><input type="checkbox" [(ngModel)]="listUsername"
-                              (change)="listUsernames()">Username</label>&nbsp;
-                <label><input type="checkbox" [(ngModel)]="listEmail" (change)="listUsernames()">Email</label>&nbsp;
-                <br>
-                <textarea id="userlist" [(ngModel)]="userlist" rows="10" cols="60"></textarea>
-                <button class="timButton"
-                        (click)="copyList()">
+                  <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="-"
+                  (change)="listUsernames()">-</label>&nbsp;
+                  <label><input type="radio" name="listsep" [(ngModel)]="listSep" value=","
+                  (change)="listUsernames()">,</label>&nbsp;
+                  <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="|"
+                  (change)="listUsernames()">|</label>&nbsp;
+                  <label><input type="radio" name="listsep" [(ngModel)]="listSep" value=";"
+                  (change)="listUsernames()">;</label>&nbsp;
+                  <label><input type="radio" name="listsep" [(ngModel)]="listSep" value="\n"
+                  (change)="listUsernames()">\\n</label>&nbsp;
+                  <label title="Use this if username can include other username">
+                    <input type="radio" name="listsep" [(ngModel)]="listSep" value="$|^"
+                    (change)="listUsernames()">^$</label>&nbsp;
+                  </p>
+                  <label><input type="checkbox" [(ngModel)]="listName" (change)="listUsernames()">Name</label>&nbsp;
+                  <label><input type="checkbox" [(ngModel)]="listUsername"
+                  (change)="listUsernames()">Username</label>&nbsp;
+                  <label><input type="checkbox" [(ngModel)]="listEmail" (change)="listUsernames()">Email</label>&nbsp;
+                  <br>
+                    <textarea id="userlist" [(ngModel)]="userlist" rows="10" cols="60"></textarea>
+                    <button class="timButton"
+                      (click)="copyList()">
                     Copy
-                </button>
+                  </button>
+                </div>
+              }
+              <tim-message-send [(recipientList)]="recipientList"
+                [docId]="currentDocumentID()"
+                [storageKey]="this.taskIdFull"
+                [replyToEmail]="markup['replyToEmail']"
+              ></tim-message-send>
+              @if (result) {
+                <pre>{{ result }}</pre>
+              }
+              @if (error) {
+                <pre [innerHtml]="error"></pre>
+              }
+              @if (footer) {
+                <p [innerHtml]="footer | purify" class="plgfooter"></p>
+              }
             </div>
-            <tim-message-send [(recipientList)]="recipientList"
-                              [docId]="currentDocumentID()"
-                              [storageKey]="this.taskIdFull"
-                              [replyToEmail]="markup['replyToEmail']"
-            ></tim-message-send>
-            <pre *ngIf="result">{{ result }}</pre>
-            <pre *ngIf="error" [innerHtml]="error"></pre>
-            <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
-        </div>
-        <div class="tableOpener" *ngIf="!showTable">
-            <button class="timButton"
-                    [disabled]="loading"
-                    (click)="openTable()">
+          }
+          @if (!showTable) {
+            <div class="tableOpener">
+              <button class="timButton"
+                [disabled]="loading"
+                (click)="openTable()">
                 {{ openButtonText }}
-            </button>
-            <tim-loading *ngIf="loading"></tim-loading>
-        </div>
-    `,
+              </button>
+              @if (loading) {
+                <tim-loading></tim-loading>
+              }
+            </div>
+          }
+        `,
     styleUrls: ["./table-form.component.scss"],
     standalone: false,
 })

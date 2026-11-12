@@ -32,42 +32,82 @@ import {
 @Component({
     selector: "js-runner",
     template: `
-<div *ngIf="isVisible()" style="display: inline-block" class="jsrunner">
-    <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header"></h4>
-    <p *ngIf="stem" [innerHtml]="stem"></p>
-    <div class="form form-inline" *ngIf="showIncludeUsersOption()">
-    Users to include:
-    <select [(ngModel)]="userOpt" class="form-control">
-        <option *ngFor="let o of userOpts" [value]="o">{{o}}</option>
-    </select>
-    </div>
-    <button *ngIf="hasAllAttributes()" class="timButton"
-            [disabled]="isRunning || readonly"
-            (click)="runScript()">
+@if (isVisible()) {
+  <div style="display: inline-block" class="jsrunner">
+    @if (markupError) {
+      <tim-markup-error [data]="markupError!"></tim-markup-error>
+    }
+    @if (header) {
+      <h4 [innerHtml]="header"></h4>
+    }
+    @if (stem) {
+      <p [innerHtml]="stem"></p>
+    }
+    @if (showIncludeUsersOption()) {
+      <div class="form form-inline">
+        Users to include:
+        <select [(ngModel)]="userOpt" class="form-control">
+          @for (o of userOpts; track o) {
+            <option [value]="o">{{o}}</option>
+          }
+        </select>
+      </div>
+    }
+    @if (hasAllAttributes()) {
+      <button class="timButton"
+        [disabled]="isRunning || readonly"
+        (click)="runScript()">
         {{buttonText()}}
-    </button>&nbsp;
-    <tim-loading *ngIf="isRunning"></tim-loading>
-    <p class="error" *ngIf="error">Error occurred, script results may not be saved.</p>
-    <pre *ngIf="error?.msg">{{error?.msg}}</pre>
-    <pre *ngIf="error?.stackTrace">{{error?.stackTrace}}</pre>
-    <jsrunner-error *ngFor="let err of scriptErrors" [e]="err"></jsrunner-error>
-    <div *ngIf="md" class="md" [innerHTML]="md | purify"></div>    
-    <div *ngIf="html" class="html" [innerHTML]="html | purify"></div>    
-    <div class="jsrunner-output" *ngIf="output">
-    <p class="pull-right">
-        <a class="smalltext" (click)="copyText()" title="Copy to clipboard" 
-           style="position: absolute; right: 0;">copy</a>
-    </p>
-    <pre >{{output}}</pre>
+      </button>
+      }<ng-container>&nbsp; </ng-container>
+      @if (isRunning) {
+        <tim-loading></tim-loading>
+      }
+      @if (error) {
+        <p class="error">Error occurred, script results may not be saved.</p>
+      }
+      @if (error?.msg) {
+        <pre>{{error?.msg}}</pre>
+      }
+      @if (error?.stackTrace) {
+        <pre>{{error?.stackTrace}}</pre>
+      }
+      @for (err of scriptErrors; track err) {
+        <jsrunner-error [e]="err"></jsrunner-error>
+      }
+      @if (md) {
+        <div class="md" [innerHTML]="md | purify"></div>
+      }
+      @if (html) {
+        <div class="html" [innerHTML]="html | purify"></div>
+      }
+      @if (output) {
+        <div class="jsrunner-output">
+          <p class="pull-right">
+            <a class="smalltext" (click)="copyText()" title="Copy to clipboard"
+            style="position: absolute; right: 0;">copy</a>
+          </p>
+          <pre >{{output}}</pre>
+        </div>
+      }
+      @if (footer) {
+        <p [innerHtml]="footer | purify" class="plgfooter"></p>
+      }
+      @if (isFieldHelper()) {
+        <div>
+          @if (!isopen) {
+            <p (click)="toggleFieldHelper()" >+ Show field list</p>
+          }
+          @if (isopen) {
+            <p (click)="toggleFieldHelper()">- Hide field list</p>
+          }
+          @if (isopen) {
+            <pre>{{fieldlist}}</pre>
+          }
+        </div>
+      }
     </div>
-    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
-    <div *ngIf="isFieldHelper()">
-    <p *ngIf="!isopen" (click)="toggleFieldHelper()" >+ Show field list</p>
-    <p *ngIf="isopen" (click)="toggleFieldHelper()">- Hide field list</p>
-    <pre *ngIf="isopen">{{fieldlist}}</pre>
-    </div>
-</div>
+  }
 `,
     standalone: false,
 })
@@ -356,13 +396,19 @@ export class JsRunnerPluginComponent
     template: `
 <tim-alert severity="danger">
   <span>{{ e.user }}:</span>
-  <div *ngFor="let err of e.errors">
-    <span>{{ err.msg }}</span>
-    <button *ngIf="err.stackTrace" class="timButton btn-sm" (click)="toggleStackTrace()">Stack trace</button>
-    <pre *ngIf="err.stackTrace && showTrace">{{ err.stackTrace }}</pre>
-  </div>
+  @for (err of e.errors; track err) {
+    <div>
+      <span>{{ err.msg }}</span>
+      @if (err.stackTrace) {
+        <button class="timButton btn-sm" (click)="toggleStackTrace()">Stack trace</button>
+      }
+      @if (err.stackTrace && showTrace) {
+        <pre>{{ err.stackTrace }}</pre>
+      }
+    </div>
+  }
 </tim-alert>
-    `,
+`,
     standalone: false,
 })
 export class JsRunnerErrorComponent {
@@ -381,7 +427,7 @@ export class JsRunnerErrorComponent {
         TimUtilityModule,
         FormsModule,
         PurifyModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],
 })

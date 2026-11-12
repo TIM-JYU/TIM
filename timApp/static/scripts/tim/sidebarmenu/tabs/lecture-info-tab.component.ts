@@ -14,34 +14,48 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
         <ng-template i18n>Lecture</ng-template>
         <h5 i18n>Current Lectures</h5>
         <ul>
-            <li *ngFor="let lecture of currentLecturesList">
-                <a class="space-right" href="/showLectureInfo/{{lecture.lecture_id}}">{{lecture.lecture_code}}</a>
-                <button *ngIf="lctrl.lecture?.lecture_id != lecture.lecture_id"
-                        class="timButton btn-xs"
-                        value="Join" i18n-value
-                        (click)="lctrl.joinLecture(lecture)"
-                        i18n>Join
+          @for (lecture of currentLecturesList; track lecture) {
+            <li>
+              <a class="space-right" href="/showLectureInfo/{{lecture.lecture_id}}">{{lecture.lecture_code}}</a>
+              @if (lctrl.lecture?.lecture_id != lecture.lecture_id) {
+                <button
+                  class="timButton btn-xs"
+                  value="Join" i18n-value
+                  (click)="lctrl.joinLecture(lecture)"
+                  i18n>Join
                 </button>
+              }
             </li>
-            <li *ngIf="currentLecturesList.length == 0"><p i18n>No current lectures</p></li>
+          }
+          @if (currentLecturesList.length == 0) {
+            <li><p i18n>No current lectures</p></li>
+          }
         </ul>
-
+        
         <h5 i18n>Upcoming Lectures</h5>
         <ul>
-            <li *ngFor="let lecture of futureLecturesList">
-                <a href="/showLectureInfo/{{lecture.lecture_id}}">{{lecture.lecture_code}}</a>
+          @for (lecture of futureLecturesList; track lecture) {
+            <li>
+              <a href="/showLectureInfo/{{lecture.lecture_id}}">{{lecture.lecture_code}}</a>
             </li>
-            <li *ngIf="futureLecturesList.length == 0"><p i18n>No upcoming lectures</p></li>
+          }
+          @if (futureLecturesList.length == 0) {
+            <li><p i18n>No upcoming lectures</p></li>
+          }
         </ul>
-
+        
         <h5 i18n>Past Lectures</h5>
         <ul>
-            <li *ngFor="let lecture of pastLecturesList">
-                <a href="/showLectureInfo/{{lecture.lecture_id}}">{{lecture.lecture_code}}</a>
+          @for (lecture of pastLecturesList; track lecture) {
+            <li>
+              <a href="/showLectureInfo/{{lecture.lecture_id}}">{{lecture.lecture_code}}</a>
             </li>
-            <li *ngIf="pastLecturesList.length == 0"><p i18n>No past lectures</p></li>
+          }
+          @if (pastLecturesList.length == 0) {
+            <li><p i18n>No past lectures</p></li>
+          }
         </ul>
-    `,
+        `,
     standalone: false,
 })
 export class LectureInfoTabComponent implements OnTabSelect {

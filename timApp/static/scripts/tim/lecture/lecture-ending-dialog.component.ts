@@ -16,30 +16,35 @@ export interface ILectureEndingDialogResult {
     selector: "tim-lecture-ending-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <form>
-                    <label> Extend by
-                        <select [(ngModel)]="selectedTime">
-                            <option *ngFor="let choice of extendTimes" [value]="choice">{{choice}}</option>
-                        </select>
-                        minutes
-                    </label>
-                </form>
-            </ng-container>
-            <ng-container footer>
-                <button class="timButton" autofocus (click)="extend()">Extend</button>
-                <button class="timButton" *ngIf="!hasLectureEnded()" (click)="end()">End</button>
-                <button
-                        class="timButton"
-                        *ngIf="hasLectureEnded()"
-                        (click)="noExtend()">Don't extend
-                </button>
-            </ng-container>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            <form>
+              <label> Extend by
+                <select [(ngModel)]="selectedTime">
+                  @for (choice of extendTimes; track choice) {
+                    <option [value]="choice">{{choice}}</option>
+                  }
+                </select>
+                minutes
+              </label>
+            </form>
+          </ng-container>
+          <ng-container footer>
+            <button class="timButton" autofocus (click)="extend()">Extend</button>
+            @if (!hasLectureEnded()) {
+              <button class="timButton" (click)="end()">End</button>
+            }
+            @if (hasLectureEnded()) {
+              <button
+                class="timButton"
+                (click)="noExtend()">Don't extend
+              </button>
+            }
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class LectureEndingDialogComponent extends AngularDialogComponent<

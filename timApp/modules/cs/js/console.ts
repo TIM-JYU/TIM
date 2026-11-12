@@ -14,42 +14,50 @@ function trackByIndex(index: number, o: unknown) {
     selector: "cs-console",
     template: `
     <div class="web-console no-popup-menu {{currentSize}} " (keydown)="handleKey($event)">
-        <code class="console-output">
-            <div class="console-output-elem" *ngFor="let item of history; trackBy: trackByIndex">
-                <span class="console-oldinput">
-                    <span class="console-in">{{item.istem}}</span>
-                    <span class="console-userInput">{{item.input}}</span>
+      <code class="console-output">
+        @for (item of history; track trackByIndex($index, item)) {
+          <div class="console-output-elem">
+            <span class="console-oldinput">
+              <span class="console-in">{{item.istem}}</span>
+              <span class="console-userInput">{{item.input}}</span>
+            </span>
+            <span class="console-oldresponse">
+              @if (!isShell) {
+                <span>  <br/>
+                  <span class="console-out">{{item.ostem}}</span>
                 </span>
-                <span class="console-oldresponse">
-                    <span *ngIf="!isShell">  <br/>
-                        <span class="console-out">{{item.ostem}}</span>
-                    </span>
-                    <span class="console-response" [ngClass]="{error: item.error}">
-                        <span [innerHTML]="item.response"></span>
-                    </span>
-                    <!-- Double span since [textContent] eats the innermost one -->
-                </span>
-            </div>
-            <span class="console-expander-sym" (click)="toggleSize()"></span>
-        </code>
-        <div class="console-examples-box">
-            <span class="examples-title" (click)="examplesVisible=!examplesVisible">    ▼ example expressions ▲</span>
-            <div>Click to load:</div>
-            <ul>
-                <li *ngFor="let example of examples; index as i">
-                    <a (click)="loadExample(i)" title="example.expr">{{example.title||example.expr}}</a>
-                </li>
-            </ul>
-        </div>
-        <div class="console-curIndex" *ngIf="isShell">{{pwd}}</div>
-        <span class="console-curIndex">in_{{cursor}}</span>
-        <input type="text" placeholder="type expressions here"
-                        class="console-input"
-                        [(ngModel)]="currentInput"/>
-        &nbsp;
-        <div class="console-buttons">
-            <button (click)="up()">↑</button>&nbsp;<button (click)="down()">↓</button>&nbsp;<button (click)="handler()">Enter</button>&nbsp;
-        </div>
+              }
+              <span class="console-response" [ngClass]="{error: item.error}">
+                <span [innerHTML]="item.response"></span>
+              </span>
+              <!-- Double span since [textContent] eats the innermost one -->
+            </span>
+          </div>
+        }
+        <span class="console-expander-sym" (click)="toggleSize()"></span>
+      </code>
+      <div class="console-examples-box">
+        <span class="examples-title" (click)="examplesVisible=!examplesVisible">    ▼ example expressions ▲</span>
+        <div>Click to load:</div>
+        <ul>
+          @for (example of examples; track example; let i = $index) {
+            <li>
+              <a (click)="loadExample(i)" title="example.expr">{{example.title||example.expr}}</a>
+            </li>
+          }
+        </ul>
+      </div>
+      @if (isShell) {
+        <div class="console-curIndex">{{pwd}}</div>
+      }
+      <span class="console-curIndex">in_{{cursor}}</span>
+      <input type="text" placeholder="type expressions here"
+        class="console-input"
+        [(ngModel)]="currentInput"/>
+      &nbsp;
+      <div class="console-buttons">
+        <button (click)="up()">↑</button>&nbsp;<button (click)="down()">↓</button>&nbsp;<button (click)="handler()">Enter</button>&nbsp;
+      </div>
     </div>`,
     standalone: false,
 })

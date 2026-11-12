@@ -27,14 +27,24 @@ interface ICountOptions {
 @Component({
     selector: "cs-count-board", // TODO: styling
     template: `
-        <div *ngIf="options_" class="csPluginCountItems">
-            <span *ngIf="nameLines">{{nameLines}}: <span>{{lines}}</span><br></span>
-            <span *ngIf="nameWords">{{nameWords}}: <span>{{words}}</span><br></span>
-            <span *ngIf="nameChars">{{nameChars}}: <span>{{chars}}</span></span>
-        </div>
-        <div *ngIf="countError" class="csPluginCountError">
+        @if (options_) {
+          <div class="csPluginCountItems">
+            @if (nameLines) {
+              <span>{{nameLines}}: <span>{{lines}}</span><br></span>
+            }
+            @if (nameWords) {
+              <span>{{nameWords}}: <span>{{words}}</span><br></span>
+            }
+            @if (nameChars) {
+              <span>{{nameChars}}: <span>{{chars}}</span></span>
+            }
+          </div>
+        }
+        @if (countError) {
+          <div class="csPluginCountError">
             <p>{{countError}}</p>
-        </div>`,
+          </div>
+        }`,
     standalone: false,
 })
 export class CountBoardComponent {

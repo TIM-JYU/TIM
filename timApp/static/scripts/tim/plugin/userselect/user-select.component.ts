@@ -147,147 +147,194 @@ class ToggleOption {
 @Component({
     selector: "user-selector",
     template: `
-        <div *ngIf="enableScanner" class="barcode-video">
+        @if (enableScanner) {
+          <div class="barcode-video">
             <button [disabled]="!queryHandler || !supportsMediaDevices" class="timButton btn-lg"
-                    (click)="scanCode = !scanCode">
-                <span class="icon-text">
-                    <i class="glyphicon glyphicon-qrcode"></i>
-                    <span>/</span>
-                    <i class="glyphicon glyphicon-barcode"></i><br>
-                </span>
-                <span i18n>Scan code</span>
+              (click)="scanCode = !scanCode">
+              <span class="icon-text">
+                <i class="glyphicon glyphicon-qrcode"></i>
+                <span>/</span>
+                <i class="glyphicon glyphicon-barcode"></i><br>
+              </span>
+              <span i18n>Scan code</span>
             </button>
-            <span *ngIf="!supportsMediaDevices" class="label label-default not-supported" i18n>Not supported in this browser</span>
-            <tim-code-scanner *ngIf="scanCode" (successfulRead)="onCodeScanned($event)"
-                              [scanInterval]="scanInterval" #codeScanner></tim-code-scanner>
-        </div>
+            @if (!supportsMediaDevices) {
+              <span class="label label-default not-supported" i18n>Not supported in this browser</span>
+            }
+            @if (scanCode) {
+              <tim-code-scanner (successfulRead)="onCodeScanned($event)"
+              [scanInterval]="scanInterval" #codeScanner></tim-code-scanner>
+            }
+          </div>
+        }
         <form class="search" (ngSubmit)="searchPress.next()" #searchForm="ngForm">
-            <input class="form-control input-lg"
-                   placeholder="Search for user"
-                   i18n-placeholder
-                   name="search-string"
-                   type="search"
-                   autocomplete="off"
-                   [(ngModel)]="searchString"
-                   (ngModelChange)="inputTyped.next($event)"
-                   [disabled]="!queryHandler || undoing || applying"
-                   minlength="{{ inputMinLength }}"
-                   required
-                   #searchInput>
-
-            <ng-template #submitButton>
-                <button class="timButton btn-lg" i18n
-                        [disabled]="!queryHandler || !searchForm.form.valid || searching || undoing">
+          <input class="form-control input-lg"
+            placeholder="Search for user"
+            i18n-placeholder
+            name="search-string"
+            type="search"
+            autocomplete="off"
+            [(ngModel)]="searchString"
+            (ngModelChange)="inputTyped.next($event)"
+            [disabled]="!queryHandler || undoing || applying"
+            minlength="{{ inputMinLength }}"
+            required
+            #searchInput>
+        
+          <ng-template #submitButton>
+            <button class="timButton btn-lg" i18n
+              [disabled]="!queryHandler || !searchForm.form.valid || searching || undoing">
                     Search
                 </button>
-            </ng-template>
-
-            <ng-container *ngIf="optionToggles.length == 0; else withSearchOptions">
-                <ng-container *ngTemplateOutlet="submitButton"></ng-container>
-            </ng-container>
-            <ng-template #withSearchOptions>
-                <div class="btn-group" dropdown>
-                    <ng-container *ngTemplateOutlet="submitButton"></ng-container>
-                    <button type="button" class="timButton btn-lg dropdown-toggle dropdown-toggle-split" dropdownToggle>
-                        <span class="caret"></span>
-                        <span class="sr-only">Split button</span>
-                    </button>
-                    <ul *dropdownMenu class="dropdown-menu" role="menu">
-                        <li role="menuitem" *ngFor="let option of optionToggles">
-                            <a class="dropdown-item" (click)="option.value = !option.value">
-                                <i class="glyphicon glyphicon-ok" style="margin-right: 1rem;" *ngIf="option.value"></i>
-                                <span>{{option.name}}</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </ng-template>
-
+          </ng-template>
+        
+          @if (optionToggles.length == 0) {
+            <ng-container *ngTemplateOutlet="submitButton"></ng-container>
+          } @else {
+            <div class="btn-group" dropdown>
+              <ng-container *ngTemplateOutlet="submitButton"></ng-container>
+              <button type="button" class="timButton btn-lg dropdown-toggle dropdown-toggle-split" dropdownToggle>
+                <span class="caret"></span>
+                <span class="sr-only">Split button</span>
+              </button>
+              <ul *dropdownMenu class="dropdown-menu" role="menu">
+                @for (option of optionToggles; track option) {
+                  <li role="menuitem">
+                    <a class="dropdown-item" (click)="option.value = !option.value">
+                      @if (option.value) {
+                        <i class="glyphicon glyphicon-ok" style="margin-right: 1rem;"></i>
+                      }
+                      <span>{{option.name}}</span>
+                    </a>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        
         </form>
-        <div class="progress" *ngIf="!isInPreview && (searching || !queryHandler)">
+        @if (!isInPreview && (searching || !queryHandler)) {
+          <div class="progress">
             <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
-        </div>
-        <div class="search-result" *ngIf="lastSearchResult">
-            <tim-alert *ngIf="lastSearchResult.matches.length == 0" i18n>
+          </div>
+        }
+        @if (lastSearchResult) {
+          <div class="search-result">
+            @if (lastSearchResult.matches.length == 0) {
+              <tim-alert i18n>
                 No matches for given keyword
             </tim-alert>
-            <form *ngIf="lastSearchResult.matches.length != 0">
-                <table *ngIf="lastSearchResult">
+            }
+            @if (lastSearchResult.matches.length != 0) {
+              <form>
+                @if (lastSearchResult) {
+                  <table>
                     <thead>
-                    <tr>
+                      <tr>
                         <th i18n>Select</th>
-                        <th *ngFor="let fieldName of fieldNames">
+                        @for (fieldName of fieldNames; track fieldName) {
+                          <th>
                             {{fieldName}}
-                        </th>
-                    </tr>
+                          </th>
+                        }
+                      </tr>
                     </thead>
                     <tbody>
-                    <tr class="user-row" *ngFor="let match of lastSearchResult.matches"
-                        [class.selected-user]="selectedUser == match" (click)="selectedUser = match; onUserSelected()">
-                        <td class="select-col">
+                      @for (match of lastSearchResult.matches; track match) {
+                        <tr class="user-row"
+                          [class.selected-user]="selectedUser == match" (click)="selectedUser = match; onUserSelected()">
+                          <td class="select-col">
                             <span class="radio">
-                                <label>
-                                    <input type="radio"
-                                           name="userselect-radios"
-                                           [value]="match"
-                                           [(ngModel)]="selectedUser"
-                                           (ngModelChange)="onUserSelected()"
-                                           [disabled]="applying">
-                                </label>
+                              <label>
+                                <input type="radio"
+                                  name="userselect-radios"
+                                  [value]="match"
+                                  [(ngModel)]="selectedUser"
+                                  (ngModelChange)="onUserSelected()"
+                                  [disabled]="applying">
+                              </label>
                             </span>
-                        </td>
-                        <td *ngFor="let fieldId of displayFields">{{match.fields[fieldId]}}</td>
-                    </tr>
+                          </td>
+                          @for (fieldId of displayFields; track fieldId) {
+                            <td>{{match.fields[fieldId]}}</td>
+                          }
+                        </tr>
+                      }
                     </tbody>
-                </table>
-            </form>
-            <div class="more-matches-info"
-                 *ngIf="lastSearchResult && lastSearchResult.matches.length < lastSearchResult.allMatchCount"
-                 i18n>
+                  </table>
+                }
+              </form>
+            }
+            @if (lastSearchResult && lastSearchResult.matches.length < lastSearchResult.allMatchCount) {
+              <div class="more-matches-info"
+                i18n>
                 There are {{lastSearchResult.allMatchCount}} matches. Only first {{lastSearchResult.matches.length}} are
                 shown.
                 Please give more specific keywords to show all results.
             </div>
-            <div class="action-buttons" *ngIf="selectedUser">
-                <tim-loading *ngIf="applying"></tim-loading>
+            }
+            @if (selectedUser) {
+              <div class="action-buttons">
+                @if (applying) {
+                  <tim-loading></tim-loading>
+                }
                 <button type="button" class="btn btn-success btn-lg" [disabled]="applying" (click)="apply()">
-                    {{applyButtonText}}
+                  {{applyButtonText}}
                 </button>
                 <button type="button" class="btn btn-danger btn-lg" [disabled]="applying" (click)="resetView()">
-                    {{cancelButtonText}}
+                  {{cancelButtonText}}
                 </button>
-            </div>
-        </div>
-        <tim-alert *ngIf="lastAddedUser" severity="success" [closeable]="!undoing" (closing)="resetView()">
+              </div>
+            }
+          </div>
+        }
+        @if (lastAddedUser) {
+          <tim-alert severity="success" [closeable]="!undoing" (closing)="resetView()">
             <div class="undoable-message">
-                <span class="undoable-text">{{successMessage}}</span>
-                <span class="undo-button" *ngIf="allowUndo && !undone">
-                    <tim-loading *ngIf="undoing"></tim-loading>
-                    <button *ngIf="!verifyUndo" (click)="verifyUndo = true" class="btn btn-danger"
-                            [disabled]="undoing">{{undoButtonLabel}}</button>
-                </span>
-            </div>
-        </tim-alert>
-        <tim-alert severity="warning" *ngIf="verifyUndo" [closeable]="!undoing" (closing)="verifyUndo = false">
-            <div class="undoable-message">
-                <span class="undoable-text">{{undoWarningText}}</span>
+              <span class="undoable-text">{{successMessage}}</span>
+              @if (allowUndo && !undone) {
                 <span class="undo-button">
-                    <button (click)="undoLast()" class="btn btn-danger">{{undoButtonLabel}}</button>
+                  @if (undoing) {
+                    <tim-loading></tim-loading>
+                  }
+                  @if (!verifyUndo) {
+                    <button (click)="verifyUndo = true" class="btn btn-danger"
+                    [disabled]="undoing">{{undoButtonLabel}}</button>
+                  }
                 </span>
+              }
             </div>
-        </tim-alert>
-        <tim-alert [severity]="verifyError ? 'danger': 'warning'" *ngIf="verifyMessages">
+          </tim-alert>
+        }
+        @if (verifyUndo) {
+          <tim-alert severity="warning" [closeable]="!undoing" (closing)="verifyUndo = false">
             <div class="undoable-message">
-                <ul class="undoable-text">
-                   <li *ngFor="let message of verifyMessages">{{message}}</li> 
-                </ul>
-                <span class="undo-button" *ngIf="!verifyError && verifyAccept && verifyReject">
-                    <button (click)="verifyAccept()" class="btn btn-success">{{applyButtonText}}</button>
-                    <button (click)="verifyReject()" class="btn btn-danger">{{cancelButtonText}}</button>
-                </span>
+              <span class="undoable-text">{{undoWarningText}}</span>
+              <span class="undo-button">
+                <button (click)="undoLast()" class="btn btn-danger">{{undoButtonLabel}}</button>
+              </span>
             </div>
-        </tim-alert>
-        <tim-alert class="small" *ngIf="undoErrors.length > 0" severity="warning">
+          </tim-alert>
+        }
+        @if (verifyMessages) {
+          <tim-alert [severity]="verifyError ? 'danger': 'warning'">
+            <div class="undoable-message">
+              <ul class="undoable-text">
+                @for (message of verifyMessages; track message) {
+                  <li>{{message}}</li>
+                }
+              </ul>
+              @if (!verifyError && verifyAccept && verifyReject) {
+                <span class="undo-button">
+                  <button (click)="verifyAccept()" class="btn btn-success">{{applyButtonText}}</button>
+                  <button (click)="verifyReject()" class="btn btn-danger">{{cancelButtonText}}</button>
+                </span>
+              }
+            </div>
+          </tim-alert>
+        }
+        @if (undoErrors.length > 0) {
+          <tim-alert class="small" severity="warning">
             <ng-container i18n>
                 <p>
                     There were problems while undoing. Someone might have edited the permissions at the same time as
@@ -297,32 +344,43 @@ class ToggleOption {
                 <p>Detailed error messages:</p>
             </ng-container>
             <div class="alert-details">
-                <a (click)="showErrorMessage = !showErrorMessage" i18n><i class="glyphicon glyphicon-chevron-down"></i>Show
+              <a (click)="showErrorMessage = !showErrorMessage" i18n><i class="glyphicon glyphicon-chevron-down"></i>Show
                     details</a>
-                <ng-container *ngIf="showErrorMessage">
-                    <ul *ngFor="let error of undoErrors">
-                        <li>{{error}}</li>
-                    </ul>
-                </ng-container>
-            </div>
+            @if (showErrorMessage) {
+              @for (error of undoErrors; track error) {
+                <ul>
+                  <li>{{error}}</li>
+                </ul>
+              }
+            }
+          </div>
         </tim-alert>
-        <tim-alert class="small" *ngIf="errorMessage" i18n>
+        }
+        @if (errorMessage) {
+          <tim-alert class="small" i18n>
             <span>{{errorMessage}}</span>
             <div class="alert-details">
                 <p>Please try refreshing the page and try again.</p>
-                <ng-container *ngIf="detailedError">
+                @if (detailedError) {
+
                     <div>
                         <a (click)="showErrorMessage = !showErrorMessage">
                             <i class="glyphicon glyphicon-chevron-down"></i>
                             Show details
                         </a>
                     </div>
-                    <pre *ngIf="showErrorMessage">{{detailedError}}</pre>
-                </ng-container>
+                    @if (showErrorMessage) {
+<pre>{{detailedError}}</pre>
+}
+                
+}
             </div>
         </tim-alert>
-        <tim-t9-keyboard (applyT9)="applyT9($event)" *ngIf="t9Mode.value"></tim-t9-keyboard>
-    `,
+        }
+        @if (t9Mode.value) {
+          <tim-t9-keyboard (applyT9)="applyT9($event)"></tim-t9-keyboard>
+        }
+        `,
     styleUrls: ["user-select.component.scss"],
     standalone: false,
 })
@@ -953,12 +1011,7 @@ export class UserSelectComponent extends AngularPluginBase<
         CodeScannerComponent,
         T9KeyboardComponent,
     ],
-    imports: [
-        CommonModule,
-        FormsModule,
-        TimUtilityModule,
-        BsDropdownModule.forRoot(),
-    ],
+    imports: [CommonModule, FormsModule, TimUtilityModule, BsDropdownModule],
     providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class UserSelectModule implements DoBootstrap {

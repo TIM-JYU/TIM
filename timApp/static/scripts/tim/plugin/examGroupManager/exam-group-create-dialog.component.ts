@@ -17,55 +17,63 @@ export interface ExamGroupDialogParams {
     selector: "tim-exam-group-create-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container i18n header>
+          <ng-container i18n header>
                 Create a new exam group
             </ng-container>
-            <ng-container body>
-                <form #form="ngForm" class="form-horizontal">
-                    <fieldset [disabled]="loading">
-                        <div class="form-group">
-                            <label i18n for="name" class="col-sm-3 control-label">Group name</label>
-                            <div class="col-sm-9">
-                                <input i18n-placeholder type="text" required
-                                       [(ngModel)]="name"
-                                       (ngModelChange)="setMessage()"
-                                       id="name" name="name"
-                                       class="form-control"
-                                       placeholder="Enter the name of the exam group"/>
-                            </div>
-                        </div>
-                        <div class="form-group" *ngIf="data.exams">
-                            <label i18n for="exam" class="col-sm-3 control-label" i18n>Exam</label>
-                            <div class="col-sm-9">
-                                <select id="exam" name="exam" class="form-control" [(ngModel)]="exam" required>
-                                    <option *ngFor="let exam of data.exams" [ngValue]="exam">{{exam.name}}</option>
-                                </select>
-                            </div>
-                        </div>
-                    </fieldset>
-
-                </form>
-
-                <tim-alert *ngIf="message" severity="danger">
-                    <ng-container *ngIf="message">
-                        {{ message }}
-                    </ng-container>
-                </tim-alert>
-
-            </ng-container>
-            <ng-container footer>
-                <div>
-                    <tim-loading *ngIf="loading"></tim-loading>
-                    <button i18n class="timButton" type="button" (click)="saveGroup()" [disabled]="form.invalid">
+          <ng-container body>
+            <form #form="ngForm" class="form-horizontal">
+              <fieldset [disabled]="loading">
+                <div class="form-group">
+                  <label i18n for="name" class="col-sm-3 control-label">Group name</label>
+                  <div class="col-sm-9">
+                    <input i18n-placeholder type="text" required
+                      [(ngModel)]="name"
+                      (ngModelChange)="setMessage()"
+                      id="name" name="name"
+                      class="form-control"
+                      placeholder="Enter the name of the exam group"/>
+                  </div>
+                </div>
+                @if (data.exams) {
+                  <div class="form-group">
+                    <label i18n for="exam" class="col-sm-3 control-label" i18n>Exam</label>
+                    <div class="col-sm-9">
+                      <select id="exam" name="exam" class="form-control" [(ngModel)]="exam" required>
+                        @for (exam of data.exams; track exam) {
+                          <option [ngValue]="exam">{{exam.name}}</option>
+                        }
+                      </select>
+                    </div>
+                  </div>
+                }
+              </fieldset>
+        
+            </form>
+        
+            @if (message) {
+              <tim-alert severity="danger">
+                @if (message) {
+                  {{ message }}
+                }
+              </tim-alert>
+            }
+        
+          </ng-container>
+          <ng-container footer>
+            <div>
+              @if (loading) {
+                <tim-loading></tim-loading>
+              }
+              <button i18n class="timButton" type="button" (click)="saveGroup()" [disabled]="form.invalid">
                         Create
                     </button>
-                    <button i18n class="btn btn-default" type="button" (click)="dismiss()">
+              <button i18n class="btn btn-default" type="button" (click)="dismiss()">
                         Cancel
                     </button>
-                </div>
-            </ng-container>
+            </div>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class ExamGroupCreateDialogComponent extends AngularDialogComponent<

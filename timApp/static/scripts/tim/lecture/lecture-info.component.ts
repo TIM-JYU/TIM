@@ -45,91 +45,107 @@ import {BrowserModule} from "@angular/platform-browser";
     selector: "tim-lecture-info",
     template: `
         <div class="panel panel-default">
-            <div class="panel-heading">Lecture info</div>
-            <div class="panel-body">
-                <strong>Lecture code:</strong>
-                <p [innerText]="lecture.lecture_code"></p>
-                <strong>Start time:</strong>
-                <p [innerText]="lecture.start_time | timdate"></p>
-                <strong>End time:</strong>
-                <p [innerText]="lecture.end_time | timdate"></p>
-                <div *ngIf="canSeeAllData()">
-                    <strong>Questions asked:</strong>
-                    <ul>
-                        <li *ngFor="let question of questions; let index = index">
-                            {{ index + 1 }}. <span [innerText]="question.asked_time | timdate"></span>&ngsp;
-                            <a (click)="editPoints(question.asked_id)">{{ question.json.json.questionTitle }}</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+          <div class="panel-heading">Lecture info</div>
+          <div class="panel-body">
+            <strong>Lecture code:</strong>
+            <p [innerText]="lecture.lecture_code"></p>
+            <strong>Start time:</strong>
+            <p [innerText]="lecture.start_time | timdate"></p>
+            <strong>End time:</strong>
+            <p [innerText]="lecture.end_time | timdate"></p>
+            @if (canSeeAllData()) {
+              <div>
+                <strong>Questions asked:</strong>
+                <ul>
+                  @for (question of questions; track question; let index = $index) {
+                    <li>
+                      {{ index + 1 }}. <span [innerText]="question.asked_time | timdate"></span>&ngsp;
+                      <a (click)="editPoints(question.asked_id)">{{ question.json.json.questionTitle }}</a>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
         </div>
-
+        
         <div class="panel panel-default">
-            <div class="panel-heading">Lecture wall</div>
-            <div class="panel-body">
-                <tim-lecture-wall-content
-                        [messages]="messages">
-                </tim-lecture-wall-content>
-            </div>
+          <div class="panel-heading">Lecture wall</div>
+          <div class="panel-body">
+            <tim-lecture-wall-content
+              [messages]="messages">
+            </tim-lecture-wall-content>
+          </div>
         </div>
-
+        
         <div class="panel panel-default">
-            <div class="panel-heading">Find answers
-            </div>
-            <div class="panel-body">
-                <label *ngIf="canSeeAllData()">User name
-                    <select
-                            [disabled]="showAll"
-                            class="form-control"
-                            [(ngModel)]="selectedUser"
-                            (ngModelChange)="updateAnswerMap()">
-                        <option *ngFor="let u of answerers" [ngValue]="u">{{u.name}}</option>
-                    </select>
-                </label>
-                <div class="checkbox" *ngIf="canSeeAllData()">
-                    <label>
-                        <input
-                                type="checkbox"
-                                [(ngModel)]="showAll"
-                                (ngModelChange)="updateAnswerMap()">Show all users
-                    </label>
+          <div class="panel-heading">Find answers
+          </div>
+          <div class="panel-body">
+            @if (canSeeAllData()) {
+              <label>User name
+                <select
+                  [disabled]="showAll"
+                  class="form-control"
+                  [(ngModel)]="selectedUser"
+                  (ngModelChange)="updateAnswerMap()">
+                  @for (u of answerers; track u) {
+                    <option [ngValue]="u">{{u.name}}</option>
+                  }
+                </select>
+              </label>
+            }
+            @if (canSeeAllData()) {
+              <div class="checkbox">
+                <label>
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="showAll"
+                    (ngModelChange)="updateAnswerMap()">Show all users
+                  </label>
                 </div>
-                <a class="timButton"
-                   href="/getLectureAnswerTotals/{{ lecture.lecture_id }}?sum_field_name=sum&count_field_name=cnt">
-                    Download as plain text</a>
-                <div *ngFor="let question of questions; let index = index">
-                    <p>{{ index + 1 }}.
-                        <strong [innerHtml]="question.json.json.questionTitle"></strong>
-                        /
-                        <span [innerText]="question.asked_time | timdate"></span>
-                    </p>
-                    <div class="flex cl" [ngResizable]="true"
-                         style="width: 400px; height: 300px; position: relative">
-                        <span [innerHTML]="question.json.json.questionText"></span>
-                        <tim-answer-chart
-                                [question]="question"
-                                [answers]="answerMap[question.asked_id]">
-                        </tim-answer-chart>
-                    </div>
+              }
+              <a class="timButton"
+                href="/getLectureAnswerTotals/{{ lecture.lecture_id }}?sum_field_name=sum&count_field_name=cnt">
+              Download as plain text</a>
+              @for (question of questions; track question; let index = $index) {
+                <div>
+                  <p>{{ index + 1 }}.
+                    <strong [innerHtml]="question.json.json.questionTitle"></strong>
+                    /
+                    <span [innerText]="question.asked_time | timdate"></span>
+                  </p>
+                  <div class="flex cl" [ngResizable]="true"
+                    style="width: 400px; height: 300px; position: relative">
+                  <span [innerHTML]="question.json.json.questionText"></span>
+                  <tim-answer-chart
+                    [question]="question"
+                    [answers]="answerMap[question.asked_id]">
+                  </tim-answer-chart>
                 </div>
-
-                <p *ngIf="answers.length === 0">
-                    No answers from this lecture
-                </p>
-            </div>
+              </div>
+            }
+        
+            @if (answers.length === 0) {
+              <p>
+                No answers from this lecture
+              </p>
+            }
+          </div>
         </div>
-
-        <div *ngIf="canSeeAllData()" class="panel panel-default">
+        
+        @if (canSeeAllData()) {
+          <div class="panel panel-default">
             <div class="panel-heading">
-                Actions
+              Actions
             </div>
             <div class="panel-body">
-                <button class="timButton" (click)="editLecture()">Edit lecture</button>&ngsp;
-                <button class="btn btn-danger" (click)="deleteLecture()">Delete lecture</button>
+              <button class="timButton" (click)="editLecture()">Edit lecture</button>&ngsp;
+              <button class="btn btn-danger" (click)="deleteLecture()">Delete lecture</button>
             </div>
-        </div>
-    `,
+          </div>
+        }
+        `,
     styleUrls: [
         "../../../../node_modules/angular2-draggable/css/resizable.min.css",
     ],

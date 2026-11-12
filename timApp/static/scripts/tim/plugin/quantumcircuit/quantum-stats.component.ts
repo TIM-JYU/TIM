@@ -28,80 +28,98 @@ export interface QuantumChartData {
     selector: "tim-quantum-stats",
     template: `
         <div class="stats-container" [hidden]="!showChart && !showPrintField && !showExport">
-            <div>
-                <div class="stats-description">
-                    <span *ngIf="showChart">{{statsDescription}}</span>
-
-                    <div class="btn-group export-container" *ngIf="showExport">
-                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
-                                aria-haspopup="true" aria-expanded="false">
-                            <ng-container i18n>Export</ng-container>
-                            <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li (click)="handleExport($event, 'probabilities')"><a>
-                                <ng-container i18n>Probabilities</ng-container>
-                            </a></li>
-                            <li (click)="handleExport($event, 'stateVector')"><a>
-                                <ng-container i18n>State vector</ng-container>
-                            </a></li>
-                        </ul>
-                    </div>
-                    
-                    <tim-loading *ngIf="isSimulatorRunning"></tim-loading>
-
+          <div>
+            <div class="stats-description">
+              @if (showChart) {
+                <span>{{statsDescription}}</span>
+              }
+        
+              @if (showExport) {
+                <div class="btn-group export-container">
+                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                    <ng-container i18n>Export</ng-container>
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li (click)="handleExport($event, 'probabilities')"><a>
+                      <ng-container i18n>Probabilities</ng-container>
+                    </a></li>
+                    <li (click)="handleExport($event, 'stateVector')"><a>
+                      <ng-container i18n>State vector</ng-container>
+                    </a></li>
+                  </ul>
                 </div>
-
-                <div class="chart" *ngIf="showChart">
-                    <div class="chart-inner" #chartInnerElement>
-                        <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions"
-                                [data]="chartData"></canvas>
-                    </div>
-                </div>
+              }
+        
+              @if (isSimulatorRunning) {
+                <tim-loading></tim-loading>
+              }
+        
             </div>
-
-            <div class="output-container">
-
-                <p *ngIf="showPrintField" class="measurements-description">
-                    <ng-container i18n>Measurements</ng-container>
-                </p>
-                <div class="output-print" *ngIf="showPrintField">
-                    <table #outputTable class="output-table">
-                        <thead>
-                        <tr>
-                            <th>#&nbsp;</th>
-                            <th>Input</th>
-                            <th>Output</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr *ngFor="let measurement of measurements; even as isEven; first as isFirst; index as i"
-                            [class.even-row]="isEven">
-                            <td>{{measurements.length - i}}</td>
-                            <td>{{measurement.input}}</td>
-                            <td>{{measurement.output}}</td>
-                        </tr>
-                        </tbody>
-                    </table>
+        
+            @if (showChart) {
+              <div class="chart">
+                <div class="chart-inner" #chartInnerElement>
+                  <canvas baseChart #chartCanvas [type]="'bar'" [options]="chartOptions"
+                  [data]="chartData"></canvas>
                 </div>
-
-                <div class="buttons" *ngIf="showPrintField || samplingMode === 'sample'">
-                    <button class="timButton" (click)="handleMeasure()">
-                        <ng-container i18n>Measure</ng-container>
-                    </button>
-                    <button class="timButton" (click)="handleClear()">
-                        <ng-container i18n>Clear</ng-container>
-                    </button>
-                </div>
-
-                <label class="font-weight-normal" *ngIf="showChart">
-                    <input type="checkbox" [(ngModel)]="hideZeroRows" (ngModelChange)="updateChart()"/>
-                    <ng-container i18n>Hide 0% rows</ng-container>
-                </label>
-
-            </div>
+              </div>
+            }
+          </div>
+        
+          <div class="output-container">
+        
+            @if (showPrintField) {
+              <p class="measurements-description">
+                <ng-container i18n>Measurements</ng-container>
+              </p>
+            }
+            @if (showPrintField) {
+              <div class="output-print">
+                <table #outputTable class="output-table">
+                  <thead>
+                    <tr>
+                      <th>#&nbsp;</th>
+                      <th>Input</th>
+                      <th>Output</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (measurement of measurements; track measurement; let isEven = $even; let isFirst = $first; let i = $index) {
+                      <tr
+                        [class.even-row]="isEven">
+                        <td>{{measurements.length - i}}</td>
+                        <td>{{measurement.input}}</td>
+                        <td>{{measurement.output}}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+        
+            @if (showPrintField || samplingMode === 'sample') {
+              <div class="buttons">
+                <button class="timButton" (click)="handleMeasure()">
+                  <ng-container i18n>Measure</ng-container>
+                </button>
+                <button class="timButton" (click)="handleClear()">
+                  <ng-container i18n>Clear</ng-container>
+                </button>
+              </div>
+            }
+        
+            @if (showChart) {
+              <label class="font-weight-normal">
+                <input type="checkbox" [(ngModel)]="hideZeroRows" (ngModelChange)="updateChart()"/>
+                <ng-container i18n>Hide 0% rows</ng-container>
+              </label>
+            }
+        
+          </div>
         </div>
-    `,
+        `,
     styleUrls: ["./quantum-stats.component.scss"],
     standalone: false,
 })

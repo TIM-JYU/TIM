@@ -31,41 +31,56 @@ const VIEW_PATH = "/view/";
     selector: "tim-goto-link",
     template: `
         <a [class.disabled]="linkDisabled"
-           [attr.aria-disabled]="linkDisabled"
-           [class.timButton]="isButton"
-           [attr.role]="isButton ? 'button': null"
-           (click)="start()">
-            <ng-content></ng-content>
+          [attr.aria-disabled]="linkDisabled"
+          [class.timButton]="isButton"
+          [attr.role]="isButton ? 'button': null"
+          (click)="start()">
+          <ng-content></ng-content>
         </a>
-        <div class="load-text" *ngIf="hasStatus">
-            <span *ngIf="this.error" [className]="this.error.displayClass ? this.error.displayClass : 'error'">
+        @if (hasStatus) {
+          <div class="load-text">
+            @if (this.error) {
+              <span [className]="this.error.displayClass ? this.error.displayClass : 'error'">
                 {{this.error.userMessage ? this.error.userMessage : this.error.defaultMessage}}
-            </span>
-            <ng-container *ngIf="isCountdown">
-                <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="countdownDone()"></tim-countdown>
-            </ng-container>
-            <ng-container *ngIf="isPolling">
-                <tim-loading></tim-loading>
+              </span>
+            }
+            @if (isCountdown) {
+              <tim-countdown [template]="countdownText" [endTime]="openTime" (onFinish)="countdownDone()"></tim-countdown>
+            }
+            @if (isPolling) {
+              <tim-loading></tim-loading>
+              <span>
+                @if (pollText) {
+                  {{pollText}}
+                } @else {
+                  <ng-container i18n>You will automatically be redirected when you can access the document.</ng-container>
+                }
+              </span>
+            }
+            @if (isGoing) {
+              <tim-loading></tim-loading>
+              <span>
+                @if (waitText) {
+                  {{waitText}}
+                } @else {
+                  <ng-container i18n>Loading, please wait.</ng-container>
+                }
+              </span>
+              @if (showDirectLink) {
                 <span>
-                    <ng-container *ngIf="pollText else defaultPollText">{{pollText}}</ng-container>
-                    <ng-template #defaultPollText i18n>You will automatically be redirected when you can access the document.</ng-template>
+                  <a [href]="href" [target]="target">
+                    @if (directLinkText) {
+                      {{directLinkText}}
+                    } @else {
+                      <ng-container i18n>Click here if you were not redirected.</ng-container>
+                    }
+                  </a>
                 </span>
-            </ng-container>
-            <ng-container *ngIf="isGoing">
-                <tim-loading></tim-loading>
-                <span>
-                    <ng-container *ngIf="waitText else defaultWaitText">{{waitText}}</ng-container>
-                    <ng-template #defaultWaitText i18n>Loading, please wait.</ng-template>
-                </span>
-                <span *ngIf="showDirectLink">
-                    <a [href]="href" [target]="target">
-                        <ng-container *ngIf="directLinkText else defaultDirectLinkText">{{directLinkText}}</ng-container>
-                        <ng-template #defaultDirectLinkText i18n>Click here if you were not redirected.</ng-template>
-                    </a>
-                </span>
-            </ng-container>
-        </div>
-    `,
+              }
+            }
+          </div>
+        }
+        `,
     styleUrls: ["./goto-link.component.scss"],
     standalone: false,
 })

@@ -60,232 +60,271 @@ export function notifyUserPrefsChanged(settings: ISettings) {
     selector: "settings-tab",
     template: `
         <ng-template i18n>Document settings</ng-template>
-        <ng-container *ngIf="users.isRealUser() && quickThemes.length > 0">
-            <h5 i18n>Quick themes</h5>
-            <div class="flex flex-wrap gap-1 quick-theme-container">
-                <button *ngFor="let theme of quickThemes"
-                        class="btn btn-xs" 
-                        [class.btn-primary]="theme.enabled"
-                        [class.active]="theme.enabled"
-                        [class.btn-default]="!theme.enabled"
-                        (click)="toggleTheme(theme)"
-                        >
-                    {{ theme.title }}
-                </button>
-            </div>
-        </ng-container>
+        @if (users.isRealUser() && quickThemes.length > 0) {
+          <h5 i18n>Quick themes</h5>
+          <div class="flex flex-wrap gap-1 quick-theme-container">
+            @for (theme of quickThemes; track theme) {
+              <button
+                class="btn btn-xs"
+                [class.btn-primary]="theme.enabled"
+                [class.active]="theme.enabled"
+                [class.btn-default]="!theme.enabled"
+                (click)="toggleTheme(theme)"
+                >
+                {{ theme.title }}
+              </button>
+            }
+          </div>
+        }
         <ng-container>
-            <h5 i18n>Help</h5>
-            <div class="flex cl">
-                <a i18n-title title="Open quick start guide" href="/view/tim/ohjeita/pikaohje" i18n>Quick start</a>
-                <a i18n-title title="Open content creator guide" href="/view/tim/ohjeita/ohjeet" i18n>Content creator
+          <h5 i18n>Help</h5>
+          <div class="flex cl">
+            <a i18n-title title="Open quick start guide" href="/view/tim/ohjeita/pikaohje" i18n>Quick start</a>
+            <a i18n-title title="Open content creator guide" href="/view/tim/ohjeita/ohjeet" i18n>Content creator
                     guide</a>
-                <a i18n-title title="Open all guides" href="/view/tim/TIM-ohjeet" i18n>All guides</a>
-            </div>
+            <a i18n-title title="Open all guides" href="/view/tim/TIM-ohjeet" i18n>All guides</a>
+          </div>
         </ng-container>
-        <ng-container *ngIf="users.isRealUser()">
-            <h5 i18n>Customize</h5>
-            <a href="/settings" i18n>Customize TIM</a>
-        </ng-container>
-        <ng-container *ngIf="showFolderSettings && showRelevance">
-            <h5 i18n>Folder settings</h5>
-            <button class="timButton btn-block"
-                    i18n-title title="Set item relevance value"
-                    (click)="openRelevanceEditDialog()"
-                    i18n>
+        @if (users.isRealUser()) {
+          <h5 i18n>Customize</h5>
+          <a href="/settings" i18n>Customize TIM</a>
+        }
+        @if (showFolderSettings && showRelevance) {
+          <h5 i18n>Folder settings</h5>
+          <button class="timButton btn-block"
+            i18n-title title="Set item relevance value"
+            (click)="openRelevanceEditDialog()"
+            i18n>
                 Edit relevance (<span i18n-tooltip tooltip="Current relevance value">{{currentRelevance}}</span>)
             </button>
-        </ng-container>
-        <ng-container *ngIf="item && item.isFolder">
-            <h5 i18n>Search</h5>
-            <button class="timButton btn-block"
-                    i18n-title title="Search with tags"
-                    (click)="searchWithTags()"
-                    i18n>Search with tags
+        }
+        @if (item && item.isFolder) {
+          <h5 i18n>Search</h5>
+          <button class="timButton btn-block"
+            i18n-title title="Search with tags"
+            (click)="searchWithTags()"
+            i18n>Search with tags
             </button>
-        </ng-container>
-        <ng-container *ngIf="users.isLoggedIn() && item && !item.isFolder">
-            <h5 i18n>Document settings</h5>
-            <a i18n-title title="Toggle between showing full and partitioned document"
-               (click)="toggleViewRange()">
-                <ng-container *ngIf="isFullPage; else showInFull" i18n>Show page in parts</ng-container>
-                <ng-template #showInFull i18n>Show page in full</ng-template>
-            </a>
-            <a class="same-line spaced" i18n-title title="Open document partitioning settings"
-               (click)="openViewRangeMenu()">
-                <span class="glyphicon glyphicon-cog"></span>
-            </a>
-            <button *ngIf="vctrl && isFullPage && item.rights.editable"
-                    class="timButton btn-block"
-                    (click)="vctrl.editingHandler.editSettingsPars()"
-                    i18n>Edit settings
+        }
+        @if (users.isLoggedIn() && item && !item.isFolder) {
+          <h5 i18n>Document settings</h5>
+          <a i18n-title title="Toggle between showing full and partitioned document"
+            (click)="toggleViewRange()">
+            @if (isFullPage) {
+              <ng-container i18n>Show page in parts</ng-container>
+            } @else {
+              <ng-container i18n>Show page in full</ng-container>
+            }
+          </a>
+          <a class="same-line spaced" i18n-title title="Open document partitioning settings"
+            (click)="openViewRangeMenu()">
+            <span class="glyphicon glyphicon-cog"></span>
+          </a>
+          @if (vctrl && isFullPage && item.rights.editable) {
+            <button
+              class="timButton btn-block"
+              (click)="vctrl.editingHandler.editSettingsPars()"
+              i18n>Edit settings
             </button>
-            <button *ngIf="item && item.rights.manage"
-                    class="timButton btn-block"
-                    title="Set item relevance value" i18n-title
-                    (click)="openRelevanceEditDialog()"
-                    i18n>
+          }
+          @if (item && item.rights.manage) {
+            <button
+              class="timButton btn-block"
+              title="Set item relevance value" i18n-title
+              (click)="openRelevanceEditDialog()"
+              i18n>
                 Edit relevance (<span i18n-tooltip tooltip="Current relevance value">{{currentRelevance}}</span>)
             </button>
-            <button class="timButton btn-block"
-                    title="Mark all paragraphs of the document as read" i18n-title
-                    (click)="markAllAsRead()"
-                    i18n>Mark all as read
+          }
+          <button class="timButton btn-block"
+            title="Mark all paragraphs of the document as read" i18n-title
+            (click)="markAllAsRead()"
+            i18n>Mark all as read
             </button>
-            <button *ngIf="vctrl?.isTranslation()"
-                    class="timButton btn-block"
-                    title="Mark document as translated" i18n-title
-                    (click)="markTranslated()"
-                    i18n>Mark all as translated
+          @if (vctrl?.isTranslation()) {
+            <button
+              class="timButton btn-block"
+              title="Mark document as translated" i18n-title
+              (click)="markTranslated()"
+              i18n>Mark all as translated
             </button>
-            <button *ngIf="vctrl?.isTranslation()"
-                    class="timButton btn-block"
-                    title="Mark translations as checked" i18n-title
-                    (click)="markTranslationChecked()"
-                    i18n>Mark all translations as checked
+          }
+          @if (vctrl?.isTranslation()) {
+            <button
+              class="timButton btn-block"
+              title="Mark translations as checked" i18n-title
+              (click)="markTranslationChecked()"
+              i18n>Mark all translations as checked
             </button>
-            <button *ngIf="docSettings?.exam_mode && item.rights.manage"
-                    class="timButton btn-block"
-                    title="Delete all read marks from all users who visited this document" i18n-title
-                    (click)="markDocumentUnread()"
-                    i18n>Delete all read marks
+          }
+          @if (docSettings?.exam_mode && item.rights.manage) {
+            <button
+              class="timButton btn-block"
+              title="Delete all read marks from all users who visited this document" i18n-title
+              (click)="markDocumentUnread()"
+              i18n>Delete all read marks
             </button>
-            <span *ngIf="item.rights.editable">
-                <a title="Refresh numbering" i18n-title
-                   (click)="refreshNumbering(false)"
-                   i18n>Refresh numbering
+          }
+          @if (item.rights.editable) {
+            <span>
+              <a title="Refresh numbering" i18n-title
+                (click)="refreshNumbering(false)"
+                i18n>Refresh numbering
                 </a> /
-                <a title="Refresh also remote documents numbering" i18n-title
-                   (click)="refreshNumbering(true)"
-                   i18n>recurse
+              <a title="Refresh also remote documents numbering" i18n-title
+                (click)="refreshNumbering(true)"
+                i18n>recurse
                 </a>
             </span>
-            <tim-loading *ngIf="isAutoCounterNumbering"></tim-loading>
-        </ng-container>
-        <ng-container *ngIf="lctrl.lectureSettings.inLecture">
-            <h5 i18n>Lecture settings</h5>
-            <div class="checkbox">
-                <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useWall"
+          }
+          @if (isAutoCounterNumbering) {
+            <tim-loading></tim-loading>
+          }
+        }
+        @if (lctrl.lectureSettings.inLecture) {
+          <h5 i18n>Lecture settings</h5>
+          <div class="checkbox">
+            <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useWall"
                                    (ngModelChange)="lctrl.refreshWall()"> Show wall</label>
-            </div>
-            <div *ngIf="!lctrl.isLecturer" class="checkbox">
-                <label i18n>
+          </div>
+          @if (!lctrl.isLecturer) {
+            <div class="checkbox">
+              <label i18n>
                     <input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useQuestions"> Show questions
                 </label>
             </div>
-            <div *ngIf="lctrl.isLecturer" class="checkbox">
-                <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useAnswers"> Show answers</label>
+          }
+          @if (lctrl.isLecturer) {
+            <div class="checkbox">
+              <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useAnswers"> Show answers</label>
             </div>
-        </ng-container>
-
-        <ng-container *ngIf="item && !item.isFolder">
-            <div>
-                <h5 class="same-line" i18n>Print document</h5>
-                <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
-                    <span class="glyphicon glyphicon-question-sign" title="Printing help" i18n-title></span>
-                </a>
-            </div>
-            <button class="timButton btn-block"
-                    title="Print using LaTeX (best quality)" i18n-title
-                    (click)="printDocument()"
-                    i18n>Print document
+          }
+        }
+        
+        @if (item && !item.isFolder) {
+          <div>
+            <h5 class="same-line" i18n>Print document</h5>
+            <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/tulostusohje">
+              <span class="glyphicon glyphicon-question-sign" title="Printing help" i18n-title></span>
+            </a>
+          </div>
+          <button class="timButton btn-block"
+            title="Print using LaTeX (best quality)" i18n-title
+            (click)="printDocument()"
+            i18n>Print document
             </button>
-            <button class="timButton btn-block"
-                    title="Print via browser's print dialog" i18n-title
-                    (click)="cssPrint()"
-                    i18n>Browser print
+          <button class="timButton btn-block"
+            title="Print via browser's print dialog" i18n-title
+            (click)="cssPrint()"
+            i18n>Browser print
             </button>
-            <div>
-                <h5 class="same-line" i18n>Document tags</h5>
-                <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
-                    <span class="glyphicon glyphicon-question-sign"
-                          title="Teachers' help for course code" i18n-title></span>
-                </a>
-            </div>
-            <button *ngIf="item && item.rights.manage"
-                    class="timButton btn-block"
-                    title="Add or remove document tags" i18n-title
-                    (click)="addTag()"
-                    i18n>Edit tags
+          <div>
+            <h5 class="same-line" i18n>Document tags</h5>
+            <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
+              <span class="glyphicon glyphicon-question-sign"
+              title="Teachers' help for course code" i18n-title></span>
+            </a>
+          </div>
+          @if (item && item.rights.manage) {
+            <button
+              class="timButton btn-block"
+              title="Add or remove document tags" i18n-title
+              (click)="addTag()"
+              i18n>Edit tags
             </button>
-            <button class="timButton btn-block"
-                    title="Search with tags" i18n-title
-                    (click)="searchWithTags()"
-                    i18n>Search with tags
+          }
+          <button class="timButton btn-block"
+            title="Search with tags" i18n-title
+            (click)="searchWithTags()"
+            i18n>Search with tags
             </button>
-            <button *ngIf="userBelongsToTeachersOrIsAdmin"
-                    class="timButton btn-block"
-                    title="Set document as a course main page" i18n-title
-                    (click)="openCourseDialog()"
-                    i18n>Set as course
+          @if (userBelongsToTeachersOrIsAdmin) {
+            <button
+              class="timButton btn-block"
+              title="Set document as a course main page" i18n-title
+              (click)="openCourseDialog()"
+              i18n>Set as course
             </button>
-
-            <h5 *ngIf="isMinutesOrInvitation" i18n>Memo/Minutes</h5>
-            <button *ngIf="enableCreateExtractsButton"
-                    class="timButton btn-block"
-                    title="Create extracts" i18n-title
-                    (click)="createMinuteExtracts()"
-                    i18n>Create extracts
+          }
+          @if (isMinutesOrInvitation) {
+            <h5 i18n>Memo/Minutes</h5>
+          }
+          @if (enableCreateExtractsButton) {
+            <button
+              class="timButton btn-block"
+              title="Create extracts" i18n-title
+              (click)="createMinuteExtracts()"
+              i18n>Create extracts
             </button>
-            <button *ngIf="enableCreateMinutesButton"
-                    class="timButton btn-block"
-                    title="Create minutes" i18n-title
-                    (click)="createMinutes()"
-                    i18n>Create minutes
+          }
+          @if (enableCreateMinutesButton) {
+            <button
+              class="timButton btn-block"
+              title="Create minutes" i18n-title
+              (click)="createMinutes()"
+              i18n>Create minutes
             </button>
-            <button *ngIf="isMinutesOrInvitation"
-                    class="timButton btn-block"
-                    title="Display attachments, check their validity, and merge them into single file." i18n-title
-                    (click)="mergePdf()"
-                    i18n>Merge attachments
+          }
+          @if (isMinutesOrInvitation) {
+            <button
+              class="timButton btn-block"
+              title="Display attachments, check their validity, and merge them into single file." i18n-title
+              (click)="mergePdf()"
+              i18n>Merge attachments
             </button>
-        </ng-container>
-
-        <ng-container *ngIf="users.isGroupAdmin() || linkedGroups.length > 0">
-            <h5 i18n>Groups</h5>
-            <ng-container *ngIf="linkedGroups.length > 0">
-                <h6 *ngIf="!sisugroupPath; else courseGroupsLink" i18n>Linked course groups</h6>
-                <ng-template #courseGroupsLink i18n>Linked <a href="/view/{{sisugroupPath}}">course groups</a>
-                </ng-template>
-                <ul class="list-unstyled">
-                    <li *ngFor="let group of linkedGroups"><a href="/view/{{group.path}}">{{group.title}}</a></li>
-                </ul>
-            </ng-container>
-            <ng-container *ngIf="users.isGroupAdmin()">
-                <button class="timButton btn-block"
-                        title="Create a new group" i18n-title
-                        (click)="createGroup()"
-                        i18n>Create a new group
+          }
+        }
+        
+        @if (users.isGroupAdmin() || linkedGroups.length > 0) {
+          <h5 i18n>Groups</h5>
+          @if (linkedGroups.length > 0) {
+            @if (!sisugroupPath) {
+              <h6 i18n>Linked course groups</h6>
+            } @else {
+              <ng-container i18n>Linked <a href="/view/{{sisugroupPath}}">course groups</a>
+                </ng-container>
+          }
+          <ul class="list-unstyled">
+            @for (group of linkedGroups; track group) {
+              <li><a href="/view/{{group.path}}">{{group.title}}</a></li>
+            }
+          </ul>
+        }
+        @if (users.isGroupAdmin()) {
+          <button class="timButton btn-block"
+            title="Create a new group" i18n-title
+            (click)="createGroup()"
+            i18n>Create a new group
                 </button>
-                <a href="/view/groups" i18n>Browse existing groups</a>
-            </ng-container>
-        </ng-container>
-        <ng-container *ngIf="(users.isGroupAdmin() || users.isSisuTeacher()) && !hideVars.messageListCreate">
-            <h5 i18n>Message lists</h5>
-            <button class="timButton btn-block"
-                    title="Create a new message list"
-                    (click)="createMessagelist()"
-                    i18n-title
-                    i18n
+          <a href="/view/groups" i18n>Browse existing groups</a>
+        }
+        }
+        @if ((users.isGroupAdmin() || users.isSisuTeacher()) && !hideVars.messageListCreate) {
+          <h5 i18n>Message lists</h5>
+          <button class="timButton btn-block"
+            title="Create a new message list"
+            (click)="createMessagelist()"
+            i18n-title
+            i18n
             >Create a new message list
             </button>
-            <a href="/view/messagelists" i18n>Browse existing message lists</a>
-            <br/>
-            <a href="/view/archives" i18n>Browse archives</a>
-            <br/>
-            <a href="/view/messages/tim-messages" i18n>Browse TIM messages</a>
-        </ng-container>
-
-        <ng-container *ngIf="docSettings?.cache && item?.rights?.manage">
-            <h5 i18n>Cache</h5>
-            <a href="/generateCache/{{ item?.path }}?caddy_nobuffering=1" target="_blank" i18n>Refresh cache</a>
-        </ng-container>
-
-        <ng-container *ngIf="users.canScheduleFunctions()">
-            <h5 i18n>Scheduled functions</h5>
-            <button (click)="openScheduleDialog()" class="timButton btn-block" i18n>Manage scheduled functions</button>
-        </ng-container>
-    `,
+          <a href="/view/messagelists" i18n>Browse existing message lists</a>
+          <br/>
+          <a href="/view/archives" i18n>Browse archives</a>
+          <br/>
+          <a href="/view/messages/tim-messages" i18n>Browse TIM messages</a>
+        }
+        
+        @if (docSettings?.cache && item?.rights?.manage) {
+          <h5 i18n>Cache</h5>
+          <a href="/generateCache/{{ item?.path }}?caddy_nobuffering=1" target="_blank" i18n>Refresh cache</a>
+        }
+        
+        @if (users.canScheduleFunctions()) {
+          <h5 i18n>Scheduled functions</h5>
+          <button (click)="openScheduleDialog()" class="timButton btn-block" i18n>Manage scheduled functions</button>
+        }
+        `,
     styleUrls: ["./settings-tab.component.scss"],
     standalone: false,
 })

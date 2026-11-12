@@ -10,38 +10,58 @@ import {CsController} from "./csPlugin";
     selector: "cs-git-reg-runner",
     template: `
         <div [ngClass]="{'csRunDiv': markup.borders}" [class.cs-has-header]="header" class="type-{{rtype}}">
-            <tim-markup-error *ngIf="markupError" [data]="markupError!"></tim-markup-error>
-            <h4 *ngIf="header" [innerHTML]="header"></h4>
-            <p *ngIf="stem" class="stem" [innerHTML]="stem"></p>
-            <form *ngIf="!isRegistered" (ngSubmit)="submit($event)">
-                <table>
-                    <tr *ngFor="let field of askFields">
-                        <td>{{field.charAt(0).toUpperCase() + field.slice(1)}}:</td>
-                        <td><input name="{{field}}" type="{{field == 'password' ? 'password' : 'text'}}"></td>
-                    </tr>
-                    <tr><td>
-                        <button *ngIf="!preventRun"
-                                [disabled]="isRunning"
-                                class="timButton btn-sm"
-                                title="(Ctrl-S)"
-                                i18n>Submit</button>
-                    </td></tr>
-                </table>
+          @if (markupError) {
+            <tim-markup-error [data]="markupError!"></tim-markup-error>
+          }
+          @if (header) {
+            <h4 [innerHTML]="header"></h4>
+          }
+          @if (stem) {
+            <p class="stem" [innerHTML]="stem"></p>
+          }
+          @if (!isRegistered) {
+            <form (ngSubmit)="submit($event)">
+              <table>
+                @for (field of askFields; track field) {
+                  <tr>
+                    <td>{{field.charAt(0).toUpperCase() + field.slice(1)}}:</td>
+                    <td><input name="{{field}}" type="{{field == 'password' ? 'password' : 'text'}}"></td>
+                  </tr>
+                }
+                <tr><td>
+                  @if (!preventRun) {
+                    <button
+                      [disabled]="isRunning"
+                      class="timButton btn-sm"
+                      title="(Ctrl-S)"
+                    i18n>Submit</button>
+                  }
+                </td></tr>
+              </table>
             </form>
-            <div class="csRunErrorClass" *ngIf="error">
-                <p class="pull-right">
-                    <tim-close-button (click)="closeError()"></tim-close-button>
-                </p>
-                <pre class="csRunError" >{{error}}</pre>
-                <p class="pull-right" style="margin-top: -1em">
-                    <tim-close-button (click)="closeError()"></tim-close-button>
-                </p>
+          }
+          @if (error) {
+            <div class="csRunErrorClass">
+              <p class="pull-right">
+                <tim-close-button (click)="closeError()"></tim-close-button>
+              </p>
+              <pre class="csRunError" >{{error}}</pre>
+              <p class="pull-right" style="margin-top: -1em">
+                <tim-close-button (click)="closeError()"></tim-close-button>
+              </p>
             </div>
-            <div class="csRunErrorClass" *ngIf="isRegistered && error">
-                Errors occurred. Try reloading the page. If this message persists, contact the course personnel.
+          }
+          @if (isRegistered && error) {
+            <div class="csRunErrorClass">
+              Errors occurred. Try reloading the page. If this message persists, contact the course personnel.
             </div>
-            <pre *ngIf="isRegistered && !error">You are registered</pre>
-            <p *ngIf="markup.footer" class="footer" [innerHTML]="markup.footer"></p>
+          }
+          @if (isRegistered && !error) {
+            <pre>You are registered</pre>
+          }
+          @if (markup.footer) {
+            <p class="footer" [innerHTML]="markup.footer"></p>
+          }
         </div>`,
     standalone: false,
 })

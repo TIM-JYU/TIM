@@ -114,135 +114,158 @@ function isAskedQuestion(
 @Component({
     selector: "tim-edit-question-dialog",
     template: `
-        <tim-dialog-frame *ngIf="!isAskedQuestion()" [autoHeight]="false" [initialAutoHeight]="true">
+        @if (!isAskedQuestion()) {
+          <tim-dialog-frame [autoHeight]="false" [initialAutoHeight]="true">
             <ng-container header>
-                {{ getTitle() }}
+              {{ getTitle() }}
             </ng-container>
             <ng-container body>
-                <form #f (keydown)="formKeyDown($event)">
-                    <div class="form-group form-horz-flex" timErrorState>
-                        <label for="question">Question text</label>
-                        <textarea class="form-control" required name="question" id="question"
-                                  [(ngModel)]="question.questionText"
-                                  (ngModelChange)="changeQuestionTitle(question.questionText)"></textarea>
-                        <tim-error-message></tim-error-message>
-                    </div>
-                    <div class="form-group form-horz-flex" timErrorState>
-                        <label for="title">
-                            Question title</label>
-                        <input class="form-control"
-                               required name="title" id="title" type="text" [(ngModel)]="question.questionTitle"
-                               (focus)="titleFocused($event)"
-                               (ngModelChange)="titleIsChanged()"/>
-                        <tim-error-message></tim-error-message>
-                    </div>
-
-                    <div class="form-group form-horz-flex">
-                        <label for="qtype">Question type</label>
-                        <select class="form-control"
-                                name="type"
-                                id="qtype"
-                                [(ngModel)]="question.questionType"
-                                required
-                                (ngModelChange)="createMatrix(question.questionType)">
-                            <option value="" disabled selected> -- select question type --</option>
-                            <option value="radio-vertical">Multiple choice (radio button)</option>
-                            <option value="checkbox-vertical">Multiple choice (checkbox)</option>
-                            <option value="true-false">True/False</option>
-                            <option value="matrix">Many rows and columns</option>
-                            <option value="likert">5 choices likert scale</option>
-                            <option value="textarea">One text area</option>
-                        </select>
-                    </div>
-                    <label for="defaultPoints">Default points for answers</label>
-                    <input [(ngModel)]="defaultPoints"
-                           id="defaultPoints"
-                           name="defaultPoints"
-                           class="form-control"
-                           placeholder="Default point value for fields"
-                           type="number"
-                           step="0.1"/>
-                    <label> Randomize rows <input type="checkbox"
-                                                  name="randomization"
-                                                  [(ngModel)]="randomization"/></label>
-                    <div class="form-group" *ngIf="randomization">
-                        Number of rows to select (in addition to locked rows)
-                        <input [(ngModel)]="randomizedRows"
-                               id="randomizedRows"
-                               name="randomizedRows"
-                               class="form-control"
-                               type="number"
-                               step="1"/>
-                    </div>
-                    <div class="form-group"
-                         *ngIf="question.questionType == 'matrix' || question.questionType == 'likert'">
-                        <label for="answerType">Answer type</label>
-                        <select id="answerType"
-                                required
-                                name="answerType"
-                                class="form-control"
-                                [(ngModel)]="question.matrixType">
-                            <option value="" disabled selected> -- select answer type --</option>
-                            <option *ngFor="let item of answerFieldTypes" [value]="item.value">{{item.label}}</option>
-                        </select>
-                    </div>
-                    <tim-question-matrix *ngIf="question.questionType" [qctrl]="this"></tim-question-matrix>
-                    <div class="checkbox">
-                        <label><input type="checkbox" [(ngModel)]="qst" name="documentQuestion"/> Lecture
-                            question</label>
-                    </div>
-                    <div class="form-group form-horz-flex"
-                         *ngIf="!qst">
-                        <label for="answerLimit">Answer limit</label>
-                        <input [(ngModel)]="pluginMarkup.answerLimit"
-                               id="answerLimit"
-                               name="answerLimit"
-                               class="form-control"
-                               placeholder="Maximum number of allowed answer attempts"
-                               type="number"
-                               min="1"
-                               step="1"/>
-                    </div>
-                    <div class="form-horz-flex" *ngIf="qst">
-                        <label>
-                            Duration
-                        </label>
-                        <tim-duration-picker [(amount)]="ui.durationAmount"
-                                             [(type)]="ui.durationType"></tim-duration-picker>
-                    </div>
-                </form>
-                <bootstrap-panel title="Preview">
-                    <tim-answer-sheet [questiondata]="previewParams"></tim-answer-sheet>
-                </bootstrap-panel>
-                <tim-alert *ngIf="customError">{{ customError }}</tim-alert>
+              <form #f (keydown)="formKeyDown($event)">
+                <div class="form-group form-horz-flex" timErrorState>
+                  <label for="question">Question text</label>
+                  <textarea class="form-control" required name="question" id="question"
+                    [(ngModel)]="question.questionText"
+                  (ngModelChange)="changeQuestionTitle(question.questionText)"></textarea>
+                  <tim-error-message></tim-error-message>
+                </div>
+                <div class="form-group form-horz-flex" timErrorState>
+                  <label for="title">
+                  Question title</label>
+                  <input class="form-control"
+                    required name="title" id="title" type="text" [(ngModel)]="question.questionTitle"
+                    (focus)="titleFocused($event)"
+                    (ngModelChange)="titleIsChanged()"/>
+                  <tim-error-message></tim-error-message>
+                </div>
+                <div class="form-group form-horz-flex">
+                  <label for="qtype">Question type</label>
+                  <select class="form-control"
+                    name="type"
+                    id="qtype"
+                    [(ngModel)]="question.questionType"
+                    required
+                    (ngModelChange)="createMatrix(question.questionType)">
+                    <option value="" disabled selected> -- select question type --</option>
+                    <option value="radio-vertical">Multiple choice (radio button)</option>
+                    <option value="checkbox-vertical">Multiple choice (checkbox)</option>
+                    <option value="true-false">True/False</option>
+                    <option value="matrix">Many rows and columns</option>
+                    <option value="likert">5 choices likert scale</option>
+                    <option value="textarea">One text area</option>
+                  </select>
+                </div>
+                <label for="defaultPoints">Default points for answers</label>
+                <input [(ngModel)]="defaultPoints"
+                  id="defaultPoints"
+                  name="defaultPoints"
+                  class="form-control"
+                  placeholder="Default point value for fields"
+                  type="number"
+                  step="0.1"/>
+                <label> Randomize rows <input type="checkbox"
+                  name="randomization"
+                [(ngModel)]="randomization"/></label>
+                @if (randomization) {
+                  <div class="form-group">
+                    Number of rows to select (in addition to locked rows)
+                    <input [(ngModel)]="randomizedRows"
+                      id="randomizedRows"
+                      name="randomizedRows"
+                      class="form-control"
+                      type="number"
+                      step="1"/>
+                  </div>
+                }
+                @if (question.questionType == 'matrix' || question.questionType == 'likert') {
+                  <div class="form-group"
+                    >
+                    <label for="answerType">Answer type</label>
+                    <select id="answerType"
+                      required
+                      name="answerType"
+                      class="form-control"
+                      [(ngModel)]="question.matrixType">
+                      <option value="" disabled selected> -- select answer type --</option>
+                      @for (item of answerFieldTypes; track item) {
+                        <option [value]="item.value">{{item.label}}</option>
+                      }
+                    </select>
+                  </div>
+                }
+                @if (question.questionType) {
+                  <tim-question-matrix [qctrl]="this"></tim-question-matrix>
+                }
+                <div class="checkbox">
+                  <label><input type="checkbox" [(ngModel)]="qst" name="documentQuestion"/> Lecture
+                  question</label>
+                </div>
+                @if (!qst) {
+                  <div class="form-group form-horz-flex"
+                    >
+                    <label for="answerLimit">Answer limit</label>
+                    <input [(ngModel)]="pluginMarkup.answerLimit"
+                      id="answerLimit"
+                      name="answerLimit"
+                      class="form-control"
+                      placeholder="Maximum number of allowed answer attempts"
+                      type="number"
+                      min="1"
+                      step="1"/>
+                  </div>
+                }
+                @if (qst) {
+                  <div class="form-horz-flex">
+                    <label>
+                      Duration
+                    </label>
+                    <tim-duration-picker [(amount)]="ui.durationAmount"
+                    [(type)]="ui.durationType"></tim-duration-picker>
+                  </div>
+                }
+              </form>
+              <bootstrap-panel title="Preview">
+                <tim-answer-sheet [questiondata]="previewParams"></tim-answer-sheet>
+              </bootstrap-panel>
+              @if (customError) {
+                <tim-alert>{{ customError }}</tim-alert>
+              }
             </ng-container>
             <ng-container footer>
-                <button *ngIf="!isNew()"
-                        class="btn btn-danger"
-                        (click)="deleteQuestion()">Delete</button>
-                <button class="timButton saveButton" (click)="createQuestion(false)" title="Ctrl-S">Save</button>
-                <button class="timButton" (click)="dismiss()">Cancel</button>
+              @if (!isNew()) {
+                <button
+                  class="btn btn-danger"
+                (click)="deleteQuestion()">Delete</button>
+              }
+              <button class="timButton saveButton" (click)="createQuestion(false)" title="Ctrl-S">Save</button>
+              <button class="timButton" (click)="dismiss()">Cancel</button>
             </ng-container>
-        </tim-dialog-frame>
-        <tim-dialog-frame *ngIf="isAskedQuestion()">
+          </tim-dialog-frame>
+        }
+        @if (isAskedQuestion()) {
+          <tim-dialog-frame>
             <ng-container header>
-                {{ getTitle() }}
+              {{ getTitle() }}
             </ng-container>
             <ng-container body>
-                <form>
-                    <h5 [innerHtml]="question.questionText"></h5>
-                    <div *ngIf="question.questionType">
-                        <tim-question-matrix [qctrl]="this"></tim-question-matrix>
-                    </div>
-                    <tim-alert *ngIf="customError">{{ customError }}</tim-alert>
-                </form>
+              <form>
+                <h5 [innerHtml]="question.questionText"></h5>
+                @if (question.questionType) {
+                  <div>
+                    <tim-question-matrix [qctrl]="this"></tim-question-matrix>
+                  </div>
+                }
+                @if (customError) {
+                  <tim-alert>{{ customError }}</tim-alert>
+                }
+              </form>
             </ng-container>
             <ng-container footer>
-                <button class="timButton" (click)="createQuestion(false)" title="Ctrl-S">Save</button>
-                <button class="timButton" (click)="dismiss()">Cancel</button>
+              <button class="timButton" (click)="createQuestion(false)" title="Ctrl-S">Save</button>
+              <button class="timButton" (click)="dismiss()">Cancel</button>
             </ng-container>
-        </tim-dialog-frame>
-    `,
+          </tim-dialog-frame>
+        }
+        `,
     standalone: false,
 })
 export class QuestionEditDialogComponent extends AngularDialogComponent<

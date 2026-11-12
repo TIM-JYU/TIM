@@ -4263,321 +4263,471 @@ ${fhtml}
     template: `
         <!--suppress TypeScriptUnresolvedVariable -->
         <div [ngClass]="{'csRunDiv': borders}" [class.cs-has-header]="header" class="type-{{rtype}} cs-flex"
-             [ngStyle]="csRunDivStyle">
-            <tim-markup-error class="csMarkupError" *ngIf="markupError" [data]="markupError"></tim-markup-error>
-            <h4 class="csHeader" *ngIf="header" [innerHTML]="header | purify"></h4>
-            <div class="csAllSelector" *ngIf="isAll">
-                <div>
-                    <ng-container i18n>language</ng-container>
-                    <select [(ngModel)]="selectedLanguage" required (ngModelChange)="languageChange()">
-                        <option *ngFor="let o of progLanguages" [value]="o">{{ o }}</option>
-                    </select>
-                </div>
+          [ngStyle]="csRunDivStyle">
+          @if (markupError) {
+            <tim-markup-error class="csMarkupError" [data]="markupError"></tim-markup-error>
+          }
+          @if (header) {
+            <h4 class="csHeader" [innerHTML]="header | purify"></h4>
+          }
+          @if (isAll) {
+            <div class="csAllSelector">
+              <div>
+                <ng-container i18n>language</ng-container>
+                <select [(ngModel)]="selectedLanguage" required (ngModelChange)="languageChange()">
+                  @for (o of progLanguages; track o) {
+                    <option [value]="o">{{ o }}</option>
+                  }
+                </select>
+              </div>
             </div>
-            <p *ngIf="stem" class="stem" [innerHTML]="stem | purify"
-               (keydown)="elementSelectAll($event)" tabindex="0"></p>
-            <div class="csTaunoContent" *ngIf="isTauno">
-                <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()" i18n>hide Tauno</a></p>
-                <iframe *ngIf="iframesettings"
-                        [id]="iframesettings.id"
-                        class="showTauno"
-                        [src]="iframesettings.src"
-                        (load)="onIframeLoad($event)"
-                        [width]="iframesettings.width"
-                        [height]="iframesettings.height"
-                        sandbox="allow-scripts"></iframe>
-                <p *ngIf="!taunoOn" class="pluginShow"><a (click)="showTauno()" i18n>show Tauno</a></p>
-                <p *ngIf="taunoOn" class="pluginHide">
-                    <a (click)="copyTauno()" i18n>copy from Tauno</a> |
-                    <a (click)="hideTauno()" i18n>hide Tauno</a></p>
-                <p *ngIf="taunoOn" class="taunoOhje" i18n>Copy the code you made by Tauno by pressing the link "copy from Tauno". Then press Run button. Note that the running code may have different code than in Tauno!</p>
-            </div>
-            <div class="csSimcirContent" *ngIf="isSimcir">
-                <p *ngIf="simcirOn" class="pluginHide"><a (click)="hideSimcir()" i18n>hide SimCir</a></p>
+          }
+          @if (stem) {
+            <p class="stem" [innerHTML]="stem | purify"
+            (keydown)="elementSelectAll($event)" tabindex="0"></p>
+          }
+          @if (isTauno) {
+            <div class="csTaunoContent">
+              @if (taunoOn) {
+                <p class="pluginHide"><a (click)="hideTauno()" i18n>hide Tauno</a></p>
+              }
+              @if (iframesettings) {
+                <iframe
+                  [id]="iframesettings.id"
+                  class="showTauno"
+                  [src]="iframesettings.src"
+                  (load)="onIframeLoad($event)"
+                  [width]="iframesettings.width"
+                  [height]="iframesettings.height"
+                sandbox="allow-scripts"></iframe>
+              }
+              @if (!taunoOn) {
+                <p class="pluginShow"><a (click)="showTauno()" i18n>show Tauno</a></p>
+              }
+              @if (taunoOn) {
+                <p class="pluginHide">
+                  <a (click)="copyTauno()" i18n>copy from Tauno</a> |
+                  <a (click)="hideTauno()" i18n>hide Tauno</a></p>
+                }
+                @if (taunoOn) {
+                  <p class="taunoOhje" i18n>Copy the code you made by Tauno by pressing the link "copy from Tauno". Then press Run button. Note that the running code may have different code than in Tauno!</p>
+                }
+              </div>
+            }
+            @if (isSimcir) {
+              <div class="csSimcirContent">
+                @if (simcirOn) {
+                  <p class="pluginHide"><a (click)="hideSimcir()" i18n>hide SimCir</a></p>
+                }
                 <div class="simcirContainer"><p></p></div>
-                <p *ngIf="!simcirOn" class="pluginShow"><a (click)="showSimcir()" i18n>show SimCir</a></p>
-                <p *ngIf="simcirOn && !noeditor" class="pluginHide">
+                @if (!simcirOn) {
+                  <p class="pluginShow"><a (click)="showSimcir()" i18n>show SimCir</a></p>
+                }
+                @if (simcirOn && !noeditor) {
+                  <p class="pluginHide">
                     <a (click)="copyFromSimcir()" i18n>copy from SimCir</a>
                     | <a (click)="copyToSimcir()" i18n>copy to SimCir</a> | <a (click)="hideSimcir()" i18n>hide SimCir</a>
-                </p>
-            </div>
-            <div class="csUploadContent" *ngIf="upload && !this.formulaEditor">
+                  </p>
+                }
+              </div>
+            }
+            @if (upload && !this.formulaEditor) {
+              <div class="csUploadContent">
                 <file-select-manager class="small"
-                                     [dragAndDrop]="dragAndDrop"
-                                     [uploadUrl]="uploadUrl"
-                                     [stem]="uploadstem"
-                                     (file)="onFileLoad($event)"
-                                     (upload)="onUploadResponse($event)"
-                                     (uploadDone)="onUploadDone($event)">
+                  [dragAndDrop]="dragAndDrop"
+                  [uploadUrl]="uploadUrl"
+                  [stem]="uploadstem"
+                  (file)="onFileLoad($event)"
+                  (upload)="onUploadResponse($event)"
+                  (uploadDone)="onUploadDone($event)">
                 </file-select-manager>
                 <div [hidden]="formulaEditor" class="form-inline small">
-                    <span *ngFor="let item of uploadedFiles">
-                        <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
+                  @for (item of uploadedFiles; track item) {
+                    <span>
+                      <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
                     </span>
+                  }
                 </div>
-            </div>
-            <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{ code }}</pre>
-
+              </div>
+            }
+            @if (viewCode && codeover) {
+              <pre class="csViewCodeOver">{{ code }}</pre>
+            }
+        
             <div class="csRunCode">
-                <div *ngIf="formulaEditor && editor">
-                    <cs-formula-editor
-                        #formulaEditorComponent
-                        (okClose)="toggleFormulaEditor($event)"
-                        (cancelClose)="toggleFormulaEditor($event)"
-                        (toggle)="toggleFormulaEditor()"
-                        [visible]="formulaEditorOpen"
-                        [editor]="editor"
-                        [currentSymbol]="currentSymbol"
-                        [templateButtons]="templateButtons">
-                        <file-select-manager class="small"
-                                             [dragAndDrop]="dragAndDrop"
-                                             [uploadUrl]="uploadUrl"
-                                             [stem]="uploadstem"
-                                             (file)="onFileLoad($event)"
-                                             (upload)="onUploadResponse($event)"
-                                             (uploadDone)="onUploadDone($event)">
-                        </file-select-manager>
-                    </cs-formula-editor>
+              @if (formulaEditor && editor) {
+                <div>
+                  <cs-formula-editor
+                    #formulaEditorComponent
+                    (okClose)="toggleFormulaEditor($event)"
+                    (cancelClose)="toggleFormulaEditor($event)"
+                    (toggle)="toggleFormulaEditor()"
+                    [visible]="formulaEditorOpen"
+                    [editor]="editor"
+                    [currentSymbol]="currentSymbol"
+                    [templateButtons]="templateButtons">
+                    <file-select-manager class="small"
+                      [dragAndDrop]="dragAndDrop"
+                      [uploadUrl]="uploadUrl"
+                      [stem]="uploadstem"
+                      (file)="onFileLoad($event)"
+                      (upload)="onUploadResponse($event)"
+                      (uploadDone)="onUploadDone($event)">
+                    </file-select-manager>
+                  </cs-formula-editor>
                 </div>
-                <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{ precode }}</pre>
-                <div class="csEditorAreaDiv" [hidden]="formulaEditor && formulaEditorOpen">
-                    <cs-editor #mainEditor *ngIf="!noeditor || viewCode" class="csrunEditorDiv"
-                               [base]="byCode"
-                               [minRows]="rows"
-                               [maxRows]="maxrows"
-                               [wrap]="wrap"
-                               [modes]="editorModes"
-                               [editorIndex]="editorMode"
-                               [parsonsOptions]="parsons"
-                               (close)="onFileClose($event)"
-                               (content)="onContentChange($event)"
-                               [spellcheck]="spellcheck"
-                               [allowContextMenu]="allowContextMenu"
-                               [aceOptions]="aceOptions">
-                    </cs-editor>
-                    <div class="csRunChanged" *ngIf="runChanged && !hide.changed"></div>
-                    <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
-                </div>
-                <pre class="csRunPost" *ngIf="viewCode && !codeunder && !codeover">{{ postcode }}</pre>
+              }
+              @if (viewCode && !codeunder && !codeover) {
+                <pre class="csRunPre">{{ precode }}</pre>
+              }
+              <div class="csEditorAreaDiv" [hidden]="formulaEditor && formulaEditorOpen">
+                @if (!noeditor || viewCode) {
+                  <cs-editor #mainEditor class="csrunEditorDiv"
+                    [base]="byCode"
+                    [minRows]="rows"
+                    [maxRows]="maxrows"
+                    [wrap]="wrap"
+                    [modes]="editorModes"
+                    [editorIndex]="editorMode"
+                    [parsonsOptions]="parsons"
+                    (close)="onFileClose($event)"
+                    (content)="onContentChange($event)"
+                    [spellcheck]="spellcheck"
+                    [allowContextMenu]="allowContextMenu"
+                    [aceOptions]="aceOptions">
+                  </cs-editor>
+                }
+                @if (runChanged && !hide.changed) {
+                  <div class="csRunChanged"></div>
+                }
+                @if (isUnSaved()) {
+                  <div class="csRunNotSaved"></div>
+                }
+              </div>
+              @if (viewCode && !codeunder && !codeover) {
+                <pre class="csRunPost">{{ postcode }}</pre>
+              }
             </div>
-            <div *ngIf="isSage" class="computeSage no-popup-menu"></div>
-            <div class="csInputDiv" *ngIf="showInput && isInput">
-                <p *ngIf="inputstem" class="stem">{{ inputstem }}</p>
+            @if (isSage) {
+              <div class="computeSage no-popup-menu"></div>
+            }
+            @if (showInput && isInput) {
+              <div class="csInputDiv">
+                @if (inputstem) {
+                  <p class="stem">{{ inputstem }}</p>
+                }
                 <div class="csRunCode">
-            <textarea class="csRunArea csInputArea"
-                      [rows]="inputrows"
-                      [(ngModel)]="userinput"
-                      [placeholder]="inputplaceholder">
-            </textarea>
+                  <textarea class="csRunArea csInputArea"
+                    [rows]="inputrows"
+                    [(ngModel)]="userinput"
+                    [placeholder]="inputplaceholder">
+                  </textarea>
                 </div>
+              </div>
+            }
+            @if (showArgs &&!markup['noargs'] && isInput) {
+              <div class="csArgsDiv"><label>{{ argsstem }} </label>
+              <span><input type="text"
+                class="csArgsArea"
+                [(ngModel)]="userargs"
+              [placeholder]="argsplaceholder"></span>
             </div>
-            <div class="csArgsDiv" *ngIf="showArgs &&!markup['noargs'] && isInput"><label>{{ argsstem }} </label>
-                <span><input type="text"
-                             class="csArgsArea"
-                             [(ngModel)]="userargs"
-                             [placeholder]="argsplaceholder"></span>
-            </div>
-            <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
+          }
+          @if (count) {
+            <cs-count-board class="csRunCode" [options]="count"></cs-count-board>
+          }
+          @if (templateButtonsCount && !noeditor) {
             <div #runSnippets class="csRunSnippets" [hidden]="formulaEditor && formulaEditorOpen"
-                 *ngIf="templateButtonsCount && !noeditor">
+              >
+              @for (item of templateButtons | symbols; track item) {
                 <button [class.math]="item.hasMath" class="btn btn-default"
-                        *ngFor="let item of templateButtons | symbols"
-                        (click)="addText(item)" [attr.title]="item.expl" [attr.aria-label]="item.expl"
-                        [innerHTML]="item.text | purify"></button>
+                  (click)="addText(item)" [attr.title]="item.expl" [attr.aria-label]="item.expl"
+                [innerHTML]="item.text | purify"></button>
+              }
             </div>
-            <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
-                       [maxRows]="maxrows"
-                       [disabled]="true">
+          }
+          @if (externalFiles && externalFiles.length) {
+            <cs-editor #externalEditor class="csrunEditorDiv"
+              [maxRows]="maxrows"
+              [disabled]="true">
             </cs-editor>
-            <div class="csRunMenuArea" *ngIf="!forcedupload && !markup['norunmenu']"
-                 [hidden]="formulaEditor && formulaEditorOpen">
-                <p class="csRunMenu">
-                    <button *ngIf="isRun && buttonText()"
-                            [disabled]="isRunning || preventSave || (disableUnchanged && !isUnSaved() && isText)"
-                            class="timButton btn-sm"
-                            title="(Ctrl-S)"
-                            (click)="runCode()"
-                            [innerHTML]="buttonText()"></button>
-                    &nbsp;
-                    <ng-container *ngIf="invalidMarker">&nbsp;</ng-container>
-                    <span *ngIf="invalidMarker" [tooltip]="poptemplate" placement="bottom"
-                          class="glyphicon glyphicon-lock text-warning"></span>
-                    <ng-template #poptemplate>
-                        <div *ngFor="let ttip of invalidMarkerTooltip">
-                            <span [innerText]="ttip"></span>
-                        </div>
-                    </ng-template>
-                    <ng-container *ngIf="invalidMarker">&nbsp;</ng-container>
-                    
-                    <button *ngIf="mdSaveButton" [disabled]="!mdHtml" class="timButton btn-sm"
-                            (click)="exportMDAsImg()">{{ mdSaveButton }}
-                    </button>
-                    <tim-loading *ngIf="mdSaveButton && exportingMD"></tim-loading>
-                    &nbsp;
-                    <button *ngIf="isExternalFetch"
-                            [disabled]="isRunning"
-                            class="timButton btn-sm"
-                            (click)="fetchExternalFiles()"
-                            i18n>Fetch</button>
-                    <a href="#" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
-                       (click)="tryResetChanges($event)"> &nbsp;{{ undoButton }}</a>
-                    &nbsp;&nbsp;
-                    <span *ngIf="savedText"
-                          class="savedText"
-                          [innerHTML]="savedText"></span>
-                    &nbsp;&nbsp;
-                    <button *ngIf="isTest"
-                            [disabled]="isRunning"
-                            (click)="runTest()"
-                            class="timButton btn-sm"
-                            [innerHTML]="testText">
-                    </button>
-                    &nbsp;&nbsp;
-                    <button *ngIf="isUnitTest"
-                            class="timButton btn-sm"
-                            [disabled]="isRunning"
-                            (click)="runUnitTest()">UTest
-                    </button>
-                    <tim-loading *ngIf="isRunning"></tim-loading>
-                    <span class="runningText" *ngIf="isRunning && runningText">{{ runningText }}</span>
-                    &nbsp;&nbsp;
-                    <span *ngIf="isDocument">
-                <a href="#" [ngClass]="{'link-disable': isRunning}"
-                   (click)="runDocument(); $event.preventDefault()">{{ docLink }}</a>&nbsp;&nbsp;
-            </span>
-                    <a href="#" *ngIf="!nocode && (file || program)"
-                       (click)="showCode(); $event.preventDefault()">{{ showCodeLink }}</a>&nbsp;&nbsp;
-                    <a href="#" *ngIf="canReset"
-                       (click)="initCode(true); $event.preventDefault()">{{ resetText }} </a>
-                    <a href="#" *ngIf="toggleEditor"
-                       (click)="hideShowEditor(); $event.preventDefault()">{{ toggleEditorText[noeditor ? 0 : 1] }}</a>
-                    <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"
-                       (click)="editor.showOtherEditor(); $event.preventDefault()">
-                        {{ editor.nextModeText }}
-                    </a>&nbsp;&nbsp;
-                    <a href="#" *ngIf="copyLink"
-                       (click)="copyCode(); $event.preventDefault()">{{ copyLink }}</a>
-                    <span *ngIf="showRuntime"
-                          class="inputSmall"
-                          style="float: right;"
-                          title="Run time in sec {{runtime}}">{{ oneruntime }}</span>
-                    <span *ngIf="editor && wrap && wrap.n!=-1 && !hide.wrap && editor.mode < 2" class="inputSmall"
-                          style="float: right;"
-                          title="Put 0 to no wrap">
-                <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()"
-                        style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
-                </button>
-                &nbsp;
-                <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto"
-                       style="position: relative;top: 0.3em;" />
-                &nbsp;
-                <input type="text" title="Choose linelength for text.  0=no wrap" pattern="[0-9]*" [(ngModel)]="wrap.n"
-                       size="2" />
-            </span>
-                    <span *ngIf="connectionErrorMessage" class="error" style="font-size: 12px"
-                          [innerHTML]="connectionErrorMessage"></span>
-
+          }
+          @if (!forcedupload && !markup['norunmenu']) {
+            <div class="csRunMenuArea"
+              [hidden]="formulaEditor && formulaEditorOpen">
+              <p class="csRunMenu">
+                @if (isRun && buttonText()) {
+                  <button
+                    [disabled]="isRunning || preventSave || (disableUnchanged && !isUnSaved() && isText)"
+                    class="timButton btn-sm"
+                    title="(Ctrl-S)"
+                    (click)="runCode()"
+                  [innerHTML]="buttonText()"></button>
+                }
+                <ng-container> &nbsp; </ng-container>
+                @if (invalidMarker) {&nbsp;}
+                @if (invalidMarker) {
+                  <span [tooltip]="poptemplate" placement="bottom"
+                  class="glyphicon glyphicon-lock text-warning"></span>
+                }
+                <ng-template #poptemplate>
+                  @for (ttip of invalidMarkerTooltip; track ttip) {
+                    <div>
+                      <span [innerText]="ttip"></span>
+                    </div>
+                  }
+                </ng-template>
+                @if (invalidMarker) {&nbsp;}
+                @if (mdSaveButton) {
+                  <button [disabled]="!mdHtml" class="timButton btn-sm"
+                    (click)="exportMDAsImg()">{{ mdSaveButton }}
+                  </button>
+                }
+                @if (mdSaveButton && exportingMD) {
+                  <tim-loading></tim-loading>
+                }
+                <ng-container> &nbsp; </ng-container>
+                @if (isExternalFetch) {
+                  <button
+                    [disabled]="isRunning"
+                    class="timButton btn-sm"
+                    (click)="fetchExternalFiles()"
+                  i18n>Fetch</button>
+                }
+                @if (undoButton && isUnSaved()) {
+                  <a href="#" [title]="undoTitle"
+                  (click)="tryResetChanges($event)"> &nbsp;{{ undoButton }}</a>
+                }
+                <ng-container> &nbsp;&nbsp; </ng-container>
+                @if (savedText) {
+                  <span
+                    class="savedText"
+                  [innerHTML]="savedText"></span>
+                }
+                <ng-container> &nbsp;&nbsp; </ng-container>
+                @if (isTest) {
+                  <button
+                    [disabled]="isRunning"
+                    (click)="runTest()"
+                    class="timButton btn-sm"
+                    [innerHTML]="testText">
+                  </button>
+                }
+                <ng-container> &nbsp;&nbsp; </ng-container>
+                @if (isUnitTest) {
+                  <button
+                    class="timButton btn-sm"
+                    [disabled]="isRunning"
+                    (click)="runUnitTest()">UTest
+                  </button>
+                }
+                @if (isRunning) {
+                  <tim-loading></tim-loading>
+                }
+                @if (isRunning && runningText) {
+                  <span class="runningText">{{ runningText }}</span>
+                }
+                <ng-container> &nbsp;&nbsp; </ng-container>
+                @if (isDocument) {
+                  <span>
+                    <a href="#" [ngClass]="{'link-disable': isRunning}"
+                    (click)="runDocument(); $event.preventDefault()">{{ docLink }}</a>&nbsp;&nbsp;
+                  </span>
+                }
+                @if (!nocode && (file || program)) {
+                  <a href="#"
+                  (click)="showCode(); $event.preventDefault()">{{ showCodeLink }}</a>
+                  }<ng-container>&nbsp;&nbsp; </ng-container>
+                  @if (canReset) {
+                    <a href="#"
+                    (click)="initCode(true); $event.preventDefault()">{{ resetText }} </a>
+                  }
+                  @if (toggleEditor) {
+                    <a href="#"
+                    (click)="hideShowEditor(); $event.preventDefault()">{{ toggleEditorText[noeditor ? 0 : 1] }}</a>
+                  }
+                  @if (!noeditor && editor && editor.nextModeText) {
+                    <a href="#"
+                      (click)="editor.showOtherEditor(); $event.preventDefault()">
+                      {{ editor.nextModeText }}
+                    </a>
+                    }<ng-container>&nbsp;&nbsp; </ng-container>
+                    @if (copyLink) {
+                      <a href="#"
+                      (click)="copyCode(); $event.preventDefault()">{{ copyLink }}</a>
+                    }
+                    @if (showRuntime) {
+                      <span
+                        class="inputSmall"
+                        style="float: right;"
+                      title="Run time in sec {{runtime}}">{{ oneruntime }}</span>
+                    }
+                    @if (editor && wrap && wrap.n!=-1 && !hide.wrap && editor.mode < 2) {
+                      <span class="inputSmall"
+                        style="float: right;"
+                        title="Put 0 to no wrap">
+                        <button class="timButton" title="Click to reformat text for given line length" (click)="editor.doWrap()"
+                          style="font-size: x-small; height: 1.7em; padding: 1px; margin-top: -4px;">Wrap
+                        </button>
+                        &nbsp;
+                        <input type="checkbox" title="Check for automatic wrapping" [(ngModel)]="wrap.auto"
+                          style="position: relative;top: 0.3em;" />
+                        &nbsp;
+                        <input type="text" title="Choose linelength for text.  0=no wrap" pattern="[0-9]*" [(ngModel)]="wrap.n"
+                          size="2" />
+                      </span>
+                    }
+                    @if (connectionErrorMessage) {
+                      <span class="error" style="font-size: 12px"
+                      [innerHTML]="connectionErrorMessage"></span>
+                    }
                     <!--
                     <span *ngIf="wrap.n!=-1" class="inputSmall" style="float: right;">
                       <label title="Put 0 to no wrap">wrap: <input type="text"
-                                                                  pattern="[0-9]*"
-                                                                  [(ngModel)]="wrap.n"
-                                                                  size="1"/></label>
+                        pattern="[0-9]*"
+                        [(ngModel)]="wrap.n"
+                      size="1"/></label>
                     </span>
                     -->
-                </p>
-
-            </div>
-            <div *ngIf="isSage" class="outputSage no-popup-menu"></div>
-            <pre class="csViewCodeUnder" *ngIf="viewCode && codeunder">{{ code }}</pre>
-            <p class="unitTestGreen" *ngIf="runTestGreen">&nbsp;ok</p>
-            <pre class="unitTestRed" *ngIf="runTestRed">{{ comtestError }}</pre>
-            <div class="csRunErrorClass csRunError" *ngIf="runError">
-                <p class="pull-right" *ngIf="!markup['noclose']">
-                    <label class="normalLabel" title="Keep errors until next run">Keep <input type="checkbox"></label>
-                    <tim-close-button (click)="closeError()"></tim-close-button>
-                </p>
-                <a class="copyErrorLink" *ngIf="markup.copyErrorLink"
-                   (click)="copyString(error, $event)"
-                   title="Copy text to clipboard"
-                >{{ markup.copyErrorLink }}</a>
-                <pre class="csRunError" (keydown)="elementSelectAll($event)" tabindex="0">{{ error }}</pre>
-                <p class="pull-right" *ngIf="!markup['noclose']" style="margin-top: -1em">
-                    <tim-close-button (click)="closeError()"></tim-close-button>
-                </p>
-            </div>
-            <div class="csRunErrorClass csFetchError" *ngIf="fetchError">
-                <p class="pull-right" *ngIf="!markup['noclose']">
-                    <tim-close-button (click)="fetchError=undefined"></tim-close-button>
-                </p>
-                <a class="copyErrorLink" *ngIf="markup.copyErrorLink"
-                   (click)="copyString(fetchError, $event)"
-                   title="Copy text to clipboard"
-                   aria-label="Copy text to clipboard"
-                >{{ markup.copyErrorLink }}</a>
-                <pre class="csRunError" (keydown)="elementSelectAll($event)" tabindex="0">{{ fetchError }}</pre>
-                <p class="pull-right" *ngIf="!markup['noclose']" style="margin-top: -1em">
-                    <tim-close-button (click)="fetchError=undefined"></tim-close-button>
-                </p>
-            </div>
-            <div class="consoleDiv" [class.soft-hidden]="!result">
-                <a class="copyConsoleLink" *ngIf="markup.copyConsoleLink"
-                   (click)="copyString(result, $event)"
-                   title="Copy console text to clipboard"
-                   aria-label="Copy console text to clipboard"
-                >{{ markup.copyConsoleLink }}</a>
+                  </p>
+                </div>
+              }
+              @if (isSage) {
+                <div class="outputSage no-popup-menu"></div>
+              }
+              @if (viewCode && codeunder) {
+                <pre class="csViewCodeUnder">{{ code }}</pre>
+              }
+              @if (runTestGreen) {
+                <p class="unitTestGreen">&nbsp;ok</p>
+              }
+              @if (runTestRed) {
+                <pre class="unitTestRed">{{ comtestError }}</pre>
+              }
+              @if (runError) {
+                <div class="csRunErrorClass csRunError">
+                  @if (!markup['noclose']) {
+                    <p class="pull-right">
+                      <label class="normalLabel" title="Keep errors until next run">Keep <input type="checkbox"></label>
+                      <tim-close-button (click)="closeError()"></tim-close-button>
+                    </p>
+                  }
+                  @if (markup.copyErrorLink) {
+                    <a class="copyErrorLink"
+                      (click)="copyString(error, $event)"
+                      title="Copy text to clipboard"
+                    >{{ markup.copyErrorLink }}</a>
+                  }
+                  <pre class="csRunError" (keydown)="elementSelectAll($event)" tabindex="0">{{ error }}</pre>
+                  @if (!markup['noclose']) {
+                    <p class="pull-right" style="margin-top: -1em">
+                      <tim-close-button (click)="closeError()"></tim-close-button>
+                    </p>
+                  }
+                </div>
+              }
+              @if (fetchError) {
+                <div class="csRunErrorClass csFetchError">
+                  @if (!markup['noclose']) {
+                    <p class="pull-right">
+                      <tim-close-button (click)="fetchError=undefined"></tim-close-button>
+                    </p>
+                  }
+                  @if (markup.copyErrorLink) {
+                    <a class="copyErrorLink"
+                      (click)="copyString(fetchError, $event)"
+                      title="Copy text to clipboard"
+                      aria-label="Copy text to clipboard"
+                    >{{ markup.copyErrorLink }}</a>
+                  }
+                  <pre class="csRunError" (keydown)="elementSelectAll($event)" tabindex="0">{{ fetchError }}</pre>
+                  @if (!markup['noclose']) {
+                    <p class="pull-right" style="margin-top: -1em">
+                      <tim-close-button (click)="fetchError=undefined"></tim-close-button>
+                    </p>
+                  }
+                </div>
+              }
+              <div class="consoleDiv" [class.soft-hidden]="!result">
+                @if (markup.copyConsoleLink) {
+                  <a class="copyConsoleLink"
+                    (click)="copyString(result, $event)"
+                    title="Copy console text to clipboard"
+                    aria-label="Copy console text to clipboard"
+                  >{{ markup.copyConsoleLink }}</a>
+                }
                 <pre id="resultConsole" class="console" (keydown)="elementSelectAll($event)"
-                     tabindex="0" aria-live="assertive">{{ result }}</pre>
-            </div>
-            <div class="htmlresult" *ngIf="htmlresult"><span [innerHTML]="htmlresult | purify"
-                                                             aria-live="polite"></span></div>
-            <div #csrunPreview class="csrunPreview" [class.csrun-clicking]="formulaEditor"
-                 (keydown)="elementSelectAll($event)"
-                 tabindex="0" aria-live="polite"
-                 (dblclick)="handleSelectFormulaFromPreview($event, preview)" #preview>
-                <div *ngIf="iframesettings && !isTauno"
-                     tim-draggable-fixed
-                     caption="Preview"
-                     detachable="true"
-                     class="no-popup-menu">
-                    <span class="csRunMenu" *ngIf="!markup['noclose']">
+                tabindex="0" aria-live="assertive">{{ result }}</pre>
+              </div>
+              @if (htmlresult) {
+                <div class="htmlresult"><span [innerHTML]="htmlresult | purify"
+                aria-live="polite"></span></div>
+              }
+              <div #csrunPreview class="csrunPreview" [class.csrun-clicking]="formulaEditor"
+                (keydown)="elementSelectAll($event)"
+                tabindex="0" aria-live="polite"
+                (dblclick)="handleSelectFormulaFromPreview($event, preview)" #preview>
+                @if (iframesettings && !isTauno) {
+                  <div
+                    tim-draggable-fixed
+                    caption="Preview"
+                    detachable="true"
+                    class="no-popup-menu">
+                    @if (!markup['noclose']) {
+                      <span class="csRunMenu">
                         <tim-close-button
-                            (click)="closeFrame()"
-                            style="float: right">
+                          (click)="closeFrame()"
+                          style="float: right">
                         </tim-close-button>
-                    </span>
+                      </span>
+                    }
                     <iframe [id]="iframesettings.id"
-                            class="jsCanvas"
-                            [src]="iframesettings.src"
-                            (load)="onIframeLoad($event)"
-                            [width]="iframesettings.width"
-                            [height]="iframesettings.height"
-                            sandbox="allow-scripts allow-forms"
-                            style="border:0">
+                      class="jsCanvas"
+                      [src]="iframesettings.src"
+                      (load)="onIframeLoad($event)"
+                      [width]="iframesettings.width"
+                      [height]="iframesettings.height"
+                      sandbox="allow-scripts allow-forms"
+                      style="border:0">
                     </iframe>
-                </div>
-                <div class="csMDHTML" #mdHtmlDiv *ngIf="mdHtml" [innerHTML]="mdHtml | purify" aria-live="polite">
-                </div>
-            </div>
-            <tim-graph-viz class="csGraphViz" *ngIf="isViz" [vizcmd]="fullCode" [jsparams]="jsparams"></tim-graph-viz>
-            <tim-variables class="csVariables" *ngIf="isVars" [code]="fullCode"
-                           [jsparams]="jsparams"
-                           [height]="height"
-            ></tim-variables> <!-- TODO: why direct markup.jsparam does not work -->
-            <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt="" />
-            <video class="csVideo" *ngIf="videoURL" [src]="videoURL" type="video/mp4" style="width: 100%;" controls=""
-                   autoplay></video>
-            <video class="csAudio" *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true"
-                   width="300"
-                   height="40"></video>
-            <div *ngIf="docURL" class="docurl">
-                <p class="pull-right">
-                    <tim-close-button (click)="closeDocument()"></tim-close-button>
-                </p>
-                <iframe width="800" height="600" [src]="docURL" target="csdocument" allowfullscreen></iframe>
-            </div>
-            <p class="footer" [innerHTML]="footer | purify"></p>
-        </div>`,
+                  </div>
+                }
+                @if (mdHtml) {
+                  <div class="csMDHTML" #mdHtmlDiv [innerHTML]="mdHtml | purify" aria-live="polite">
+                  </div>
+                }
+              </div>
+              @if (isViz) {
+                <tim-graph-viz class="csGraphViz" [vizcmd]="fullCode" [jsparams]="jsparams"></tim-graph-viz>
+              }
+              @if (isVars) {
+                <tim-variables class="csVariables" [code]="fullCode"
+                  [jsparams]="jsparams"
+                  [height]="height"
+                ></tim-variables>
+                } <!-- TODO: why direct markup.jsparam does not work -->
+                @if (imgURL) {
+                  <img class="grconsole" [src]="imgURL" alt="" />
+                }
+                @if (videoURL) {
+                  <video class="csVideo" [src]="videoURL" type="video/mp4" style="width: 100%;" controls=""
+                  autoplay></video>
+                }
+                @if (wavURL) {
+                  <video class="csAudio" [src]="wavURL" type="video/mp4" controls="" autoplay="true"
+                    width="300"
+                  height="40"></video>
+                }
+                @if (docURL) {
+                  <div class="docurl">
+                    <p class="pull-right">
+                      <tim-close-button (click)="closeDocument()"></tim-close-button>
+                    </p>
+                    <iframe width="800" height="600" [src]="docURL" target="csdocument" allowfullscreen></iframe>
+                  </div>
+                }
+                <p class="footer" [innerHTML]="footer | purify"></p>
+              </div>`,
     styleUrls: ["./csPlugin.scss"],
     standalone: false,
 })

@@ -22,6 +22,7 @@ import {
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {TooltipIsOpenDirective} from "tim/ui/tooltip-is-open.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -69,47 +70,69 @@ const DropdownAll = t.intersection([
     selector: "tim-dropdown-runner",
     template: `
 <div>
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-    <p class="stem" *ngIf="stem">{{stem}}</p>
-    <div class="form-inline">
-        <div class="dropdown-radio" *ngIf="radio">
-            <label *ngFor="let item of wordList">
-                <input type="radio"
-                          name="selection"
-                          value="{{item}}"
-                          [(ngModel)]="selectedWord"
-                          [disabled]="attrsall['preview']"
-                          (ngModelChange)="updateSelection()">
-                {{getItemText(item)}}
-            </label>        
-        </div>
-        <select *ngIf="!radio"
-                [(ngModel)]="selectedWord"
-                (ngModelChange)="updateSelection()"
-                [ngClass]="{warnFrame: isUnSaved(), alertFrame: saveFailed}"
-                [disabled]="attrsall['preview'] || readonly"
-                [ngStyle]="styles"
-                [tooltip]="connectionErrorMessage"
-                [isOpen]="connectionErrorMessage !== undefined"
+  @if (markupError) {
+    <tim-markup-error [data]="markupError"></tim-markup-error>
+  }
+  @if (header) {
+    <h4 [innerHtml]="header | purify"></h4>
+  }
+  @if (stem) {
+    <p class="stem">{{stem}}</p>
+  }
+  <div class="form-inline">
+    @if (radio) {
+      <div class="dropdown-radio">
+        @for (item of wordList; track item) {
+          <label>
+            <input type="radio"
+              name="selection"
+              value="{{item}}"
+              [(ngModel)]="selectedWord"
+              [disabled]="attrsall['preview']"
+              (ngModelChange)="updateSelection()">
+            {{getItemText(item)}}
+          </label>
+        }
+      </div>
+    }
+    @if (!radio) {
+      <select
+        [(ngModel)]="selectedWord"
+        (ngModelChange)="updateSelection()"
+        [ngClass]="{warnFrame: isUnSaved(), alertFrame: saveFailed}"
+        [disabled]="attrsall['preview'] || readonly"
+        [ngStyle]="styles"
+        [tooltip]="connectionErrorMessage"
+        [isOpen]="connectionErrorMessage !== undefined"
         >
-            <option *ngFor="let item of wordList" [value]="item">{{getItemText(item)}}</option>
-        </select>
-        <button class="timButton"
-                *ngIf="!hasButton() && saveFailed"
-                (click)="save()">
-            {{buttonText()}}
-        </button>
-    </div>
-    <div *ngIf="connectionErrorMessage && hasButton()" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
-    <div class="error" *ngIf="error" [innerHtml]="error"></div>
-        <button class="timButton"
-            *ngIf="hasButton()"
-            [disabled]="(disableUnchanged && !isUnSaved()) || readonly || attrsall['preview']"
-            (click)="save()">
+        @for (item of wordList; track item) {
+          <option [value]="item">{{getItemText(item)}}</option>
+        }
+      </select>
+    }
+    @if (!hasButton() && saveFailed) {
+      <button class="timButton"
+        (click)="save()">
         {{buttonText()}}
+      </button>
+    }
+  </div>
+  @if (connectionErrorMessage && hasButton()) {
+    <div class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
+  }
+  @if (error) {
+    <div class="error" [innerHtml]="error"></div>
+  }
+  @if (hasButton()) {
+    <button class="timButton"
+      [disabled]="(disableUnchanged && !isUnSaved()) || readonly || attrsall['preview']"
+      (click)="save()">
+      {{buttonText()}}
     </button>
-    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
+  }
+  @if (footer) {
+    <p [innerHtml]="footer | purify" class="plgfooter"></p>
+  }
 </div>`,
     styleUrls: ["./dropdown-plugin.component.scss"],
     standalone: false,
@@ -374,7 +397,8 @@ export class DropdownPluginComponent
         CommonModule,
         TimUtilityModule,
         FormsModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
+        TooltipIsOpenDirective,
         PurifyModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],

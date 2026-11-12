@@ -27,79 +27,91 @@ import {HttpClient} from "@angular/common/http";
     selector: "tim-user-menu",
     template: `
         <div class="btn-group" dropdown container="body">
-            <button type="button" [title]="buttonTitle"
-                    class="btn btn-primary dropdown-toggle user-button" dropdownToggle>
-                <span class="user-name">
-                    <ng-container *ngIf="accessTypePrefix">{{accessTypePrefix}}:</ng-container>
-                    {{ getCurrentUser().real_name }}
-                    <ng-container i18n
-                                  *ngIf="numSession() > 0">and {numSession(), plural, =1 {one other} other {{{numSession()}} others}}</ng-container>
-                </span>
-                &nbsp;<span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu"
-                *dropdownMenu
-                role="menu"
-                aria-labelledby="single-button">
-                <ng-container *ngIf="!hideOptions.userMenuOptions">
-                    <li role="menuitem"><a
-                            href="/view/{{ getCurrentUser().folder!.path }}" i18n>My documents</a></li>
-                    <li role="menuitem"><a
-                            href="/settings" i18n>My TIM settings</a></li>
-
+          <button type="button" [title]="buttonTitle"
+            class="btn btn-primary dropdown-toggle user-button" dropdownToggle>
+            <span class="user-name">
+              @if (accessTypePrefix) {
+                {{accessTypePrefix}}:
+              }
+              {{ getCurrentUser().real_name }}
+              @if (numSession() > 0) {
+                <ng-container i18n
+                >and {numSession(), plural, =1 {one other} other {{{numSession()}} others}}</ng-container>
+              }
+            </span>
+            &nbsp;<span class="caret"></span>
+          </button>
+          <ul class="dropdown-menu"
+            *dropdownMenu
+            role="menu"
+            aria-labelledby="single-button">
+            @if (!hideOptions.userMenuOptions) {
+              <li role="menuitem"><a
+              href="/view/{{ getCurrentUser().folder!.path }}" i18n>My documents</a></li>
+              <li role="menuitem"><a
+              href="/settings" i18n>My TIM settings</a></li>
+              <li role="menuitem">
+                <a (click)="addUser()" role="button">
+                  <ng-container i18n>Add a user to this session</ng-container>...
+                </a>
+              </li>
+              <li role="menuitem" dropdown #dropdown="bs-dropdown"  placement="right" container="body">
+                <a (mouseenter)="dropdown.show()" (click)="$event.stopPropagation()" class="dropdown-item dropdown-toggle">
+                  <ng-container i18n>Lock access</ng-container>
+                  <span class="caret caret-right"></span>
+                </a>
+                <ul *dropdownMenu class="dropdown-menu access-selector" role="menu">
+                  @for (access of lockableAccesses; track access) {
                     <li role="menuitem">
-                        <a (click)="addUser()" role="button">
-                            <ng-container i18n>Add a user to this session</ng-container>...
-                        </a>
+                      <a class="dropdown-item" (click)="lockAccess(access)">
+                        <span>{{accessTypeDisplayNames[access]}}</span>
+                        <i class="glyphicon glyphicon-ok"
+                        [class.lazyHidden]="currentLockedAccess != access"></i>
+                      </a>
                     </li>
-
-                    <li role="menuitem" dropdown #dropdown="bs-dropdown"  placement="right" container="body">
-                        <a (mouseenter)="dropdown.show()" (click)="$event.stopPropagation()" class="dropdown-item dropdown-toggle">
-                            <ng-container i18n>Lock access</ng-container>
-                            <span class="caret caret-right"></span>
-                        </a>
-                        <ul *dropdownMenu class="dropdown-menu access-selector" role="menu">
-                            <li role="menuitem" *ngFor="let access of lockableAccesses">
-                                <a class="dropdown-item" (click)="lockAccess(access)">
-                                    <span>{{accessTypeDisplayNames[access]}}</span>
-                                    <i class="glyphicon glyphicon-ok"
-                                       [class.lazyHidden]="currentLockedAccess != access"></i>
-                                </a>
-                            </li>
-                            <li class="divider"></li>
-                            <li role="menuitem">
-                                <a class="dropdown-item" (click)="lockAccess(null)" i18n>Disable</a>
-                            </li>
-                        </ul>
-                    </li>
-                    
-                    <li role="menuitem">
-                        <a (click)="openGroupDialog()" i18n>Change active groups</a>
-                    </li>
-                    
-                    <li role="menuitem" *ngIf="isAdmin() || restoreContextUser">
-                        <a (click)="beginQuickLogin()" i18n>Admin: Switch user</a>
-                    </li>
-
-                    <li class="divider"></li>
-                </ng-container>
-                <li *ngIf="!isLoggingOut" role="menuitem">
-                    <a (click)="beginLogout($event)" role="button">
-                        <ng-container *ngIf="restoreContextUser; else normalContext">
-                            <ng-container i18n>Switch to '{{ restoreContextUser }}'</ng-container>
-                        </ng-container>
-                        <ng-template #normalContext [ngSwitch]="numSession() > 0">
-                            <ng-container *ngSwitchCase="true" i18n>Log everyone out</ng-container>
-                            <ng-container *ngSwitchCase="false" i18n>Log out</ng-container>    
-                        </ng-template>
-                    </a>
+                  }
+                  <li class="divider"></li>
+                  <li role="menuitem">
+                    <a class="dropdown-item" (click)="lockAccess(null)" i18n>Disable</a>
+                  </li>
+                </ul>
+              </li>
+              <li role="menuitem">
+                <a (click)="openGroupDialog()" i18n>Change active groups</a>
+              </li>
+              @if (isAdmin() || restoreContextUser) {
+                <li role="menuitem">
+                  <a (click)="beginQuickLogin()" i18n>Admin: Switch user</a>
                 </li>
-                <li role="menuitem" *ngFor="let u of getSessionUsers()">
-                    <a (click)="logout(u)" role="button" i18n>Log {{ u.real_name }} out</a>
-                </li>
-            </ul>
+              }
+              <li class="divider"></li>
+            }
+            @if (!isLoggingOut) {
+              <li role="menuitem">
+                <a (click)="beginLogout($event)" role="button">
+                  @if (restoreContextUser) {
+                    <ng-container i18n>Switch to '{{ restoreContextUser }}'</ng-container>
+                  } @else {
+                    @switch (numSession() > 0) {
+                      @case (true) {
+                        <ng-container i18n>Log everyone out</ng-container>
+                      }
+                      @case (false) {
+                        <ng-container i18n>Log out</ng-container>
+                      }
+                    }
+                  }
+                </a>
+              </li>
+            }
+            @for (u of getSessionUsers(); track u) {
+              <li role="menuitem">
+                <a (click)="logout(u)" role="button" i18n>Log {{ u.real_name }} out</a>
+              </li>
+            }
+          </ul>
         </div>
-    `,
+        `,
     styleUrls: ["./user-menu.component.scss"],
     standalone: false,
 })

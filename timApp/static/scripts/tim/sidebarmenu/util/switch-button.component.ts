@@ -6,23 +6,23 @@ import * as t from "io-ts";
     selector: "tim-switch-button",
     template: `
         <!-- Button layout when the switch is ON -->
-        <ng-container *ngIf="isOn === true">
-            <button i18n-title title="Align to the center"
+        @if (isOn === true) {
+          <button i18n-title title="Align to the center"
                     class="btn btn-default btn-sm pull-left
                     glyphicon glyphicon-align-center"
-                    (click)="onValueChanged()">
-            </button>
-        </ng-container>
+            (click)="onValueChanged()">
+          </button>
+        }
         
         <!-- Button layout when the switch is OFF -->
-        <ng-container *ngIf="isOn === false">
-            <button i18n-title title="Align to the left"
+        @if (isOn === false) {
+          <button i18n-title title="Align to the left"
                     class="btn btn-default btn-sm pull-left 
                     glyphicon glyphicon-align-left"
-                    (click)="onValueChanged()">
-            </button>
-        </ng-container>
-    `,
+            (click)="onValueChanged()">
+          </button>
+        }
+        `,
     styleUrls: ["./switch-button.component.scss"],
     standalone: false,
 })

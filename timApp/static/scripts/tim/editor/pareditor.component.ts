@@ -2995,21 +2995,23 @@ const MacroParams = t.tuple([
     preserveWhitespaces: true,
     template: `
 <div class="btn-group" dropdown>
-    <button type="button" class="editorButton" dropdownToggle>
-        {{ data.title }} <span class="caret"></span>
-    </button>
-    <ul class="dropdown-menu"
-        *dropdownMenu
-        role="menu">
-        <li *ngFor="let item of data.items" role="menuitem">
-            <a [title]="item.title"
-               href="#"
-               (click)="item.func($event); $event.preventDefault()"
-               [innerHTML]="item.name | purify"></a>
-        </li>
-    </ul>
+  <button type="button" class="editorButton" dropdownToggle>
+    {{ data.title }} <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu"
+    *dropdownMenu
+    role="menu">
+    @for (item of data.items; track item) {
+      <li role="menuitem">
+        <a [title]="item.title"
+          href="#"
+          (click)="item.func($event); $event.preventDefault()"
+        [innerHTML]="item.name | purify"></a>
+      </li>
+    }
+  </ul>
 </div>
-    `,
+`,
     standalone: false,
 })
 export class EditorMenuComponent {
@@ -3024,16 +3026,20 @@ export class EditorMenuComponent {
     preserveWhitespaces: true,
     template: `
 <div>
-    <button *ngIf="!menu"
-            type="button"
-            class="editorButton"
-            [title]="item.title"
-            (click)="item.func($event); $event.preventDefault()"
-            [innerHTML]="item.name | purify">
+  @if (!menu) {
+    <button
+      type="button"
+      class="editorButton"
+      [title]="item.title"
+      (click)="item.func($event); $event.preventDefault()"
+      [innerHTML]="item.name | purify">
     </button>
-    <tim-editor-menu *ngIf="menu" [data]="menu"></tim-editor-menu>
+  }
+  @if (menu) {
+    <tim-editor-menu [data]="menu"></tim-editor-menu>
+  }
 </div>
-    `,
+`,
     standalone: false,
 })
 export class EditorEntryComponent {
@@ -3141,8 +3147,8 @@ export class PareditorDialogComponent implements AfterViewInit {
         PurifyModule,
         DraggableModule,
         EditorModule,
-        TabsModule.forRoot(),
-        BsDropdownModule.forRoot(),
+        TabsModule,
+        BsDropdownModule,
     ],
 })
 export class PareditorModule {}

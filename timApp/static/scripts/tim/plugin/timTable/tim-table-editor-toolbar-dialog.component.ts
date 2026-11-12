@@ -66,162 +66,198 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
     selector: "tim-table-editor-toolbar-dialog",
     template: `
         <tim-dialog-frame class="overflow-visible">
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                
-                <!-- Reusable template for toolbar items -->
-                <ng-template #toolbarItems let-items>
-                    <ng-container *ngFor="let r of items">
-                        <li role="menuitem"
-                            *ngIf="!r.hide"
-                            [ngClass]="getCellClassForToolbarMenuItem(r)"
-                            [ngStyle]="getCellStyleForToolbar(r)"
-                            (click)="applyTemplate(r)"
-                            [title]="getTitleForToolbar(r)">
-                            <a>{{ getCellForToolbar(r) }}</a>
-                        </li>
-                    </ng-container>
-                </ng-template>
-                
-                
-                <div class="row">
-                    <div class="col-xs-12" style="top: -0.8em;">
-                        <div class="btn-group" role="menuitem" dropdown *ngIf="showEditMenu">
-                            <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Edit <span
-                                    class="caret"></span></button>
-                            <ul class="dropdown-menu" *dropdownMenu>
-                                <li role="menuitem" (click)="edit('selectAll')"><a>Select all</a></li>
-                                <li role="menuitem" (click)="edit('copy')"><a>Copy selection</a></li>
-                                <li role="menuitem" (click)="edit('paste')" *ngIf="canPaste"><a>Paste</a></li>
-                                <li role="menuitem" (click)="edit('undo')"><a>Undo</a></li>
-                                <li role="menuitem" (click)="removeRow()" *ngIf="showDelRowMenu"><a>Remove row</a></li>
-                                <li role="menuitem" (click)="removeColumn()" *ngIf="showDelColMenu"><a>Remove column</a></li>
-                                <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: getReadyMenuEntries('Edit')}"></ng-container>
-                            </ul>
-                        </div>
-                        &ngsp;
-                        <div class="btn-group" role="menuitem" dropdown *ngIf="canInsertCells">
-                            <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Insert <span
-                                    class="caret"></span></button>
-                            <ul class="dropdown-menu" *dropdownMenu>
-                                <li role="menuitem" (click)="addRow(0)" *ngIf="showAddRowMenuAbove"><a>Row above</a></li>
-                                <li role="menuitem" (click)="addRow(1)" *ngIf="showAddRowMenuBelow"><a>Row below</a></li>
-                                <li role="menuitem" (click)="addColumn(0)" *ngIf="showAddColMenuLeft"><a>Column to the left</a></li>
-                                <li role="menuitem" (click)="addColumn(1)" *ngIf="showAddColMenuRight"><a>Column to the right</a></li>
-                                <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: getReadyMenuEntries('Insert')}"></ng-container>
-                            </ul>
-                        </div>
-                        &ngsp;
-                        <div class="btn-group" role="menuitem" dropdown *ngIf="showFilterMenu">
-                            <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Filter <span
-                                    class="caret"></span></button>
-                            <ul class="dropdown-menu" *dropdownMenu>
-                                <li role="menuitem" (click)="filter('copy')"><a>Copy filters</a></li>
-                                <li role="menuitem" (click)="filter('paste')"><a>Paste filters</a></li>
-                                <li role="menuitem" (click)="filter('clear')"><a>Clear filters</a></li>
-                                <li role="menuitem" (click)="filter('addrow')" *ngIf="canAddFilterRow"><a>Add filter row</a></li>
-                                <li role="menuitem" (click)="filter('removerow')"><a>Remove last filter row</a></li>
-                                <li role="menuitem" (click)="filter('addtemplate')"><a>Add filters to toolbar</a></li>
-                                <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: getReadyMenuEntries('Filter')}"></ng-container>
-                            </ul>
-                        </div>
-                        
-                        <!-- User menus -->
-                        <ng-container *ngFor="let m of this.activeTable?.menubarUserItems">
-                            &ngsp;
-                            <div class="btn-group" role="menuitem" dropdown *ngIf="showFilterMenu">
-                                <button class="timButton btn-xs dropdown-toggle" dropdownToggle>{{ m.menuName }} <span
-                                        class="caret"></span></button>
-                                <ul class="dropdown-menu" *dropdownMenu>
-                                     <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: m.entries}"></ng-container>
-                                </ul>
-                            </div>
-                        </ng-container>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+        
+            <!-- Reusable template for toolbar items -->
+            <ng-template #toolbarItems let-items>
+              @for (r of items; track r) {
+                @if (!r.hide) {
+                  <li role="menuitem"
+                    [ngClass]="getCellClassForToolbarMenuItem(r)"
+                    [ngStyle]="getCellStyleForToolbar(r)"
+                    (click)="applyTemplate(r)"
+                    [title]="getTitleForToolbar(r)">
+                    <a>{{ getCellForToolbar(r) }}</a>
+                  </li>
+                }
+              }
+            </ng-template>
+        
+        
+            <div class="row">
+              <div class="col-xs-12" style="top: -0.8em;">
+                @if (showEditMenu) {
+                  <div class="btn-group" role="menuitem" dropdown>
+                    <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Edit <span
+                    class="caret"></span></button>
+                    <ul class="dropdown-menu" *dropdownMenu>
+                      <li role="menuitem" (click)="edit('selectAll')"><a>Select all</a></li>
+                      <li role="menuitem" (click)="edit('copy')"><a>Copy selection</a></li>
+                      @if (canPaste) {
+                        <li role="menuitem" (click)="edit('paste')"><a>Paste</a></li>
+                      }
+                      <li role="menuitem" (click)="edit('undo')"><a>Undo</a></li>
+                      @if (showDelRowMenu) {
+                        <li role="menuitem" (click)="removeRow()"><a>Remove row</a></li>
+                      }
+                      @if (showDelColMenu) {
+                        <li role="menuitem" (click)="removeColumn()"><a>Remove column</a></li>
+                      }
+                      <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: getReadyMenuEntries('Edit')}"></ng-container>
+                    </ul>
+                  </div>
+                }
+                <ng-container> &ngsp; </ng-container>
+                @if (canInsertCells) {
+                  <div class="btn-group" role="menuitem" dropdown>
+                    <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Insert <span
+                    class="caret"></span></button>
+                    <ul class="dropdown-menu" *dropdownMenu>
+                      @if (showAddRowMenuAbove) {
+                        <li role="menuitem" (click)="addRow(0)"><a>Row above</a></li>
+                      }
+                      @if (showAddRowMenuBelow) {
+                        <li role="menuitem" (click)="addRow(1)"><a>Row below</a></li>
+                      }
+                      @if (showAddColMenuLeft) {
+                        <li role="menuitem" (click)="addColumn(0)"><a>Column to the left</a></li>
+                      }
+                      @if (showAddColMenuRight) {
+                        <li role="menuitem" (click)="addColumn(1)"><a>Column to the right</a></li>
+                      }
+                      <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: getReadyMenuEntries('Insert')}"></ng-container>
+                    </ul>
+                  </div>
+                }
+                <ng-container> &ngsp; </ng-container>
+                @if (showFilterMenu) {
+                  <div class="btn-group" role="menuitem" dropdown>
+                    <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Filter <span
+                    class="caret"></span></button>
+                    <ul class="dropdown-menu" *dropdownMenu>
+                      <li role="menuitem" (click)="filter('copy')"><a>Copy filters</a></li>
+                      <li role="menuitem" (click)="filter('paste')"><a>Paste filters</a></li>
+                      <li role="menuitem" (click)="filter('clear')"><a>Clear filters</a></li>
+                      @if (canAddFilterRow) {
+                        <li role="menuitem" (click)="filter('addrow')"><a>Add filter row</a></li>
+                      }
+                      <li role="menuitem" (click)="filter('removerow')"><a>Remove last filter row</a></li>
+                      <li role="menuitem" (click)="filter('addtemplate')"><a>Add filters to toolbar</a></li>
+                      <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: getReadyMenuEntries('Filter')}"></ng-container>
+                    </ul>
+                  </div>
+                }
+        
+                <!-- User menus -->
+                @for (m of this.activeTable?.menubarUserItems; track m) {
+                  &ngsp;
+                  @if (showFilterMenu) {
+                    <div class="btn-group" role="menuitem" dropdown>
+                      <button class="timButton btn-xs dropdown-toggle" dropdownToggle>{{ m.menuName }} <span
+                      class="caret"></span></button>
+                      <ul class="dropdown-menu" *dropdownMenu>
+                        <ng-container *ngTemplateOutlet="toolbarItems; context: {$implicit: m.entries}"></ng-container>
+                      </ul>
                     </div>
-                </div>
-                <div class="row timTableToolbarRow">
-                    <div class="col-xs-12 form-inline">
-                        <input [(ngModel)]="cellBackgroundColor"
-                               (change)="onColorChange(asInput($event.target).value)"
-                               type="color"
-                               *ngIf="!hide?.colorPicker"
-                               class="form-control input-xs"
-                               style="width: 70px;">
-                        &ngsp;
-                        <button class="timButton btn-xs"
-                                *ngIf="!hide?.colorPicker"
-                                (click)="applyBackgroundColor()">Apply color
-                        </button>
-                        &ngsp;
-                        <button class="timButton btn-xs"
-                                *ngIf="!hide?.alignLeft"
-                                title="Align left"
-                                (click)="setTextAlign('left')">
-                            <i class="glyphicon glyphicon-align-left"></i>
-                        </button>
-                        &ngsp;
-                        <button class="timButton btn-xs"
-                                *ngIf="!hide?.alignCenter"
-                                title="Align center"
-                                (click)="setTextAlign('center')">
-                            <i class="glyphicon glyphicon-align-center"></i>
-                        </button>
-                        &ngsp;
-                        <button class="timButton btn-xs"
-                                *ngIf="!hide?.alignRight"
-                                title="Align right"
-                                (click)="setTextAlign('right')">
-                            <i class="glyphicon glyphicon-align-right"></i>
-                        </button>
-                        &ngsp;
-                        <button class="timButton btn-xs"
-                                *ngIf="!hide?.changeTable"
-                                title="Change cell to table area"
-                                (click)="changeCellToTableArea()">
-                            <i class="glyphicon glyphicon-th"></i>
-                        </button>
-                        &ngsp;
-                        <ng-container *ngFor="let r of activeTable?.data?.toolbarTemplates">
-                            <button class="btn-xs"
-                                    *ngIf="!r.hide && !r.menu"
-                                    [ngClass]="getCellClassForToolbar(r)"
-                                    [ngStyle]="getCellStyleForToolbar(r)"
-                                    (click)="applyTemplate(r)"
-                                    [title]="getTitleForToolbar(r)">
-                                {{ getCellForToolbar(r) }}
-                                <i [ngClass]="getIClassForToolbar(r)"></i>
-                            </button>
-                            &ngsp;
-                        </ng-container>
-                        <button class="timButton btn-xs"
-                                *ngIf="!hide?.addToTemplates"
-                                title="Add current cell(s) to templates"
-                                (click)="addToTemplates(false)"
-                                (pointerdown)="addToTemplates(true)">
-                            <i class="glyphicon glyphicon-star-empty"></i>
-                        </button>
-                        &ngsp;
-                        <button class="timButton btn-xs"
-                                *ngIf="!hide?.clearFormat"
-                                title="Clear format"
-                                (click)="clearFormat()">
-                            <i class="glyphicon glyphicon-trash"></i>
-                        </button>
-                        &ngsp;
-                        <button *ngIf="!hide?.changePin"
-                                class="timButton btn-xs"
-                                [class.btn-toggled]="pinToggled()"
-                                title="Pin area corner"
-                                (click)="changePin()">
-                            <i class="glyphicon glyphicon-pushpin"></i>
-                        </button>
-                    </div>
-                </div>
-            </ng-container>
+                  }
+                }
+              </div>
+            </div>
+            <div class="row timTableToolbarRow">
+              <div class="col-xs-12 form-inline">
+                @if (!hide?.colorPicker) {
+                  <input [(ngModel)]="cellBackgroundColor"
+                    (change)="onColorChange(asInput($event.target).value)"
+                    type="color"
+                    class="form-control input-xs"
+                    style="width: 70px;">
+                }
+                <ng-container> &ngsp; </ng-container>
+                @if (!hide?.colorPicker) {
+                  <button class="timButton btn-xs"
+                    (click)="applyBackgroundColor()">Apply color
+                  </button>
+                }
+                <ng-container> &ngsp; </ng-container>
+                @if (!hide?.alignLeft) {
+                  <button class="timButton btn-xs"
+                    title="Align left"
+                    (click)="setTextAlign('left')">
+                    <i class="glyphicon glyphicon-align-left"></i>
+                  </button>
+                }
+                <ng-container> &ngsp; </ng-container>
+                @if (!hide?.alignCenter) {
+                  <button class="timButton btn-xs"
+                    title="Align center"
+                    (click)="setTextAlign('center')">
+                    <i class="glyphicon glyphicon-align-center"></i>
+                  </button>
+                }
+                <ng-container> &ngsp; </ng-container>
+                @if (!hide?.alignRight) {
+                  <button class="timButton btn-xs"
+                    title="Align right"
+                    (click)="setTextAlign('right')">
+                    <i class="glyphicon glyphicon-align-right"></i>
+                  </button>
+                }
+                <ng-container> &ngsp; </ng-container>
+                @if (!hide?.changeTable) {
+                  <button class="timButton btn-xs"
+                    title="Change cell to table area"
+                    (click)="changeCellToTableArea()">
+                    <i class="glyphicon glyphicon-th"></i>
+                  </button>
+                }
+                <ng-container> &ngsp; </ng-container>
+                @for (r of activeTable?.data?.toolbarTemplates; track r) {
+                  @if (!r.hide && !r.menu) {
+                    <button class="btn-xs"
+                      [ngClass]="getCellClassForToolbar(r)"
+                      [ngStyle]="getCellStyleForToolbar(r)"
+                      (click)="applyTemplate(r)"
+                      [title]="getTitleForToolbar(r)">
+                      {{ getCellForToolbar(r) }}
+                      <i [ngClass]="getIClassForToolbar(r)"></i>
+                    </button>
+                  }
+                  <ng-container> &ngsp; </ng-container>
+                }
+                @if (!hide?.addToTemplates) {
+                  <button class="timButton btn-xs"
+                    title="Add current cell(s) to templates"
+                    (click)="addToTemplates(false)"
+                    (pointerdown)="addToTemplates(true)">
+                    <i class="glyphicon glyphicon-star-empty"></i>
+                  </button>
+                }
+                <ng-container> &ngsp; </ng-container>
+                @if (!hide?.clearFormat) {
+                  <button class="timButton btn-xs"
+                    title="Clear format"
+                    (click)="clearFormat()">
+                    <i class="glyphicon glyphicon-trash"></i>
+                  </button>
+                }
+                <ng-container> &ngsp; </ng-container>
+                @if (!hide?.changePin) {
+                  <button
+                    class="timButton btn-xs"
+                    [class.btn-toggled]="pinToggled()"
+                    title="Pin area corner"
+                    (click)="changePin()">
+                    <i class="glyphicon glyphicon-pushpin"></i>
+                  </button>
+                }
+              </div>
+            </div>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent<
@@ -647,7 +683,7 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
         FormsModule,
         TimUtilityModule,
         DialogModule,
-        BsDropdownModule.forRoot(),
+        BsDropdownModule,
     ],
 })
 export class TimTableEditorToolbarDialogModule {}

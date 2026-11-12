@@ -54,132 +54,142 @@ function isLecture(item: unknown): item is ILecture {
     selector: "tim-lecture-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
-                {{ getTitle() }}
-            </ng-container>
-            <ng-container body>
-                <form #form="ngForm" (keydown)="handleKey($event)">
-                    <div class="form-group form-horz-flex" timErrorState>
-                        <label for="lCode">Lecture name</label>
-                        <input type="text" class="form-control" name="code" id="lCode" required
-                               [(ngModel)]="lectureCode">
-                        <tim-error-message></tim-error-message>
-                    </div>
-                    <div class="form-group form-horz-flex">
-                        <label for="lPassword">Access code</label>
-                        <input class="form-control" id="lPassword" type="text" name="password" [(ngModel)]="password"
-                               placeholder="Optional"/>
-                    </div>
-                    <div class="form-group form-horz-flex" timErrorState>
-                        <label for="maxStudents">Max number of students</label>
-                        <input class="form-control" max="999" min="0" id="maxStudents" type="number" name="max_students"
-                               [(ngModel)]="options.max_students" placeholder="Optional"/>
-                        <tim-error-message></tim-error-message>
-                    </div>
-                    <div class="form-group form-horz-flex">
-                        <label for="startTime" class="control-label">Starting time</label>
-                        <tim-datetime-picker id="startTime" [(time)]="startTime"></tim-datetime-picker>
-                    </div>
-                    <tim-alert severity="warning" *ngIf="startingBeforeNow()">Lecture start time is set in the past.
-                    </tim-alert>
-                    <div class="checkbox" *ngIf="showEarlyJoin">
-                        <label><input type="checkbox" name="earlyJoining"
-                                      [(ngModel)]="earlyJoining">
-                            Allow students to join 15 minutes prior to the start of the lecture.</label>
-                    </div>
-                    <div class="form-group form-horz-flex">
-                        <label>
-                            <input type="radio" name="useDate" (ngModelChange)="enableDate2()"
-                                   [(ngModel)]="useDate" [value]="true"/>
-                            Ending time
-                        </label>
-                        <tim-datetime-picker *ngIf="useDate" [(time)]="endTime"></tim-datetime-picker>
-                    </div>
-
-                    <div class="form-horz-flex">
-                        <label>
-                            <input type="radio" name="duration"
-                                   [(ngModel)]="useDate" [value]="false"/>
-                            Duration
-                        </label>
-                        <tim-duration-picker [disabled]="useDate"
-                                             [required]="!useDate"
-                                             [(amount)]="durationAmount"
-                                             [(type)]="durationType"></tim-duration-picker>
-                    </div>
-                    <tim-alert *ngIf="lectureTooShort()">Lecture must last at least two minutes.</tim-alert>
-                    <tim-alert severity="warning" *ngIf="endingBeforeNow()">Lecture end time is set in the past.
-                    </tim-alert>
-                    <div class="form-group">
-                        <label for="lLink">Direct link to join lecture:</label>
-                        <input class="form-control" (focus)="selectText($event)"
-                               readonly id="lLink" type="text"
-                               [value]="getJoinLectureLink()"/>
-                    </div>
-                    <div class="form-group">
-                        <label for="lLink2">Link to automatically join lectures for this document:</label>
-                        <input class="form-control" (focus)="selectText($event)"
-                               readonly id="lLink2" type="text"
-                               [value]="getAutoJoinLink()"/>
-                    </div>
-                    <accordion>
-                        <accordion-group [(isOpen)]="advancedOpen">
-                            <div accordion-heading>
-                                Advanced settings
-                                <i class="pull-right glyphicon"
-                                   [ngClass]="{'glyphicon-chevron-down': advancedOpen, 'glyphicon-chevron-right': !advancedOpen}"></i>
-                            </div>
-                            <div class="form-inline">
-                                <label>Student poll interval: <input id="poll_interval"
-                                                                     type="text"
-                                                                     name="poll_interval"
-                                                                     maxlength="3"
-                                                                     class="form-control"
-                                                                     size="3"
-                                                                     [(ngModel)]="options.poll_interval"
-                                                                     pattern="[0-9]*"> s</label>&ngsp;
-                                <div class="checkbox"><label><input id="long_poll" type="checkbox" name="long_poll"
-                                                                    [(ngModel)]="options.long_poll"> Use long
-                                    polling</label></div>
-                            </div>
-                            <div class="form-inline">
-                                <label>Teacher poll interval: <input id="poll_interval_t"
-                                                                     type="text"
-                                                                     name="poll_interval_t"
-                                                                     maxlength="3" size="3"
-                                                                     class="form-control"
-                                                                     [(ngModel)]="options.poll_interval_t"
-                                                                     pattern="[0-9]*"> s</label>&ngsp;
-                                <div class="checkbox"><label><input id="long_poll_t" type="checkbox" name="long_poll_t"
-                                                                    [(ngModel)]="options.long_poll_t"> Use long
-                                    polling</label></div>
-                            </div>
-                            <div class="form-group">
-                                <label for="teacher_poll">Use teacher poll for</label>
-                                <input id="teacher_poll"
-                                       type="text"
-                                       name="teacher_poll"
-                                       maxlength="40"
-                                       class="form-control"
-                                       size="40"
-                                       placeholder="List of usernames to get same poll rate as teacher, separate by ;"
-                                       [(ngModel)]="options.teacher_poll">
-                            </div>
-                        </accordion-group>
-                    </accordion>
-                </form>
-            </ng-container>
-            <ng-container footer>
-                <button class="timButton"
-                        (click)="submitLecture()"
-                        [disabled]="!form.valid || submittingLecture">{{creatingNew() ? 'Create' : 'Update'}}
-                </button>
-                <button class="timButton"
-                        (click)="dismiss()">Cancel
-                </button>
-            </ng-container>
+          <ng-container header>
+            {{ getTitle() }}
+          </ng-container>
+          <ng-container body>
+            <form #form="ngForm" (keydown)="handleKey($event)">
+              <div class="form-group form-horz-flex" timErrorState>
+                <label for="lCode">Lecture name</label>
+                <input type="text" class="form-control" name="code" id="lCode" required
+                  [(ngModel)]="lectureCode">
+                <tim-error-message></tim-error-message>
+              </div>
+              <div class="form-group form-horz-flex">
+                <label for="lPassword">Access code</label>
+                <input class="form-control" id="lPassword" type="text" name="password" [(ngModel)]="password"
+                  placeholder="Optional"/>
+              </div>
+              <div class="form-group form-horz-flex" timErrorState>
+                <label for="maxStudents">Max number of students</label>
+                <input class="form-control" max="999" min="0" id="maxStudents" type="number" name="max_students"
+                  [(ngModel)]="options.max_students" placeholder="Optional"/>
+                <tim-error-message></tim-error-message>
+              </div>
+              <div class="form-group form-horz-flex">
+                <label for="startTime" class="control-label">Starting time</label>
+                <tim-datetime-picker id="startTime" [(time)]="startTime"></tim-datetime-picker>
+              </div>
+              @if (startingBeforeNow()) {
+                <tim-alert severity="warning">Lecture start time is set in the past.
+                </tim-alert>
+              }
+              @if (showEarlyJoin) {
+                <div class="checkbox">
+                  <label><input type="checkbox" name="earlyJoining"
+                    [(ngModel)]="earlyJoining">
+                  Allow students to join 15 minutes prior to the start of the lecture.</label>
+                </div>
+              }
+              <div class="form-group form-horz-flex">
+                <label>
+                  <input type="radio" name="useDate" (ngModelChange)="enableDate2()"
+                    [(ngModel)]="useDate" [value]="true"/>
+                  Ending time
+                </label>
+                @if (useDate) {
+                  <tim-datetime-picker [(time)]="endTime"></tim-datetime-picker>
+                }
+              </div>
+        
+              <div class="form-horz-flex">
+                <label>
+                  <input type="radio" name="duration"
+                    [(ngModel)]="useDate" [value]="false"/>
+                  Duration
+                </label>
+                <tim-duration-picker [disabled]="useDate"
+                  [required]="!useDate"
+                  [(amount)]="durationAmount"
+                [(type)]="durationType"></tim-duration-picker>
+              </div>
+              @if (lectureTooShort()) {
+                <tim-alert>Lecture must last at least two minutes.</tim-alert>
+              }
+              @if (endingBeforeNow()) {
+                <tim-alert severity="warning">Lecture end time is set in the past.
+                </tim-alert>
+              }
+              <div class="form-group">
+                <label for="lLink">Direct link to join lecture:</label>
+                <input class="form-control" (focus)="selectText($event)"
+                  readonly id="lLink" type="text"
+                  [value]="getJoinLectureLink()"/>
+              </div>
+              <div class="form-group">
+                <label for="lLink2">Link to automatically join lectures for this document:</label>
+                <input class="form-control" (focus)="selectText($event)"
+                  readonly id="lLink2" type="text"
+                  [value]="getAutoJoinLink()"/>
+              </div>
+              <accordion>
+                <accordion-group [(isOpen)]="advancedOpen">
+                  <div accordion-heading>
+                    Advanced settings
+                    <i class="pull-right glyphicon"
+                    [ngClass]="{'glyphicon-chevron-down': advancedOpen, 'glyphicon-chevron-right': !advancedOpen}"></i>
+                  </div>
+                  <div class="form-inline">
+                    <label>Student poll interval: <input id="poll_interval"
+                      type="text"
+                      name="poll_interval"
+                      maxlength="3"
+                      class="form-control"
+                      size="3"
+                      [(ngModel)]="options.poll_interval"
+                    pattern="[0-9]*"> s</label>&ngsp;
+                    <div class="checkbox"><label><input id="long_poll" type="checkbox" name="long_poll"
+                      [(ngModel)]="options.long_poll"> Use long
+                    polling</label></div>
+                  </div>
+                  <div class="form-inline">
+                    <label>Teacher poll interval: <input id="poll_interval_t"
+                      type="text"
+                      name="poll_interval_t"
+                      maxlength="3" size="3"
+                      class="form-control"
+                      [(ngModel)]="options.poll_interval_t"
+                    pattern="[0-9]*"> s</label>&ngsp;
+                    <div class="checkbox"><label><input id="long_poll_t" type="checkbox" name="long_poll_t"
+                      [(ngModel)]="options.long_poll_t"> Use long
+                    polling</label></div>
+                  </div>
+                  <div class="form-group">
+                    <label for="teacher_poll">Use teacher poll for</label>
+                    <input id="teacher_poll"
+                      type="text"
+                      name="teacher_poll"
+                      maxlength="40"
+                      class="form-control"
+                      size="40"
+                      placeholder="List of usernames to get same poll rate as teacher, separate by ;"
+                      [(ngModel)]="options.teacher_poll">
+                  </div>
+                </accordion-group>
+              </accordion>
+            </form>
+          </ng-container>
+          <ng-container footer>
+            <button class="timButton"
+              (click)="submitLecture()"
+              [disabled]="!form.valid || submittingLecture">{{creatingNew() ? 'Create' : 'Update'}}
+            </button>
+            <button class="timButton"
+              (click)="dismiss()">Cancel
+            </button>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     standalone: false,
 })
 export class LectureDialogComponent extends AngularDialogComponent<
@@ -387,7 +397,7 @@ export class LectureDialogComponent extends AngularDialogComponent<
         FormsModule,
         TimUtilityModule,
         DialogModule,
-        AccordionModule.forRoot(),
+        AccordionModule,
         DatetimePickerModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],

@@ -57,56 +57,88 @@ function isElement(n: Node): n is Element {
 @Component({
     selector: "tim-plugin-loader",
     template: `
-        <tim-alert *ngIf="error" severity="danger">
+        @if (error) {
+          <tim-alert severity="danger">
             {{ error }}
-        </tim-alert>
-        <answerbrowser *ngIf="type != 'none' && parsedTaskId && showBrowser && !preview && !unlockable && !lockedByPrerequisite"
-                       [taskId]="parsedTaskId"
-                       [answerId]="answerId">
-        </answerbrowser>
-        <div *ngIf="timed">
-            <div *ngIf="running">
+          </tim-alert>
+        }
+        @if (type != 'none' && parsedTaskId && showBrowser && !preview && !unlockable && !lockedByPrerequisite) {
+          <answerbrowser
+            [taskId]="parsedTaskId"
+            [answerId]="answerId">
+          </answerbrowser>
+        }
+        @if (timed) {
+          <div>
+            @if (running) {
+              <div>
                 <ng-container i18n>Time left:</ng-container>
                 <tim-countdown [endTime]="endTime" (onFinish)="expireTask()"></tim-countdown>
-            </div>
-            <div i18n *ngIf="expired">
+              </div>
+            }
+            @if (expired) {
+              <div i18n>
                 Your access to this task has expired
             </div>
-            <h4 *ngIf="accessHeader && taskHidden">{{accessHeader}}</h4>
-            <div *ngIf="unlockable">
+            }
+            @if (accessHeader && taskHidden) {
+              <h4>{{accessHeader}}</h4>
+            }
+            @if (unlockable) {
+              <div>
                 <ng-container i18n>Unlock task. You will have {{accessDuration}} seconds to answer to this task.</ng-container>
                 <button i18n i18n-title class="btn btn-primary" (click)="unlockTimedTask()" title="Unlock task">Unlock task</button>
-            </div>
-            <div *ngIf="expired && accessEndText">{{accessEndText}}</div>
-        </div>
-        <div *ngIf="lockedByPrerequisite">
+              </div>
+            }
+            @if (expired && accessEndText) {
+              <div>{{accessEndText}}</div>
+            }
+          </div>
+        }
+        @if (lockedByPrerequisite) {
+          <div>
             <div>
-                {{getPrerequisiteLockedText()}}
+              {{getPrerequisiteLockedText()}}
             </div>
             <button class="btn btn-primary" (click)="unlockHiddenTask()"
-                    title="{{getPrerequisiteUnlockText()}}">{{getPrerequisiteUnlockText()}}</button>
-            <div *ngIf="lockedError">{{lockedError}}</div>
-        </div>
-        <div *ngIf="wrapper=='div'" [style.visibility]="taskHidden ? 'hidden' : 'visible'" #wrapper [attr.id]="id" [attr.plugin-type]="pluginType">
+            title="{{getPrerequisiteUnlockText()}}">{{getPrerequisiteUnlockText()}}</button>
+            @if (lockedError) {
+              <div>{{lockedError}}</div>
+            }
+          </div>
+        }
+        @if (wrapper=='div') {
+          <div [style.visibility]="taskHidden ? 'hidden' : 'visible'" #wrapper [attr.id]="id" [attr.plugin-type]="pluginType">
             <ng-container *ngTemplateOutlet="tempOutlet"></ng-container>
             <ng-container #pluginPlacement></ng-container>
-            <div *ngIf="nonPluginHtml" [innerHTML]="nonPluginHtml | purify"></div>
-        </div>
-        <span *ngIf="wrapper=='span'" [style.visibility]="taskHidden ? 'hidden' : 'visible'" #wrapper [attr.id]="id" [attr.plugin-type]="pluginType">
+            @if (nonPluginHtml) {
+              <div [innerHTML]="nonPluginHtml | purify"></div>
+            }
+          </div>
+        }
+        @if (wrapper=='span') {
+          <span [style.visibility]="taskHidden ? 'hidden' : 'visible'" #wrapper [attr.id]="id" [attr.plugin-type]="pluginType">
             <ng-container *ngTemplateOutlet="tempOutlet"></ng-container>
             <ng-container #pluginPlacement></ng-container>
-            <div *ngIf="nonPluginHtml" [innerHTML]="nonPluginHtml | purify"></div>
-        </span>
+            @if (nonPluginHtml) {
+              <div [innerHTML]="nonPluginHtml | purify"></div>
+            }
+          </span>
+        }
         <ng-template #tempOutlet>
-            <ng-content #contenthtml *ngIf="defaultload"></ng-content>
+          @if (defaultload) {
+            <ng-content #contenthtml></ng-content>
+          }
         </ng-template>
-        <div *ngIf="feedback">
+        @if (feedback) {
+          <div>
             <tim-alert [severity]="'warning'" [closeable]="true" (closing)="showFeedback('')">
-                <div class="math" #feedbackDiv [innerHTML]="feedback | purify"></div>
+              <div class="math" #feedbackDiv [innerHTML]="feedback | purify"></div>
             </tim-alert>
-        </div>
-
-    `,
+          </div>
+        }
+        
+        `,
     host: {
         "[class.lazy-answer-inactive]": "lazyActivated && !activated",
     },

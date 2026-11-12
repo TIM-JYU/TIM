@@ -56,33 +56,47 @@ type JoinGroupResult = {ok: boolean; result: Record<string, string>};
     selector: "tim-group-join",
     template: `
         <form>
-            <div *ngIf="markup['groupsSelect']" class="form-group">
-                <label for="tim-group-join-select">{{markup['groupsSelect'].name}}</label>
-                <select class="form-control" id="tim-group-join-select" name="tim-group-join-select" [(ngModel)]="selectedGroupSelection">
-                    <option [value]="undefined" disabled selected i18n>Select a group</option>
-                    <option *ngFor="let group of markup['groupsSelect'].options | keyvalue" [value]="group.key">
-                        {{group.key}}
-                    </option>
-                </select>
+          @if (markup['groupsSelect']) {
+            <div class="form-group">
+              <label for="tim-group-join-select">{{markup['groupsSelect'].name}}</label>
+              <select class="form-control" id="tim-group-join-select" name="tim-group-join-select" [(ngModel)]="selectedGroupSelection">
+                <option [value]="undefined" disabled selected i18n>Select a group</option>
+                @for (group of markup['groupsSelect'].options | keyvalue; track group) {
+                  <option [value]="group.key">
+                    {{group.key}}
+                  </option>
+                }
+              </select>
             </div>
+          }
         </form>
         <div class="button-panel">
-            <button class="timButton" [disabled]="!enabled || loading || (markup['groupsSelect'] && !selectedGroupSelection)" (click)="process()">{{status}}</button>
-            <tim-loading *ngIf="loading"></tim-loading>
+          <button class="timButton" [disabled]="!enabled || loading || (markup['groupsSelect'] && !selectedGroupSelection)" (click)="process()">{{status}}</button>
+          @if (loading) {
+            <tim-loading></tim-loading>
+          }
         </div>
-        <tim-alert *ngIf="errorMessage" severity="danger" i18n>Could not change group membership: {{ errorMessage }}</tim-alert>
-        <tim-alert *ngIf="result && !result.ok" severity="warning">
+        @if (errorMessage) {
+          <tim-alert severity="danger" i18n>Could not change group membership: {{ errorMessage }}</tim-alert>
+        }
+        @if (result && !result.ok) {
+          <tim-alert severity="warning">
             <p i18n>Updated some group memberships:</p>
             <ul>
-                <li *ngFor="let group of getResultGroups(result)">{{group[0]}}: {{ group[1] }}</li>
+              @for (group of getResultGroups(result); track group) {
+                <li>{{group[0]}}: {{ group[1] }}</li>
+              }
             </ul>
             <p><a [href]="docPath" i18n>Refresh page</a></p>
-        </tim-alert>
-        <tim-alert *ngIf="result && result.ok" severity="success">
+          </tim-alert>
+        }
+        @if (result && result.ok) {
+          <tim-alert severity="success">
             <p i18n>Updated group memberships for: {{ groups }}</p>
             <p><a [href]="docPath" i18n>Refresh page</a></p>
-        </tim-alert>
-  `,
+          </tim-alert>
+        }
+        `,
     styleUrls: ["./group-join.component.scss"],
     standalone: false,
 })

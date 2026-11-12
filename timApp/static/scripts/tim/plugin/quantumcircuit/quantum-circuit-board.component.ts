@@ -59,174 +59,223 @@ export interface GateBeingDragged {
     selector: "tim-quantum-circuit-board",
     template: `
         <!--suppress HtmlUnknownAttribute -->
-
+        
         <div class="circuit-container">
-            <div class="qubits">
-                <div class="left-block" [style.height.px]="circuitOptions.timeAxisHeight">
-                    <div [ngSwitch]="middleAxisLabel">
-                        <div *ngSwitchCase="'Step'" class="axis-text-time">
-                            <ng-container i18n>Step</ng-container>
-                        </div>
-                        <div *ngSwitchDefault class="axis-text-time">
-                            {{middleAxisLabel}}
-                        </div>
+          <div class="qubits">
+            <div class="left-block" [style.height.px]="circuitOptions.timeAxisHeight">
+              <div>
+                @switch (middleAxisLabel) {
+                  @case ('Step') {
+                    <div class="axis-text-time">
+                      <ng-container i18n>Step</ng-container>
                     </div>
-
-                    <div [ngSwitch]="leftAxisLabel">
-                        <div *ngSwitchCase="'Qubit'" class="axis-text-qubit">
-                            <ng-container i18n>Qubit</ng-container>
-                        </div>
-                        <div *ngSwitchCase="'Bit'" class="axis-text-qubit">
-                            <ng-container i18n>Bit</ng-container>
-                        </div>
-                        <div *ngSwitchDefault class="axis-text-qubit">
-                            {{leftAxisLabel}}
-                        </div>
+                  }
+                  @default {
+                    <div class="axis-text-time">
+                      {{middleAxisLabel}}
                     </div>
-                </div>
-                <div *ngFor="let qubit of qubits; let i=index"
-                     [style.height.px]="circuitOptions.baseSize"
-                     [class.qubit-editable]="qubit.editable"
-                     [class.qubit-uneditable]="!qubit.editable"
-                     class="qubit">
-                    <div class="qubit-name" (click)="toggleQubit(i)">{{qubit.name}}</div>
-                    <button class="qubit-toggle-button"
-                            (click)="toggleQubit(i)">{{qubit.text}}</button>
-                </div>
+                  }
+                }
+              </div>
+        
+              <div>
+                @switch (leftAxisLabel) {
+                  @case ('Qubit') {
+                    <div class="axis-text-qubit">
+                      <ng-container i18n>Qubit</ng-container>
+                    </div>
+                  }
+                  @case ('Bit') {
+                    <div class="axis-text-qubit">
+                      <ng-container i18n>Bit</ng-container>
+                    </div>
+                  }
+                  @default {
+                    <div class="axis-text-qubit">
+                      {{leftAxisLabel}}
+                    </div>
+                  }
+                }
+              </div>
             </div>
-
-            <div class="circuit-right-container">
-                <div class="moments">
-                    <div class="moment" *ngFor="let w of circuitOptions.columnWidths; let i = index"
-                         [style.width.px]="w"
-                         [style.height.px]="circuitOptions.timeAxisHeight">
-                        <div>{{i+1}}</div>
-                    </div>
+            @for (qubit of qubits; track qubit; let i = $index) {
+              <div
+                [style.height.px]="circuitOptions.baseSize"
+                [class.qubit-editable]="qubit.editable"
+                [class.qubit-uneditable]="!qubit.editable"
+                class="qubit">
+                <div class="qubit-name" (click)="toggleQubit(i)">{{qubit.name}}</div>
+                <button class="qubit-toggle-button"
+                (click)="toggleQubit(i)">{{qubit.text}}</button>
+              </div>
+            }
+          </div>
+        
+          <div class="circuit-right-container">
+            <div class="moments">
+              @for (w of circuitOptions.columnWidths; track w; let i = $index) {
+                <div class="moment"
+                  [style.width.px]="w"
+                  [style.height.px]="circuitOptions.timeAxisHeight">
+                  <div>{{i+1}}</div>
                 </div>
-
-                <svg #svgElement [attr.width]="circuitOptions.columnWidthsSum"
-                     [attr.height]="board.nQubits * circuitOptions.baseSize"
-                     (mousemove)="handleDrag($event)"
-                     (mouseup)="handleDragEnd($event)"
-                     (mouseleave)="handleDragEnd($event)"
-                     (touchmove)="handleDrag($event)"
-                     (touchend)="handleDragEnd($event)"
-                     (touchcancel)="handleDragEnd($event)"
-                >
-                    <!-- horizontal lines -->
-                    <line *ngFor="let qubit of qubits; let i=index" [attr.stroke]="circuitOptions.colors.dark"
-                          [attr.x1]="0" [attr.y1]="circuitOptions.baseSize * i + circuitOptions.baseSize / 2"
-                          [attr.x2]="circuitOptions.columnWidthsSum"
-                          [attr.y2]="circuitOptions.baseSize * i + circuitOptions.baseSize / 2"></line>
-
-                    <!-- wires -->
-                    <g *ngFor="let gates of board.board; let i=index">
-                        <g *ngFor="let gate of gates; let j=index">
-                            <line *ngIf="gate|instanceof: Control as c"
-                                  [attr.stroke]="circuitOptions.colors.dark"
-                                  [attr.x1]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
-                                  [attr.y1]="i * circuitOptions.baseSize + circuitOptions.baseSize / 2"
-                                  [attr.x2]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
-                                  [attr.y2]="c.target * circuitOptions.baseSize + circuitOptions.baseSize / 2 + circuitOptions.gateSize / 2"
+              }
+            </div>
+        
+            <svg #svgElement [attr.width]="circuitOptions.columnWidthsSum"
+              [attr.height]="board.nQubits * circuitOptions.baseSize"
+              (mousemove)="handleDrag($event)"
+              (mouseup)="handleDragEnd($event)"
+              (mouseleave)="handleDragEnd($event)"
+              (touchmove)="handleDrag($event)"
+              (touchend)="handleDragEnd($event)"
+              (touchcancel)="handleDragEnd($event)"
+              >
+              <!-- horizontal lines -->
+              @for (qubit of qubits; track qubit; let i = $index) {
+                <line [attr.stroke]="circuitOptions.colors.dark"
+                  [attr.x1]="0" [attr.y1]="circuitOptions.baseSize * i + circuitOptions.baseSize / 2"
+                  [attr.x2]="circuitOptions.columnWidthsSum"
+                [attr.y2]="circuitOptions.baseSize * i + circuitOptions.baseSize / 2"></line>
+              }
+        
+              <!-- wires -->
+              @for (gates of board.board; track gates; let i = $index) {
+                <g>
+                  @for (gate of gates; track gate; let j = $index) {
+                    <g>
+                      @if (gate|instanceof: Control; as c) {
+                        <line
+                          [attr.stroke]="circuitOptions.colors.dark"
+                          [attr.x1]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
+                          [attr.y1]="i * circuitOptions.baseSize + circuitOptions.baseSize / 2"
+                          [attr.x2]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
+                          [attr.y2]="c.target * circuitOptions.baseSize + circuitOptions.baseSize / 2 + circuitOptions.gateSize / 2"
+                        ></line>
+                      }
+                      @if (gate|instanceof: Swap; as s) {
+                        <g>
+                          @if (s.target > i) {
+                            <line
+                              [attr.stroke]="circuitOptions.colors.dark"
+                              [attr.x1]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
+                              [attr.y1]="i * circuitOptions.baseSize + circuitOptions.baseSize / 2"
+                              [attr.x2]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
+                              [attr.y2]="s.target * circuitOptions.baseSize + circuitOptions.baseSize / 2"
                             ></line>
-                            
-                            <g *ngIf="gate|instanceof: Swap as s">
-                                <line *ngIf="s.target > i"
-                                      [attr.stroke]="circuitOptions.colors.dark"
-                                      [attr.x1]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
-                                      [attr.y1]="i * circuitOptions.baseSize + circuitOptions.baseSize / 2"
-                                      [attr.x2]="(circuitOptions.columnWidthSums ? circuitOptions.columnWidthSums[j] : 0) - (circuitOptions.columnWidths ? circuitOptions.columnWidths[j] : 0) / 2"
-                                      [attr.y2]="s.target * circuitOptions.baseSize + circuitOptions.baseSize / 2"
-                                ></line>
-                            </g>
+                          }
                         </g>
+                      }
                     </g>
-
-                    <g *ngFor="let gates of board.board; let i = index">
-                        <g *ngFor="let gate of gates; let j=index" tim-quantum-cell
-                           [circuitOptions]="circuitOptions"
-                           [cell]="gate"
-                           [board]="board"
+                  }
+                </g>
+              }
+        
+              @for (gates of board.board; track gates; let i = $index) {
+                <g>
+                  @for (gate of gates; track gate; let j = $index) {
+                    <g tim-quantum-cell
+                      [circuitOptions]="circuitOptions"
+                      [cell]="gate"
+                      [board]="board"
                            [isSelected]="selectedGate !== null && i === selectedGate.target && j ===
                             selectedGate.time"
                            [isBeingDraggedOver]="dragOverElement !== null && dragOverElement.time === j &&
                             dragOverElement.target === i"
-                           [target]="i"
-                           [time]="j"
-                           (drop)="handleDrop($event, i, j)"
-                           (dragenter)="handleDragEnter($event)"
-                           (mousedown)="handleDragStart($event, i, j)"
-                           (touchstart)="handleDragStart($event, i, j)"
-                           (dragover)="handleDragOver($event, i, j)"
-                           (dragleave)="handleDragLeave(i, j)"
-                           [attr.data-time]="j"
-                           [attr.data-target]="i"
-                           class="gate-drop"
-                           [class.uneditable]="gate !== undefined && gate?.editable === false"
-                           [class.chosen]="gateBeingDragged !== null && gateBeingDragged.gate.target === i && gateBeingDragged.gate.time === j">
-                        </g>
-
+                      [target]="i"
+                      [time]="j"
+                      (drop)="handleDrop($event, i, j)"
+                      (dragenter)="handleDragEnter($event)"
+                      (mousedown)="handleDragStart($event, i, j)"
+                      (touchstart)="handleDragStart($event, i, j)"
+                      (dragover)="handleDragOver($event, i, j)"
+                      (dragleave)="handleDragLeave(i, j)"
+                      [attr.data-time]="j"
+                      [attr.data-target]="i"
+                      class="gate-drop"
+                      [class.uneditable]="gate !== undefined && gate?.editable === false"
+                      [class.chosen]="gateBeingDragged !== null && gateBeingDragged.gate.target === i && gateBeingDragged.gate.time === j">
                     </g>
-                </svg>
+                  }
+                </g>
+              }
+            </svg>
+          </div>
+        
+          <div class="output-container">
+            <div class="right-block" [style.height.px]="circuitOptions.timeAxisHeight">
+              <div>
+                @switch (middleAxisLabel) {
+                  @case ('Step') {
+                    <div class="out-axis-time">
+                      <ng-container i18n>Step</ng-container>
+                    </div>
+                  }
+                  @default {
+                    <div class="out-axis-time">
+                      {{middleAxisLabel}}
+                    </div>
+                  }
+                }
+              </div>
+        
+              <div>
+                @switch (rightAxisLabel) {
+                  @case ('Output') {
+                    <div class="out-axis-text">
+                      <ng-container i18n>Output</ng-container>
+                    </div>
+                  }
+                  @default {
+                    <div class="out-axis-text">
+                      {{rightAxisLabel}}
+                    </div>
+                  }
+                }
+              </div>
+        
             </div>
-
-            <div class="output-container">
-                <div class="right-block" [style.height.px]="circuitOptions.timeAxisHeight">
-                    <div [ngSwitch]="middleAxisLabel">
-                        <div *ngSwitchCase="'Step'" class="out-axis-time">
-                            <ng-container i18n>Step</ng-container>
-                        </div>
-                        <div *ngSwitchDefault class="out-axis-time">
-                            {{middleAxisLabel}}
-                        </div>
-                    </div>
-                    
-                    <div [ngSwitch]="rightAxisLabel">
-                        <div *ngSwitchCase="'Output'" class="out-axis-text">
-                            <ng-container i18n>Output</ng-container>
-                        </div>
-                        <div *ngSwitchDefault class="out-axis-text">
-                            {{rightAxisLabel}}
-                        </div>
-                    </div>
-                    
-                </div>
-                <div class="output" *ngFor="let output of qubitOutputs"
-                     [style.height.px]="circuitOptions.baseSize">
-                    <img alt="measurement icon" src="/static/images/quantum-measurement.svg"
-                         [style.height.px]="circuitOptions.gateSize"
-                         [style.width.px]="circuitOptions.gateSize"/>
-
-                    <svg *ngIf="showOutputBits" class="output-value"
-                         [attr.height]="circuitOptions.gateSize"
-                         [attr.width]="circuitOptions.gateSize">
-                        <rect [attr.height]="circuitOptions.gateSize"
-                              [attr.width]="circuitOptions.gateSize"
-                              [attr.stroke]="circuitOptions.colors.dark"
-                              x="0" y="0"
-                              fill="white"
-                        ></rect>
-                        <rect [attr.height]="circuitOptions.gateSize"
-                              [attr.width]="circuitOptions.gateSize * (output.probability/100)"
-                              x="0" y="0"
-                              fill="aqua"
-                        ></rect>
-                        <text dominant-baseline="middle"
-                              text-anchor="middle"
-                              x="50%"
-                              y="50%"
-                              [attr.stroke]="circuitOptions.colors.dark">{{output.value}}</text>
-                        <title>{{output.probabilityText}}</title>
-                    </svg>
-                    <div *ngIf="output.name" class="output-name">
-                        {{output.name}}
-                    </div>
-                </div>
-            </div>
-
+            @for (output of qubitOutputs; track output) {
+              <div class="output"
+                [style.height.px]="circuitOptions.baseSize">
+                <img alt="measurement icon" src="/static/images/quantum-measurement.svg"
+                  [style.height.px]="circuitOptions.gateSize"
+                  [style.width.px]="circuitOptions.gateSize"/>
+                @if (showOutputBits) {
+                  <svg class="output-value"
+                    [attr.height]="circuitOptions.gateSize"
+                    [attr.width]="circuitOptions.gateSize">
+                    <rect [attr.height]="circuitOptions.gateSize"
+                      [attr.width]="circuitOptions.gateSize"
+                      [attr.stroke]="circuitOptions.colors.dark"
+                      x="0" y="0"
+                      fill="white"
+                    ></rect>
+                    <rect [attr.height]="circuitOptions.gateSize"
+                      [attr.width]="circuitOptions.gateSize * (output.probability/100)"
+                      x="0" y="0"
+                      fill="aqua"
+                    ></rect>
+                    <text dominant-baseline="middle"
+                      text-anchor="middle"
+                      x="50%"
+                      y="50%"
+                    [attr.stroke]="circuitOptions.colors.dark">{{output.value}}</text>
+                    <title>{{output.probabilityText}}</title>
+                  </svg>
+                }
+                @if (output.name) {
+                  <div class="output-name">
+                    {{output.name}}
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        
         </div>
-
-    `,
+        
+        `,
     styleUrls: ["./quantum-circuit-board.component.scss"],
     standalone: false,
 })

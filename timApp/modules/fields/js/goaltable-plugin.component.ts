@@ -90,46 +90,68 @@ const scaleValueWords: Word[] = [
 @Component({
     selector: "tim-goaltable-runner",
     template: `
-        <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+        @if (markupError) {
+          <tim-markup-error [data]="markupError"></tim-markup-error>
+        }
         <div [class.csRunDiv]="borders" [class.cs-has-header]="header" class="goalTableDiv no-popup-menu">
-            <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-            <div class="goalTableInner">
-                <p>
-                    <span *ngIf="stem" class="stem" [innerHtml]="stem | purify"></span>
-                    <span *ngIf="bloomText" class="bloom" [innerHtml]="bloomText | purify"></span>
-                </p>
-                <label class="editText small hidden-print " [title]="editTitle">{{editText}}
-                    <input type="checkbox" [(ngModel)]="editMode">
-                </label>
-                <table class="goaltable">
-                    <tbody>
-                        <tr class="heading">
-                            <th>{{goalText}}</th>
-                            <th *ngFor="let h of headings" [title]="getTitle(h)">{{h}}</th>
-                        </tr>
-                        <tr class="itemrow" *ngFor="let row of rows">
-                            <td [innerHtml]="row.itemtext | purify"></td>
-                            <td *ngFor="let h of headings" [ngStyle]="cellTDStyle(row, h)"
-                                (click)="rbClicked(row, h)"
-                            >
-                                <span class="goalspan" [ngStyle]="cellStyle(row, h)" [innerHtml]="getCell(row, h)"></span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="csRunMenuArea hidden-print">
-                    <button class="timButton" [disabled]="isRunning || !isUnSaved()" (click)="save()"
-                            *ngIf="editMode || isUnSaved()">
-                        {{btnText}}
-                    </button>&nbsp;
-                    <span class="notSavedSpan" *ngIf="isUnSaved()"></span>&nbsp;
-                    <span *ngIf="result">{{result}}</span>
+          @if (header) {
+            <h4 [innerHtml]="header | purify"></h4>
+          }
+          <div class="goalTableInner">
+            <p>
+              @if (stem) {
+                <span class="stem" [innerHtml]="stem | purify"></span>
+              }
+              @if (bloomText) {
+                <span class="bloom" [innerHtml]="bloomText | purify"></span>
+              }
+            </p>
+            <label class="editText small hidden-print " [title]="editTitle">{{editText}}
+              <input type="checkbox" [(ngModel)]="editMode">
+            </label>
+            <table class="goaltable">
+              <tbody>
+                <tr class="heading">
+                  <th>{{goalText}}</th>
+                  @for (h of headings; track h) {
+                    <th [title]="getTitle(h)">{{h}}</th>
+                  }
+                </tr>
+                @for (row of rows; track row) {
+                  <tr class="itemrow">
+                    <td [innerHtml]="row.itemtext | purify"></td>
+                    @for (h of headings; track h) {
+                      <td [ngStyle]="cellTDStyle(row, h)"
+                        (click)="rbClicked(row, h)"
+                        >
+                        <span class="goalspan" [ngStyle]="cellStyle(row, h)" [innerHtml]="getCell(row, h)"></span>
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+            <div class="csRunMenuArea hidden-print">
+              @if (editMode || isUnSaved()) {
+                <button class="timButton" [disabled]="isRunning || !isUnSaved()" (click)="save()"
+                  >
+                  {{btnText}}
+                </button>
+                }<ng-container>&nbsp; </ng-container>
+                @if (isUnSaved()) {
+                  <span class="notSavedSpan"></span>
+                  }<ng-container>&nbsp; </ng-container>
+                  @if (result) {
+                    <span>{{result}}</span>
+                  }
                 </div>
-                <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
+                @if (footer) {
+                  <p [innerHtml]="footer | purify" class="plgfooter"></p>
+                }
                 <p></p>
+              </div>
             </div>
-        </div>
-`,
+        `,
     styleUrls: ["goaltable-plugin.component.scss"],
     standalone: false,
 })
@@ -408,7 +430,7 @@ export class GoalTablePluginComponent
         CommonModule,
         TimUtilityModule,
         FormsModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
         PurifyModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],

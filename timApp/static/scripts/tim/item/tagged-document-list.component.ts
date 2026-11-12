@@ -13,31 +13,41 @@ import {tagStyleClass} from "tim/item/IItem";
 @Component({
     selector: "tim-tagged-document-list",
     template: `
-        <div class="input-group" *ngIf="enableSearch">
+        @if (enableSearch) {
+          <div class="input-group">
             <input [(ngModel)]="tagFilter" name="filterField" (keydown.enter)="enterPressed()"
-                   type="text"
-                   title="Search documents by entering a tag"
-                   placeholder="Search documents by entering a tag"
-                   class="form-control" id="tagFilterField" autocomplete="off"
-                   [typeahead]="allUniqueTags"
-                   [typeaheadMinLength]="1">
+              type="text"
+              title="Search documents by entering a tag"
+              placeholder="Search documents by entering a tag"
+              class="form-control" id="tagFilterField" autocomplete="off"
+              [typeahead]="allUniqueTags"
+              [typeaheadMinLength]="1">
             <span class="input-group-addon btn">
-                <span class="glyphicon glyphicon-search"
-                      (click)="searchClicked(tagFilter)"
-                      title="Search documents with tag '{{tagFilter}}'"></span>
+              <span class="glyphicon glyphicon-search"
+                (click)="searchClicked(tagFilter)"
+              title="Search documents with tag '{{tagFilter}}'"></span>
             </span>
-        </div>
-        <ul *ngIf="docList.length > 0">
-            <li *ngFor="let d of docList">
+          </div>
+        }
+        @if (docList.length > 0) {
+          <ul>
+            @for (d of docList; track d) {
+              <li>
                 <a href="/view/{{d.path}}" title="Open {{d.title}}">{{d.title}}</a>
-                <span *ngFor="let tag of d.tags" (click)="searchClicked(tag.name)">
+                @for (tag of d.tags; track tag) {
+                  <span (click)="searchClicked(tag.name)">
                     <span class="btn-xs" [ngClass]="tagClass(tag)"
-                          title="{{tagToolTip}}'{{tag.name}}'">{{tag.name}}</span>
-                </span>
-            </li>
-        </ul>
-        <span *ngIf="docList.length == 0">No documents found!</span>
-    `,
+                    title="{{tagToolTip}}'{{tag.name}}'">{{tag.name}}</span>
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        }
+        @if (docList.length == 0) {
+          <span>No documents found!</span>
+        }
+        `,
     standalone: false,
 })
 export class TaggedDocumentListComponent {

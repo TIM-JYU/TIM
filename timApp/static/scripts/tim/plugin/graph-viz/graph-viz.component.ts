@@ -6,9 +6,13 @@ import {to2} from "tim/util/utils";
 @Component({
     selector: "tim-graph-viz",
     template: `
-<span *ngIf="error" class="vizerror" [innerHTML]="error"></span>
-<div *ngIf="svg" [innerHTML]="svg|purify"></div>
-    `,
+@if (error) {
+  <span class="vizerror" [innerHTML]="error"></span>
+}
+@if (svg) {
+  <div [innerHTML]="svg|purify"></div>
+}
+`,
     styleUrls: ["./graph-viz.component.scss"],
     standalone: false,
 })

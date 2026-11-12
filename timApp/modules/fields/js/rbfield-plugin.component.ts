@@ -22,6 +22,7 @@ import {
 } from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {TooltipIsOpenDirective} from "tim/ui/tooltip-is-open.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -61,41 +62,58 @@ const RbfieldAll = t.intersection([
     selector: "tim-rbfield-runner",
     template: `
 <div class="textfieldNoSaveDiv" [ngStyle]="cols">
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-    <p class="stem" *ngIf="stem">{{stem}}</p>
-     <span style="width: 100%">
-      <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
-      <span *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() ), alertFrame: saveFailed}">
-        <input type="radio"
-               *ngIf="!isPlainText()"
-               name="{{getName()}}"
-               id="{{getName()}}"
-               value="1"
-               [ngStyle]="cbStyle"
-               class="form-control"
-               [(ngModel)]="userword"
-               (ngModelChange)="autoSave()"
-               [disabled]="readonly || attrsall['preview']"
-               [readonly]="readonly"
-               [tooltip]="errormessage"
-               [isOpen]="errormessage !== undefined"
-               >
-               <button class="timButton"
-                        *ngIf="!hasButton() && saveFailed"
-                        (click)="autoSave()">
-                    {{buttonText()}}
-               </button>
-         </span>
-         <span *ngIf="isPlainText()" style="">{{userword}}</span>
-      </span>
-        <button class="timButton"
-            *ngIf="!isPlainText() && hasButton()"
-            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
+  @if (markupError) {
+    <tim-markup-error [data]="markupError"></tim-markup-error>
+  }
+  @if (header) {
+    <h4 [innerHtml]="header | purify"></h4>
+  }
+  @if (stem) {
+    <p class="stem">{{stem}}</p>
+  }
+  <span style="width: 100%">
+    @if (inputstem) {
+      <span class="inputstem" [innerHtml]="inputstem | purify"></span>
+    }
+    @if (!isPlainText()) {
+      <span [ngClass]="{warnFrame: (isUnSaved() ), alertFrame: saveFailed}">
+        @if (!isPlainText()) {
+          <input type="radio"
+            name="{{getName()}}"
+            id="{{getName()}}"
+            value="1"
+            [ngStyle]="cbStyle"
+            class="form-control"
+            [(ngModel)]="userword"
+            (ngModelChange)="autoSave()"
+            [disabled]="readonly || attrsall['preview']"
+            [readonly]="readonly"
+            [tooltip]="errormessage"
+            [isOpen]="errormessage !== undefined"
+            >
+        }
+        @if (!hasButton() && saveFailed) {
+          <button class="timButton"
             (click)="autoSave()">
-        {{buttonText()}}
-        </button>
-    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
+            {{buttonText()}}
+          </button>
+        }
+      </span>
+    }
+    @if (isPlainText()) {
+      <span style="">{{userword}}</span>
+    }
+  </span>
+  @if (!isPlainText() && hasButton()) {
+    <button class="timButton"
+      [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
+      (click)="autoSave()">
+      {{buttonText()}}
+    </button>
+  }
+  @if (footer) {
+    <p [innerHtml]="footer | purify" class="plgfooter"></p>
+  }
 </div>
 `,
     styleUrls: ["./rbfield-plugin.component.scss"],
@@ -444,7 +462,8 @@ export class RbfieldPluginComponent
         CommonModule,
         TimUtilityModule,
         FormsModule,
-        TooltipModule.forRoot(),
+        TooltipModule,
+        TooltipIsOpenDirective,
         PurifyModule,
     ],
     providers: [provideHttpClient(withInterceptorsFromDi())],

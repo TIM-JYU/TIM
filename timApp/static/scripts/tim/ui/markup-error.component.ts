@@ -5,14 +5,16 @@ import {PluginMarkupErrors} from "tim/plugin/util";
     selector: "tim-markup-error",
     template: `
         <div class="pluginError">
-            Plugin has invalid values for these markup fields:
-            <ul>
-                <li *ngFor="let e of data">
-                    {{ e.name }}: expected {{ e.type }}
-                </li>
-            </ul>
+          Plugin has invalid values for these markup fields:
+          <ul>
+            @for (e of data; track e) {
+              <li>
+                {{ e.name }}: expected {{ e.type }}
+              </li>
+            }
+          </ul>
         </div>
-    `,
+        `,
     standalone: false,
 })
 export class MarkupErrorComponent {

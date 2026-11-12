@@ -30,114 +30,134 @@ export interface UserCreationDialogParams {
     selector: "tim-user-creation-dialog",
     template: `
         <tim-dialog-frame [size]="'lg'">
-            <ng-container i18n header>
+          <ng-container i18n header>
                 Create user
             </ng-container>
-            <ng-container body>
-                <form #form="ngForm" class="form-horizontal">
-                    <ng-container *ngIf="!isHidden('username')">
-                        <div class="form-group">
-                            <label i18n for="username" class="col-sm-2 control-label">Username</label>
-                            <div class="col-sm-10">
-                                <input i18n-placeholder type="text" 
-                                       [(ngModel)]="username"
-                                       id="username" name="username"
-                                       class="form-control"
-                                       placeholder="Enter a username for the user"/>
-                            </div>
-                        </div>
-                    </ng-container>
-
-                    <div class="form-group">
-                        <label for="given_name" class="col-sm-2 control-label"><ng-container i18n>First name(s)</ng-container> <span class="mandatory-asterisk">(<i class="glyphicon glyphicon-asterisk mandatory"></i>)</span></label>
-                        <div class="col-sm-10">
-                            <input i18n-placeholder type="text" required
-                                   [(ngModel)]="given_name" #firstName="ngModel"
-                                   pattern="[^/]*"
-                                   (ngModelChange)="setMessage()"
-                                   id="given_name" name="given_name"
-                                   class="form-control"
-                                   placeholder="User's given name, list first and middle names in order">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="surname" class="col-sm-2 control-label"><ng-container i18n>Surname</ng-container> <span class="mandatory-asterisk">(<i class="glyphicon glyphicon-asterisk mandatory"></i>)</span></label>
-                        <div class="col-sm-10">
-                            <input i18n-placeholder type="text"
-                                   [(ngModel)]="surname" #surnameInput="ngModel"
-                                   required
-                                   pattern="[^/]*"
-                                   (ngModelChange)="setMessage()"
-                                   id="surname" name="surname"
-                                   class="form-control"
-                                   placeholder="User's surname">
-                        </div>
-                    </div>
-
-                    <div class="form-group" *ngIf="!isHidden('extra_info')">
-                        <label for="extra_info" class="col-sm-2 control-label">{{getExtraInfoTitle()}}</label>
-                        <div class="col-sm-10">
-                            <input i18n-placeholder type="text"
-                                   [(ngModel)]="extra_info"
-                                   id="extra_info" name="extra_info"
-                                   class="form-control"
-                                   placeholder="Additional information related to the user, eg. class or group name">
-                        </div>
-                    </div>
-
-                    <div class="form-group" *ngIf="!isHidden('email')">
-                        <label i18n for="email" class="col-sm-2 control-label">Email</label>
-                        <div class="col-sm-10">
-                            <input i18n-placeholder type="text"
-                                   [(ngModel)]="email"
-                                   id="email" name="email"
-                                   class="form-control"
-                                   placeholder="User's email">
-                        </div>
-                    </div>
-                    
-                    <p class="mandatory-expl">
-                        (<i class="glyphicon glyphicon-asterisk mandatory"></i>) = <ng-container i18n>required field</ng-container>
-                    </p>
-                </form>
-
-                <tim-alert *ngIf="firstName.invalid && firstName.dirty" severity="danger">
-                    <ng-container i18n *ngIf="firstName.errors?.['required']">
+          <ng-container body>
+            <form #form="ngForm" class="form-horizontal">
+              @if (!isHidden('username')) {
+                <div class="form-group">
+                  <label i18n for="username" class="col-sm-2 control-label">Username</label>
+                  <div class="col-sm-10">
+                    <input i18n-placeholder type="text"
+                      [(ngModel)]="username"
+                      id="username" name="username"
+                      class="form-control"
+                      placeholder="Enter a username for the user"/>
+                  </div>
+                </div>
+              }
+        
+              <div class="form-group">
+                <label for="given_name" class="col-sm-2 control-label"><ng-container i18n>First name(s)</ng-container> <span class="mandatory-asterisk">(<i class="glyphicon glyphicon-asterisk mandatory"></i>)</span></label>
+                <div class="col-sm-10">
+                  <input i18n-placeholder type="text" required
+                    [(ngModel)]="given_name" #firstName="ngModel"
+                    pattern="[^/]*"
+                    (ngModelChange)="setMessage()"
+                    id="given_name" name="given_name"
+                    class="form-control"
+                    placeholder="User's given name, list first and middle names in order">
+                </div>
+              </div>
+        
+              <div class="form-group">
+                <label for="surname" class="col-sm-2 control-label"><ng-container i18n>Surname</ng-container> <span class="mandatory-asterisk">(<i class="glyphicon glyphicon-asterisk mandatory"></i>)</span></label>
+                <div class="col-sm-10">
+                  <input i18n-placeholder type="text"
+                    [(ngModel)]="surname" #surnameInput="ngModel"
+                    required
+                    pattern="[^/]*"
+                    (ngModelChange)="setMessage()"
+                    id="surname" name="surname"
+                    class="form-control"
+                    placeholder="User's surname">
+                </div>
+              </div>
+        
+              @if (!isHidden('extra_info')) {
+                <div class="form-group">
+                  <label for="extra_info" class="col-sm-2 control-label">{{getExtraInfoTitle()}}</label>
+                  <div class="col-sm-10">
+                    <input i18n-placeholder type="text"
+                      [(ngModel)]="extra_info"
+                      id="extra_info" name="extra_info"
+                      class="form-control"
+                      placeholder="Additional information related to the user, eg. class or group name">
+                  </div>
+                </div>
+              }
+        
+              @if (!isHidden('email')) {
+                <div class="form-group">
+                  <label i18n for="email" class="col-sm-2 control-label">Email</label>
+                  <div class="col-sm-10">
+                    <input i18n-placeholder type="text"
+                      [(ngModel)]="email"
+                      id="email" name="email"
+                      class="form-control"
+                      placeholder="User's email">
+                  </div>
+                </div>
+              }
+        
+              <p class="mandatory-expl">
+                (<i class="glyphicon glyphicon-asterisk mandatory"></i>) = <ng-container i18n>required field</ng-container>
+              </p>
+            </form>
+        
+            @if (firstName.invalid && firstName.dirty) {
+              <tim-alert severity="danger">
+                @if (firstName.errors?.['required']) {
+                  <ng-container i18n>
                         First name is required.
                     </ng-container>
-                    <ng-container i18n *ngIf="firstName.errors?.['pattern']">
+                }
+                @if (firstName.errors?.['pattern']) {
+                  <ng-container i18n>
                         First name should not contain the slash character.
                     </ng-container>
-                </tim-alert>
-                
-                <tim-alert *ngIf="surnameInput.invalid && surnameInput.dirty" severity="danger">
-                    <ng-container i18n *ngIf="surnameInput.errors?.['required']">
+                }
+              </tim-alert>
+            }
+        
+            @if (surnameInput.invalid && surnameInput.dirty) {
+              <tim-alert severity="danger">
+                @if (surnameInput.errors?.['required']) {
+                  <ng-container i18n>
                         Surname is required.
                     </ng-container>
-                    <ng-container i18n *ngIf="surnameInput.errors?.['pattern']">
+                }
+                @if (surnameInput.errors?.['pattern']) {
+                  <ng-container i18n>
                         Surname should not contain the slash character.
                     </ng-container>
-                </tim-alert>
-
-                <tim-alert *ngIf="message" severity="danger">
-                    <ng-container *ngIf="message">
-                        {{message}}
-                    </ng-container>
-                </tim-alert>
-
-            </ng-container>
-            <ng-container footer>
-                <tim-loading *ngIf="loading"></tim-loading>
-                <button i18n class="timButton" type="button" (click)="saveUser()" [disabled]="form.invalid || loading">
+                }
+              </tim-alert>
+            }
+        
+            @if (message) {
+              <tim-alert severity="danger">
+                @if (message) {
+                  {{message}}
+                }
+              </tim-alert>
+            }
+        
+          </ng-container>
+          <ng-container footer>
+            @if (loading) {
+              <tim-loading></tim-loading>
+            }
+            <button i18n class="timButton" type="button" (click)="saveUser()" [disabled]="form.invalid || loading">
                     Add
                 </button>
-                <button i18n class="btn btn-default" type="button" (click)="dismiss()" [disabled]="loading">
+            <button i18n class="btn btn-default" type="button" (click)="dismiss()" [disabled]="loading">
                     Cancel
                 </button>
-            </ng-container>
+          </ng-container>
         </tim-dialog-frame>
-    `,
+        `,
     styleUrls: ["user-creation-dialog.component.scss"],
     standalone: false,
 })

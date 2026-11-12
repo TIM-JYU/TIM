@@ -29,36 +29,40 @@ const QR_CODE_SIZE = 350;
     template: `
         <div class="modal-bg"></div>
         <tim-dialog-frame [minimizable]="false" size="lg">
-            <ng-container header i18n>
+          <ng-container header i18n>
                 Session check
             </ng-container>
-            <ng-container body>
-                <tim-alert *ngIf="currentSession && !currentSession.valid && recheck && !isCheckingStatus" i18n>
+          <ng-container body>
+            @if (currentSession && !currentSession.valid && recheck && !isCheckingStatus) {
+              <tim-alert i18n>
                     The session is expired. Ask the supervisor to scan the QR code below.
                 </tim-alert>
-                <h2 i18n>Verify a new login</h2>
-                <p i18n>This session was expired because you logged in too many times.</p>
-                <p>
-                    <strong i18n>
+            }
+            <h2 i18n>Verify a new login</h2>
+            <p i18n>This session was expired because you logged in too many times.</p>
+            <p>
+              <strong i18n>
                         Please ask the supervisor to scan the code below to continue.
                     </strong>
-                </p>
-                <div class="qr-container">
-                    <div class="qr-code" #qrCode></div>
-                    <div class="qr-info">{{currentUser?.name}} ({{currentUser?.real_name}})</div>
-                </div>
-                <p i18n>Once the code has been scanned, press "Check status" to re-check your verification.</p>
-            </ng-container>
-            <ng-container footer>
-                <div class="footer">
-                    <tim-loading *ngIf="isCheckingStatus"></tim-loading>
-                    <button class="timButton" [disabled]="isCheckingStatus" (click)="checkStatus(true)" i18n>
+            </p>
+            <div class="qr-container">
+              <div class="qr-code" #qrCode></div>
+              <div class="qr-info">{{currentUser?.name}} ({{currentUser?.real_name}})</div>
+            </div>
+            <p i18n>Once the code has been scanned, press "Check status" to re-check your verification.</p>
+          </ng-container>
+          <ng-container footer>
+            <div class="footer">
+              @if (isCheckingStatus) {
+                <tim-loading></tim-loading>
+              }
+              <button class="timButton" [disabled]="isCheckingStatus" (click)="checkStatus(true)" i18n>
                         Check status
                     </button>
-                </div>
-            </ng-container>
+            </div>
+          </ng-container>
         </tim-dialog-frame>
-  `,
+        `,
     styleUrls: ["./session-check-dialog.component.scss"],
     standalone: false,
 })

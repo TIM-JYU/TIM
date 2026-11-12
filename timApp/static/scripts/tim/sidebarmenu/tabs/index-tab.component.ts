@@ -18,32 +18,40 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
         <ng-template i18n>Document index</ng-template>
         <h5 i18n>Index <a (click)="goToTop()" i18n-title title="Go to top" class="pull-right">Go to top</a></h5>
         <ul (window:scrollend)="updateActive()" class="subexp">
-            <li *ngFor="let header of displayIndex" [class.no-sub-headings]="!hasSubHeadings(header)">
-                <a class="exptoggle" *ngIf="hasSubHeadings(header)">
-                    <i (click)="toggleClosed(header)"
-                       class="glyphicon"
-                       [class.glyphicon-plus]="header.closed"
-                       [class.glyphicon-minus]="!header.closed"></i>
+          @for (header of displayIndex; track header) {
+            <li [class.no-sub-headings]="!hasSubHeadings(header)">
+              @if (hasSubHeadings(header)) {
+                <a class="exptoggle">
+                  <i (click)="toggleClosed(header)"
+                    class="glyphicon"
+                    [class.glyphicon-plus]="header.closed"
+                  [class.glyphicon-minus]="!header.closed"></i>
                 </a>
-                <a [ngClass]="getHeaderClassList(header.h1)"
-                   [href]="getHeaderHref(header.h1)"
-                   target="_self"
-                   (click)="headerClicked($event, header.h1.id)">
-                    {{header.h1.text}}
-                </a>
-                <ul class="list-unstyled" *ngIf="!header.closed" (click)="$event.stopPropagation()">
-                    <li *ngFor="let header2 of header.h2List">
-                        <a [ngClass]="getHeaderClassList(header2)"
-                           [href]="getHeaderHref(header2)"
-                           target="_self"
-                           (click)="headerClicked($event, header2.id)">
-                            {{header2.text}}
-                        </a>
+              }
+              <a [ngClass]="getHeaderClassList(header.h1)"
+                [href]="getHeaderHref(header.h1)"
+                target="_self"
+                (click)="headerClicked($event, header.h1.id)">
+                {{header.h1.text}}
+              </a>
+              @if (!header.closed) {
+                <ul class="list-unstyled" (click)="$event.stopPropagation()">
+                  @for (header2 of header.h2List; track header2) {
+                    <li>
+                      <a [ngClass]="getHeaderClassList(header2)"
+                        [href]="getHeaderHref(header2)"
+                        target="_self"
+                        (click)="headerClicked($event, header2.id)">
+                        {{header2.text}}
+                      </a>
                     </li>
+                  }
                 </ul>
+              }
             </li>
+          }
         </ul>
-    `,
+        `,
     styleUrls: ["./index-tab.component.scss"],
     standalone: false,
 })

@@ -60,71 +60,79 @@ class OwnerPipe {
     selector: "tim-scheduled-functions-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header i18n>
+          <ng-container header i18n>
                 Manage scheduled functions
             </ng-container>
-            <ng-container body>
-                <h2 i18n>Current functions</h2>
-                <p *ngIf="functions.length === 0" i18n>There are no functions.</p>
-                <ul class="current-functions">
-                    <li *ngFor="let t of functions" [class.disabled]="!t.enabled">
-                        <a href="/view/{{t.doc_path}}#{{t.name}}">{{t.doc_path}}#{{t.name}}</a>,
-                        {{t.owners | timownerstr}},
-                        <ng-container i18n>expires:</ng-container>
-                        {{t.expires | timdate}},
-                        <ng-container i18n>interval:</ng-container>
-                        {{t.interval | timinterval}},
-                        <ng-container i18n>last run:</ng-container>&ngsp;
-                        <ng-container
-                                *ngIf="t.last_run_at; else norun">{{t.last_run_at | timdate}}</ng-container>
-                        <ng-container>,</ng-container>&ngsp; <!-- avoid space before comma -->
-                        <ng-container i18n>run count:</ng-container>
-                        {{t.total_run_count}}
-                        <button class="btn btn-danger btn-xs" (click)="deleteFunction(t)">
-                            <i class="glyphicon glyphicon-trash"></i>
-                        </button>
-                    </li>
-                </ul>
-
-                <div class="checkbox" *ngIf="isAdmin">
-                    <label i18n>
+          <ng-container body>
+            <h2 i18n>Current functions</h2>
+            @if (functions.length === 0) {
+              <p i18n>There are no functions.</p>
+            }
+            <ul class="current-functions">
+              @for (t of functions; track t) {
+                <li [class.disabled]="!t.enabled">
+                  <a href="/view/{{t.doc_path}}#{{t.name}}">{{t.doc_path}}#{{t.name}}</a>,
+                  {{t.owners | timownerstr}},
+                  <ng-container i18n>expires:</ng-container>
+                  {{t.expires | timdate}},
+                  <ng-container i18n>interval:</ng-container>
+                  {{t.interval | timinterval}},
+                  <ng-container i18n>last run:</ng-container>&ngsp;
+                  @if (t.last_run_at) {
+                    {{t.last_run_at | timdate}}
+                  } @else {
+                    <ng-container i18n>never</ng-container>
+                  }
+                  <ng-container>,</ng-container>&ngsp; <!-- avoid space before comma -->
+                  <ng-container i18n>run count:</ng-container>
+                  {{t.total_run_count}}
+                  <button class="btn btn-danger btn-xs" (click)="deleteFunction(t)">
+                    <i class="glyphicon glyphicon-trash"></i>
+                  </button>
+                </li>
+              }
+            </ul>
+        
+            @if (isAdmin) {
+              <div class="checkbox">
+                <label i18n>
                         <input type="checkbox"
                                (change)="fetchFunctions()"
                                [(ngModel)]="showAllUsers"> Show functions from all users
                     </label>
                 </div>
-                <ng-template #norun>
-                    <ng-container i18n>never</ng-container>
-                </ng-template>
-                <h2 i18n>Add a new function</h2>
-                <div class="add-function">
-                    <label for="newFunction" i18n>Id of plugin to run</label>
-                    <input id="newFunction"
-                           class="form-control"
-                           [(ngModel)]="functionName"
-                           type="text">
-                    <label i18n>Interval</label>
-                    <tim-duration-picker
-                            [required]="true"
-                            [(amount)]="functionDurAmount"
-                            [(type)]="functionDurType"
-                    ></tim-duration-picker>
-                    <label i18n>Expires</label>
-                    <tim-datetime-picker [(time)]="expires"></tim-datetime-picker>
-                    <label i18n>Other function parameters (in YAML format)</label>
-                    <textarea [(ngModel)]="params" class="form-control"></textarea>
-                    <button [disabled]="!functionName || !functionDurAmount || !expires"
-                            (click)="addFunction()"
-                            class="timButton" i18n>Add
+              }
+              <h2 i18n>Add a new function</h2>
+              <div class="add-function">
+                <label for="newFunction" i18n>Id of plugin to run</label>
+                <input id="newFunction"
+                  class="form-control"
+                  [(ngModel)]="functionName"
+                  type="text">
+                <label i18n>Interval</label>
+                <tim-duration-picker
+                  [required]="true"
+                  [(amount)]="functionDurAmount"
+                  [(type)]="functionDurType"
+                ></tim-duration-picker>
+                <label i18n>Expires</label>
+                <tim-datetime-picker [(time)]="expires"></tim-datetime-picker>
+                <label i18n>Other function parameters (in YAML format)</label>
+                <textarea [(ngModel)]="params" class="form-control"></textarea>
+                <button [disabled]="!functionName || !functionDurAmount || !expires"
+                  (click)="addFunction()"
+                  class="timButton" i18n>Add
                     </button>
-                </div>
-                <tim-alert *ngIf="error">{{error}}</tim-alert>
+              </div>
+              @if (error) {
+                <tim-alert>{{error}}</tim-alert>
+              }
             </ng-container>
             <ng-container footer>
-                <button class="timButton" type="button" (click)="close({})" i18n>Close</button>
+              <button class="timButton" type="button" (click)="close({})" i18n>Close</button>
             </ng-container>
-        </tim-dialog-frame>
-    `,
+          </tim-dialog-frame>
+        `,
     styleUrls: ["./schedule-dialog.component.scss"],
     standalone: false,
 })
