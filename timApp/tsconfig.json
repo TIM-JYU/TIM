@@ -9,7 +9,7 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "outDir": "./dist/tsc",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
       "tim/*": [

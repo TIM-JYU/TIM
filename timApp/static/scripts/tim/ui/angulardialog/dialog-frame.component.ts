@@ -1,11 +1,23 @@
 /* eslint-disable no-underscore-dangle */
+import type {EventEmitter} from "@angular/core";
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import type {ISize} from "tim/util/utils";
-import type {Size} from "angular2-draggable/lib/models/size";
-import type {IPosition, Position} from "angular2-draggable/lib/models/position";
+import type {
+    AngularResizableDirective,
+    IPosition,
+    Position,
+} from "angular2-draggable";
 import {AngularDraggableDirective} from "angular2-draggable";
 import {Subject} from "rxjs";
-import type {IResizeEvent} from "angular2-draggable/lib/models/resize-event";
+
+// angular2-draggable does not export these types from its public API,
+// and its internal files cannot be imported directly, so the types are derived from the public API.
+type IResizeEvent = AngularResizableDirective["rzStop"] extends EventEmitter<
+    infer T
+>
+    ? T
+    : never;
+type Size = ISize & {set(s: ISize): Size};
 
 export interface IAngularResizableDirectivePublic {
     _currSize: Size;

@@ -1,4 +1,9 @@
-import type {AfterViewInit, DoCheck, OnInit} from "@angular/core";
+import type {
+    AfterViewChecked,
+    AfterViewInit,
+    DoCheck,
+    OnInit,
+} from "@angular/core";
 import {Component, ViewChild} from "@angular/core";
 import type {TabDirective} from "ngx-bootstrap/tabs";
 import {TabsetComponent} from "ngx-bootstrap/tabs";
@@ -69,7 +74,9 @@ const sizeBreakpoint = "md";
     `,
     standalone: false,
 })
-export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
+export class SidebarMenuComponent
+    implements OnInit, AfterViewInit, AfterViewChecked, DoCheck
+{
     private lastUsedTabStorage = new TimStorage(
         "sideBarMenu_lastUsedTab",
         t.string
@@ -84,6 +91,10 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     private currentMenuState: MenuState = MenuState.Open;
     private isSm = isScreenSizeOrLower(sizeBreakpoint);
     private lastNonSmState = this.lastVisState;
+    // Whether tab selections are ignored because ngx-bootstrap is still activating the default tab.
+    private ignoreTabSelect = false;
+    // Whether the set of visible tabs changed in the current change detection pass.
+    private tabsChanged = false;
     @ViewChild("tabs") private tabs!: TabsetComponent;
     hide: IVisibilityVars = getVisibilityVars();
     menuTabs!: TabEntry[];
@@ -202,10 +213,22 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         } else if (!someTabSelected) {
             initialViewState = MenuState.Icons;
         }
-        this.setVisibleState(initialViewState, UPDATE_ALL);
+        this.setVisibleState(initialViewState, {lastVisState: true});
+        this.updateTabsAfterDefaultActivation();
+    }
+
+    ngAfterViewChecked() {
+        if (this.tabsChanged) {
+            // The tab components have been created now
+            this.tabsChanged = false;
+            this.updateTabsAfterDefaultActivation();
+        }
     }
 
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
+        if (this.ignoreTabSelect) {
+            return;
+        }
         this.currentTab = tab.id;
         this.lastUsedTab = this.currentTab ?? "";
         this.setVisibleState(MenuState.Open, {lastVisState: true});
@@ -269,12 +292,30 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         }
     }
 
+    /**
+     * Updates the active tab after ngx-bootstrap has activated its default tab.
+     *
+     * When tabs are created and none of them is active, ngx-bootstrap activates the first tab by itself
+     * in a microtask. That selection must not be handled as a selection made by the user
+     * (it would open the menu), and the correct tab can be activated only after it.
+     */
+    private updateTabsAfterDefaultActivation() {
+        this.ignoreTabSelect = true;
+        void Promise.resolve().then(() => {
+            this.ignoreTabSelect = false;
+            this.updateTabs();
+        });
+    }
+
     private tabVisibilityChanged() {
         let nextState = MenuState.Open;
         if (!this.trySetCurrentTabToDefault() || !this.currentTab) {
             nextState = MenuState.Icons;
         }
-        this.setVisibleState(nextState, UPDATE_ALL);
+        // The tab components are not up to date yet, so they are updated in ngAfterViewChecked.
+        this.setVisibleState(nextState, {lastVisState: true});
+        this.ignoreTabSelect = true;
+        this.tabsChanged = true;
         this.updateTabsVisible();
     }
 
