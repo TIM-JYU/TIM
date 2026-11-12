@@ -34,23 +34,17 @@ jobs:
         with:
           path: |
             timApp/node_modules
-            timApp/modules/jsrunner/server/node_modules
+            timApp/modules/angjsrunner/server/node_modules
           key: ${{ runner.os }}-eslint-npm-${{ hashFiles('**/package-lock.json') }}
       - name: Install packages
         run: cd timApp && npm install
       - name: Lint main code
         run: cd timApp && npm run lint
-      # JSRunner runs on Node.js 18 and npm 6 (see jsrunner service in docker-compose.tmpl.yml)
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
+      # JSRunner runs the angjsrunner copy on Node.js 24 (see jsrunner service in docker-compose.tmpl.yml)
       - name: Install JSRunner packages
-        run: |
-          npm i --global npm@6
-          cd timApp/modules/jsrunner/server
-          npm install
+        run: cd timApp/modules/angjsrunner/server && npm install
       - name: Lint JSRunner
-        run: cd timApp/modules/jsrunner/server && npm run lint
+        run: cd timApp/modules/angjsrunner/server && npm run lint
 
   py_lint:
     name: Lint Python

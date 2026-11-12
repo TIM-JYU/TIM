@@ -212,13 +212,15 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
   tmpfs:
    - /tmp
  jsrunner:
-  image: ${compose.images_repository}/tim:${tim.image_tag}
+  # JSRunner runs the "angjsrunner" copy of the server (timApp/modules/angjsrunner) on the angtim image (Node.js 24).
+  # The original timApp/modules/jsrunner needs Node.js 18 and is kept unchanged.
+  image: ${compose.images_repository}/${tim.angtim_image_name}:${tim.angtim_image_tag}
   healthcheck:
     disable: true # Not used here
   volumes:
-   - ./timApp/modules/jsrunner:/timApp/modules/jsrunner:rw
+   - ./timApp/modules/angjsrunner:/timApp/modules/angjsrunner:rw
    - ./timApp/static/scripts:/timApp/static/scripts:ro
-  working_dir: /timApp/modules/jsrunner/server
+  working_dir: /timApp/modules/angjsrunner/server
   command: ${ "./startAll.sh" if not jsrunner.is_dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true

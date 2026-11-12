@@ -16,7 +16,7 @@ On Linux, NPM packaged within TIM image is used.
 
 NODE_MODULES = [
     Path.cwd() / "timApp" / "node_modules",
-    Path.cwd() / "timApp" / "modules" / "jsrunner" / "server" / "node_modules",
+    Path.cwd() / "timApp" / "modules" / "angjsrunner" / "server" / "node_modules",
 ]
 
 

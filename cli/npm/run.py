@@ -15,7 +15,9 @@ MIN_NPM_MAJOR_VERSION = 10
 # npm that is installed by `./tim setup` if the local npm is too old
 DEFAULT_NPM_MAJOR_VERSION = 11
 
-JSRUNNER_SERVER_DIR = "timApp/modules/jsrunner/server"
+# JSRunner server is run from the "angjsrunner" copy that works with Node.js 24.
+# The original server in timApp/modules/jsrunner/server needs Node.js 18 and is kept unchanged.
+JSRUNNER_SERVER_DIR = "timApp/modules/angjsrunner/server"
 
 _npm_ok = False
 _npm_version_ok = False
@@ -108,7 +110,7 @@ def run_jsrunner_npm(args: List[str]) -> None:
 
     JSRunner has native dependencies, so npm is always run in a container.
     The container is the JSRunner's own one (and not TIM's) so that the dependencies are
-    installed and built with the same Node.js that runs JSRunner.
+    installed and built in the same container that runs JSRunner.
     """
     log_debug(f"Running JSRunner npm with args: {args}")
     run_compose(

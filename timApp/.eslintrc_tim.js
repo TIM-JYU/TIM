@@ -19,6 +19,7 @@ module.exports = {
         "modules/cs/static/mindsim/",
         "modules/cs/simcir/",
         "modules/jsrunner/server/",
+        "modules/angjsrunner/",
         "static/scripts/tim/environments/environment.prod.ts",
         "**/*.worker.ts",
         "i18n/"
