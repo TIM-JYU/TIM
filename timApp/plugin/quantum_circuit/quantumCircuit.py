@@ -619,7 +619,7 @@ def run_all_simulations(
             return
 
         ignored_set = set(ignored)
-        if (actual, tuple) and isinstance(expected, tuple):
+        if isinstance(actual, tuple) and isinstance(expected, tuple):
             expected_probs = _drop_ignored(expected[1], n_qubits, ignored)
             actual_probs = _drop_ignored(actual[1], n_qubits, ignored)
             if not check_answer(actual_probs, expected_probs):
