@@ -20,7 +20,12 @@ from cli.docker.run import (
     verify_compose_installed,
     run_compose,
 )
-from cli.npm.run import verify_npm, run_npm, reset_npm_version
+from cli.npm.run import (
+    verify_npm,
+    run_npm,
+    reset_npm_version,
+    DEFAULT_NPM_MAJOR_VERSION,
+)
 from cli.util.errors import CLIError
 from cli.util.logging import log_info, log_warning, log_debug
 from cli.util.proc import run_cmd
@@ -363,8 +368,10 @@ def setup_dev() -> None:
     verify_venv_pip()
 
     if not verify_npm(False):
-        log_info("Ensuring npm@6 is installed")
-        run_npm(["install", "--global", "npm@6"], "timApp", False)
+        log_info(f"Ensuring npm@{DEFAULT_NPM_MAJOR_VERSION} is installed")
+        run_npm(
+            ["install", "--global", f"npm@{DEFAULT_NPM_MAJOR_VERSION}"], "timApp", False
+        )
         reset_npm_version()
 
     idea_path = Path.cwd() / ".idea"

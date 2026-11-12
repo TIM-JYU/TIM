@@ -9,7 +9,11 @@ from cli.util.errors import CLIError
 from cli.util.logging import log_debug
 from cli.util.proc import run_cmd
 
-MAX_NPM_MAJOR_VERSION = 6
+# Oldest npm that can be used for TIM's main packages when running npm locally (i.e. not in the TIM container).
+# The TIM container has Node.js 24 with npm 11.
+MIN_NPM_MAJOR_VERSION = 10
+# npm that is installed by `./tim setup` if the local npm is too old
+DEFAULT_NPM_MAJOR_VERSION = 11
 
 JSRUNNER_SERVER_DIR = "timApp/modules/jsrunner/server"
 
@@ -45,11 +49,11 @@ def verify_npm(assert_version: bool = True) -> bool:
         )
         version = res.stdout.strip()
         version_parts = [int(x) for x in version.split(".")]
-        _npm_version_ok = version_parts[0] <= MAX_NPM_MAJOR_VERSION
+        _npm_version_ok = version_parts[0] >= MIN_NPM_MAJOR_VERSION
         if not _npm_version_ok and assert_version:
             raise CLIError(
-                f"TIM requires NPM version {MAX_NPM_MAJOR_VERSION}.x to run locally. "
-                f"Run `npm i -g npm@{MAX_NPM_MAJOR_VERSION}` to install it."
+                f"TIM requires NPM version {MIN_NPM_MAJOR_VERSION} or newer to run locally (found {version}). "
+                f"Install Node.js 24 or run `npm i -g npm@{DEFAULT_NPM_MAJOR_VERSION}` to install it."
             )
         _npm_ok = True
         _npm_cmd = [npm_cmd]

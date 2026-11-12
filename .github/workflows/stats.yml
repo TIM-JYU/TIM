@@ -22,6 +22,9 @@ jobs:
     if: needs.skip_check.outputs.should_skip != 'true'
 
     steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
       - uses: actions/checkout@v4
       - name: Cache Angular build assets
         uses: actions/cache@v3
@@ -38,7 +41,6 @@ jobs:
           key: ${{ runner.os }}-ts-stats-npm-${{ hashFiles('timApp/package-lock.json') }}
       - name: Install packages
         run: |
-          npm i --global npm@6
           cd timApp
           npm install
           npm install -g webpack-bundle-analyzer
