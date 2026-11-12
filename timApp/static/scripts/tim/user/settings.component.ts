@@ -806,7 +806,10 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     @ViewChild("stylesTabs", {static: false}) stylesTabs!: TabsetComponent;
     styleError?: {title: string; message: string};
 
-    constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
+    constructor(
+        private http: HttpClient,
+        private cdr: ChangeDetectorRef
+    ) {
         this.getKeys();
         this.user = settingsglobals().current_user;
         this.consent = this.user.consent;

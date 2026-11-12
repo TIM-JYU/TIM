@@ -266,7 +266,7 @@ export class PrintDialogComponent extends AngularDialogComponent<
         if (tpl.name !== "empty") {
             return true;
         }
-        if (this.selectedTemplate && this.selectedTemplate.id === tpl.id) {
+        if (this.selectedTemplate?.id === tpl.id) {
             return true;
         }
         return false;

@@ -89,7 +89,8 @@ export class GotoLinkComponent implements OnInit {
     @Input() href = "";
     @Input() waitText?: string;
     @Input()
-    countdownText: string = $localize`Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
+    countdownText: string =
+        $localize`Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
     @Input() unauthorizedText?: string;
     @Input() pastDueText?: string;
     @Input() timeLang?: string;

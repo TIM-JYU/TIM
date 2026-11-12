@@ -800,8 +800,7 @@ export class AnswerBrowserComponent
         if (
             (!(
                 this.selectedAnswer &&
-                this.loadedAnswer &&
-                this.selectedAnswer.id == this.loadedAnswer.id &&
+                this.selectedAnswer.id == this.loadedAnswer?.id &&
                 this.oldreview == this.review
             ) &&
                 this.canSafelyChangeState) ||
@@ -1518,10 +1517,7 @@ export class AnswerBrowserComponent
      */
     async getAnswersAndUpdate(forceUpdate?: boolean) {
         // if ( this.isUseCurrentUser(this.taskId) ) { return null; }
-        if (
-            !this.viewctrl.item.rights ||
-            !this.viewctrl.item.rights.browse_own_answers
-        ) {
+        if (!this.viewctrl.item.rights?.browse_own_answers) {
             return;
         }
         const data = await this.getAnswers();
@@ -1611,8 +1607,7 @@ export class AnswerBrowserComponent
     }
 
     public pluginAttrs():
-        | IGenericPluginTopLevelFields<IGenericPluginMarkup>
-        | undefined {
+        IGenericPluginTopLevelFields<IGenericPluginMarkup> | undefined {
         return this.getPluginComponent()?.attrsall;
     }
 

@@ -170,7 +170,10 @@ export class LectureInfoComponent {
     answerMap: Record<number, IQuestionAnswerPlain[]> = {};
     messages: ILectureMessage[] = [];
 
-    constructor(private http: HttpClient, private zone: NgZone) {
+    constructor(
+        private http: HttpClient,
+        private zone: NgZone
+    ) {
         const g = lectureinfoglobals();
         this.inLecture = g.inLecture;
         this.lecture = {

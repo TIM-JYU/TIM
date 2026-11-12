@@ -117,9 +117,7 @@ export class ServerSyncValues {
             iframeSelector
         ) as HTMLIFrameElement;
         if (debugName) {
-            this.debugElem = this.parentElem.querySelector(
-                debugName
-            ) as HTMLInputElement;
+            this.debugElem = this.parentElem.querySelector(debugName);
         }
         this.channel = new MessageChannel();
 

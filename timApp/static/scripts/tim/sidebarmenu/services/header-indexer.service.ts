@@ -58,7 +58,7 @@ export class HeaderIndexerService {
      * @returns {HeaderIndexItem[]} Index with added closed states.
      */
     private formDisplayIndex(index: HeaderIndexItem[]) {
-        if (!index || !index[0]) {
+        if (!index?.[0]) {
             return [];
         }
 

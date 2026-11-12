@@ -156,8 +156,6 @@ export interface DataModelProvider {
 
     isNrColumn(def: boolean): boolean;
 
-    isNrColumn(def: boolean): boolean;
-
     isSequentialNr(): boolean;
 
     isCbColumn(def: boolean): boolean;
@@ -825,7 +823,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         });
         const {x, y, w, h} = this.getCellPosition(row, col);
         if (editInput) {
-            applyBasicStyle(editInput as HTMLElement, {
+            applyBasicStyle(editInput, {
                 position: "absolute",
                 top: px(y - this.mainDataTable.nativeElement.offsetHeight),
                 left: px(x),
@@ -1849,8 +1847,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (colWidth) {
             this.sizeContentContainer.style.minWidth = px(colWidth);
         }
-        this.sizeContentContainer.innerHTML =
-            this.modelProvider.getCellContents(row, column);
+        // The contents come from the users, so they must not reach the DOM unsanitized even for measuring.
+        this.sizeContentContainer.innerHTML = DOMPurify.sanitize(
+            this.modelProvider.getCellContents(row, column) ?? ""
+        );
         const size = this.sizeContentContainer.getBoundingClientRect();
         return {
             width: Math.ceil(size.width * 1.1),
@@ -2280,7 +2280,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 worker.postMessage({
                     row,
                     data: this.modelProvider.getRowContents(row),
-                } as PurifyData);
+                });
             }
         }
     }

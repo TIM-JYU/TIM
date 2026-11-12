@@ -142,9 +142,7 @@ export class ReviewController {
             if (range && range.toString().length > 0) {
                 this.selectionIsDrawing = false;
                 this.selectText(
-                    createParContext(
-                        $(range.startContainer).parents(".par")[0] as Element
-                    )
+                    createParContext($(range.startContainer).parents(".par")[0])
                 );
                 refreshUI();
             }
@@ -556,9 +554,7 @@ export class ReviewController {
      * @returns {Array} Annotations of the answer
      */
     getAnnotationsByAnswerId(id: number): Annotation[] {
-        const annotations = this.annotations.filter(
-            (a) => a.answer != null && a.answer.id === id
-        );
+        const annotations = this.annotations.filter((a) => a.answer?.id === id);
         annotations.sort(
             (a, b) => (b.coord.start.offset ?? 0) - (a.coord.start.offset ?? 0)
         );
@@ -1381,7 +1377,7 @@ export class ReviewController {
         const lastInnerFirstChild = this.getFirstChildUntilNull(innerElement);
         const lastInnerLastChild = this.getLastChildUntilNull(innerElement);
 
-        while (parent && parent.nodeName === "#text") {
+        while (parent?.nodeName === "#text") {
             parent = parent.parentNode;
         }
 
@@ -1590,13 +1586,7 @@ export class ReviewController {
             }
         }
 
-        if (
-            !(
-                ab.review &&
-                ab.selectedAnswer &&
-                ab.selectedAnswer.id === annotation.answer.id
-            )
-        ) {
+        if (!(ab.review && ab.selectedAnswer?.id === annotation.answer.id)) {
             ab.review = true;
             await ab.setAnswerById(annotation.answer.id);
         }

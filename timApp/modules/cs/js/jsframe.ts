@@ -187,7 +187,7 @@ function unwrapAllC(data: unknown): JSFrameData {
         !Array.isArray(data) &&
         "usercode" in data
     ) {
-        return data as JSFrameData;
+        return data;
     }
     while (CProp.is(data) && CProp.is(data.c)) {
         data = data.c;

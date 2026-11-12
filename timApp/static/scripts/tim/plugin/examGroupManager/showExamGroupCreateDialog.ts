@@ -5,9 +5,8 @@ import type {ExamGroupDialogParams} from "tim/plugin/examGroupManager/exam-group
 export async function showExamGroupCreateDialog(
     params?: ExamGroupDialogParams
 ): Promise<ExamGroup> {
-    const {ExamGroupCreateDialogComponent} = await import(
-        "./exam-group-create-dialog.component"
-    );
+    const {ExamGroupCreateDialogComponent} =
+        await import("./exam-group-create-dialog.component");
     return (await angularDialog.open(ExamGroupCreateDialogComponent, params))
         .result;
 }

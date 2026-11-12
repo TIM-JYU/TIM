@@ -143,11 +143,7 @@ export class CourseListDialogComponent extends AngularDialogComponent<
      * Loads subjects collapse states.
      */
     private loadCollapseStates() {
-        if (
-            this.grouped &&
-            this.closedSubjects &&
-            this.closedSubjects.length === this.grouped.length
-        ) {
+        if (this.closedSubjects?.length === this.grouped?.length) {
             for (const {subject, i} of this.grouped.map((s, ind) => ({
                 subject: s,
                 i: ind,

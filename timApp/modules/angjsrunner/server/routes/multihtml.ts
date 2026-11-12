@@ -8,7 +8,9 @@ router.post("/", (req, res, next) => {
     const htmls = [];
     for (const j of req.body) {
         // TODO: Lift this up to pluginify / render_plugin
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         const siw = j.markup.showInView || false;
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         const fieldHelper = j.markup.fieldhelper || false;
         if (j.viewmode) {
             if (!fieldHelper && !siw) {

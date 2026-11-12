@@ -217,10 +217,10 @@ export class ViewRangeInfo {
         const ranges = documentglobals().nav_ranges;
         const current = getCurrentViewRange();
         this.isOnly = false;
-        if (current && current.name === "Only") {
+        if (current?.name === "Only") {
             this.isOnly = true;
         }
-        if (!current || !ranges || ranges.length != 4) {
+        if (!current || ranges?.length != 4) {
             return;
         }
         const first = ranges[0];

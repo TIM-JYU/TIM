@@ -5,9 +5,8 @@ import type {GroupMember} from "tim/plugin/examGroupManager/exam-group-manager.c
 export async function showUserCreationDialog(
     params?: UserCreationDialogParams
 ): Promise<GroupMember> {
-    const {UserCreationDialogComponent} = await import(
-        "./user-creation-dialog.component"
-    );
+    const {UserCreationDialogComponent} =
+        await import("./user-creation-dialog.component");
     return (await angularDialog.open(UserCreationDialogComponent, params))
         .result;
 }

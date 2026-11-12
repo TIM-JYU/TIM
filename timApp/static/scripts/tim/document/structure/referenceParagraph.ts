@@ -12,9 +12,9 @@ import {DerefOption} from "tim/document/structure/derefOption";
  * @property original The original {@link Paragraph} that refers to a {@link Paragraph} or an {@link Area}.
  * @property target The referred {@link DocumentPart}.
  */
-export class ReferenceParagraph<T extends Paragraph | Area>
-    implements IDocumentPart
-{
+export class ReferenceParagraph<
+    T extends Paragraph | Area,
+> implements IDocumentPart {
     public parent?: Area | ReferenceParagraph<Paragraph | Area>;
     constructor(
         public readonly original: Paragraph,

@@ -681,13 +681,11 @@ export class LectureController {
                 ) {
                     if (
                         // Lecturer asked a question from this window/tab. Show it of course.
-                        (this.lastQuestion &&
-                            getAskedQuestionFromQA(answer.extra.data)
-                                .asked_id === this.lastQuestion.asked_id) ||
+                        getAskedQuestionFromQA(answer.extra.data).asked_id ===
+                            this.lastQuestion?.asked_id ||
                         // lecturer has multiple windows/tabs open in the lecture document. Show the question in all of them.
                         (this.isLecturer &&
-                            this.viewctrl &&
-                            this.viewctrl.item.id == this.lecture.doc_id) ||
+                            this.viewctrl?.item.id == this.lecture.doc_id) ||
                         // The question is not open in any other window/tab, so it needs to be shown in whichever got the
                         // message first. We also need to make sure we are not the lecturer because in that case the dialog
                         // might open in the wrong window (because we specifically want the one where the lecturer
@@ -753,7 +751,7 @@ export class LectureController {
     }
 
     getCurrentPointsId() {
-        if (!currentQuestion || !currentQuestion.hasResult()) {
+        if (!currentQuestion?.hasResult()) {
             return undefined;
         }
         return currentQuestion.getQuestion().asked_id;

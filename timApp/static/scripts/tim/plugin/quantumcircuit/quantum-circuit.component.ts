@@ -124,6 +124,7 @@ const CustomGateInfo = t.intersection([
 
 export type ICustomGateInfo = t.TypeOf<typeof CustomGateInfo>;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as a type
 const NumericCustomGateInfo = t.type({
     name: t.string,
     matrix: t.string,
@@ -131,10 +132,12 @@ const NumericCustomGateInfo = t.type({
 
 export type INumericCustomGateInfo = t.TypeOf<typeof NumericCustomGateInfo>;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as a type
 const CircuitType = nullable(t.array(GateInfo));
 
 export type ICircuit = t.TypeOf<typeof CircuitType>;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as a type
 const InputBitsType = nullable(t.array(t.number));
 type IUserInput = t.TypeOf<typeof InputBitsType>;
 
@@ -1049,8 +1052,7 @@ export class QuantumCircuitComponent
         ) {
             // same was selected so unselect it
             if (
-                this.selectedGate &&
-                this.selectedGate.time === gate.time &&
+                this.selectedGate?.time === gate.time &&
                 this.selectedGate.target === gate.target
             ) {
                 this.selectedGate = null;
@@ -1280,11 +1282,7 @@ export class QuantumCircuitComponent
             // when resetting, use original value.
             // if userInput isn't the same length as nQubits then yaml was edited and
             // existing answers with different nQubits value wouldn't work
-            if (
-                userInput &&
-                userInput.length === this.markup.nQubits &&
-                !reset
-            ) {
+            if (userInput?.length === this.markup.nQubits && !reset) {
                 value = userInput[i];
             }
 
@@ -1340,10 +1338,7 @@ export class QuantumCircuitComponent
             );
         }
         for (let i = 0; i < this.markup.nQubits; i++) {
-            if (
-                this.markup.outputNames &&
-                this.markup.outputNames.length === this.markup.nQubits
-            ) {
+            if (this.markup.outputNames?.length === this.markup.nQubits) {
                 this.qubitOutputs.push({
                     value: "0",
                     probability: 0,
@@ -1401,10 +1396,7 @@ export class QuantumCircuitComponent
         }
 
         // set names but only if there is right amount of them
-        if (
-            this.markup.outputNames &&
-            this.markup.outputNames.length === this.markup.nQubits
-        ) {
+        if (this.markup.outputNames?.length === this.markup.nQubits) {
             for (let i = 0; i < this.qubitOutputs.length; i++) {
                 this.qubitOutputs[i].name = this.markup.outputNames[i];
             }

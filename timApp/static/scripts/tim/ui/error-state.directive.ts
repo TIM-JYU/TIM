@@ -13,7 +13,10 @@ export class ErrorStateDirective implements AfterContentInit, OnDestroy {
     @ContentChild(NgModel, {static: false}) c?: NgModel;
     private sub?: Subscription;
 
-    constructor(private i: InputService, private e: ElementRef<HTMLElement>) {}
+    constructor(
+        private i: InputService,
+        private e: ElementRef<HTMLElement>
+    ) {}
 
     ngAfterContentInit() {
         if (this.c?.statusChanges) {

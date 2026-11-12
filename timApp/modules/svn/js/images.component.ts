@@ -253,7 +253,7 @@ export class ImagesComponent extends AngularPluginBase<
         el.addEventListener("mouseleave", this.hoverEnd);
         el.addEventListener("touchstart", this.hoverStart, {
             passive: false,
-        } as AddEventListenerOptions);
+        });
         el.addEventListener("touchend", this.hoverEnd);
         el.addEventListener("touchcancel", this.hoverEnd);
     }

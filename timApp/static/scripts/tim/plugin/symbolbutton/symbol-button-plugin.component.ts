@@ -108,9 +108,7 @@ export class SymbolButtonPluginComponent
 
     async loadComponent() {
         const component = (
-            await import(
-                "../../../../../modules/cs/js/editor/math-editor/symbol-button-menu.component"
-            )
+            await import("../../../../../modules/cs/js/editor/math-editor/symbol-button-menu.component")
         ).SymbolButtonMenuComponent;
         const comp = this.symbolButtonMenuContainer.createComponent(component);
         this.symbolButtonMenuComponent = comp.instance;

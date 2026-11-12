@@ -4,7 +4,7 @@ export const formErrorMessages: Record<string, string> = {
     maxlength: "This field is too long.",
     min: "Number is too small.",
     minlength: "This field is too short.",
-    // eslint-disable-next-line id-blacklist
+    // eslint-disable-next-line id-denylist
     number: "This must be a number.",
     required: "This field is required.",
     timLocation:

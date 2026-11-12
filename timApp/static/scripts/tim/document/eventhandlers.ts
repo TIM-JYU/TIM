@@ -116,7 +116,7 @@ export function onClick(
         // When the element has focus, allow clicking by pressing Enter.
         $(document).on("keypress", className, (e) => {
             const kbE = e.originalEvent;
-            if (!kbE || kbE.keyCode != KEY_ENTER) {
+            if (kbE?.keyCode != KEY_ENTER) {
                 return;
             }
             const t = e.target as HTMLElement;

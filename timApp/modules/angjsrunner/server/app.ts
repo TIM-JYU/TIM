@@ -11,9 +11,15 @@ import runScriptRouter from "./routes/runscript";
 
 const app = express();
 
-// view engine setup
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "jade");
+function escapeHtml(s: unknown): string {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
 
 app.use(logger("dev"));
 app.use(express.json({limit: "100mb"}));
@@ -40,10 +46,18 @@ app.use(((err, req, res, next) => {
     res.locals.error = req.app.get("env") === "development" ? err : {};
 
     // render the error page
+    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
     res.status(err.status || 500);
     /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
-    res.render("error");
+    const error = res.locals.error as {status?: unknown; stack?: unknown};
+    res.type("html").send(
+        `<!DOCTYPE html><html><head><title></title></head><body><h1>${escapeHtml(
+            res.locals.message
+        )}</h1><h2>${escapeHtml(error.status)}</h2><pre>${escapeHtml(
+            error.stack
+        )}</pre></body></html>`
+    );
 }) as ErrorRequestHandler);
 
 export default app;

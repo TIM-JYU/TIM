@@ -231,7 +231,8 @@ declare module "ace-builds/src-noconflict/ace" {
         }
 
         export interface EditorOptions
-            extends EditSessionOptions,
+            extends
+                EditSessionOptions,
                 MouseHandlerOptions,
                 VirtualRendererOptions {
             selectionStyle: string;
@@ -456,9 +457,7 @@ declare module "ace-builds/src-noconflict/ace" {
         }
 
         export interface EditSession
-            extends EventEmitter,
-                OptionsProvider,
-                Folding {
+            extends EventEmitter, OptionsProvider, Folding {
             selection: Selection;
 
             on(name: "change", callback: () => void): Function;

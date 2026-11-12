@@ -51,6 +51,7 @@ import type {
 import {FileSelectManagerComponent} from "../../../../../modules/cs/js/util/file-select";
 import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as a type
 const FileSubmission = t.intersection([
     t.type({
         source: t.string,

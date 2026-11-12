@@ -286,7 +286,7 @@ export class FileSelectComponent {
                                                 file.name
                                             } at ${timeString()}. ${
                                                 this.multiple
-                                                    ? this.stem ?? ""
+                                                    ? (this.stem ?? "")
                                                     : ""
                                             }`
                                         ); // TODO: push to correct file-select
@@ -298,7 +298,7 @@ export class FileSelectComponent {
                                                 mapping.path
                                             } at ${timeString()}. ${
                                                 this.multiple
-                                                    ? this.stem ?? ""
+                                                    ? (this.stem ?? "")
                                                     : ""
                                             }`
                                         ); // TODO: push to correct file-select
@@ -515,9 +515,8 @@ export class FileSelectManagerComponent {
     }
 
     updateFileInfo() {
-        const self = this;
-        let nfileInfo: typeof self.fileInfo = [];
-        const nidToFile: typeof self.idToFile = {};
+        let nfileInfo: typeof this.fileInfo = [];
+        const nidToFile: typeof this.idToFile = {};
         if (this.files.length != 0) {
             if (this.multipleElements) {
                 for (let i = 0; i < this.files.length; i++) {

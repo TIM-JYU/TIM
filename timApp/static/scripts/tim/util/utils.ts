@@ -645,7 +645,10 @@ export function getTypedStorage<T, O = T>(
 }
 
 export class TimStorage<T, O = T> {
-    constructor(private key: string, private codec: t.Type<T, O>) {}
+    constructor(
+        private key: string,
+        private codec: t.Type<T, O>
+    ) {}
 
     set(value: T) {
         setStorage(this.key, this.codec.encode(value));
@@ -691,7 +694,7 @@ export function numOrStringToNumber(s: number | string) {
 
 export function valueOr<
     T extends Record<string, unknown> | string | number | boolean,
-    K extends T
+    K extends T,
 >(v: T | undefined | null, def: K): T {
     return v != null ? v : def;
 }
@@ -815,7 +818,7 @@ export function copyToClipboard(s: string) {
 }
 
 export async function getClipboardText(): Promise<string | null> {
-    if (navigator?.clipboard && navigator.clipboard.readText) {
+    if (navigator?.clipboard?.readText) {
         try {
             return await navigator.clipboard.readText();
         } catch (err) {

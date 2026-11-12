@@ -42,7 +42,10 @@ export class DialogContainerComponent {
         TimDefer<AngularDialogComponent<unknown, unknown>>
     >();
 
-    constructor(private ds: DialogService, private zone: NgZone) {
+    constructor(
+        private ds: DialogService,
+        private zone: NgZone
+    ) {
         ds.registerContainer(this);
     }
 

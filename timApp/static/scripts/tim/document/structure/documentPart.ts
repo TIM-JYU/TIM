@@ -8,9 +8,7 @@ import type {DerefOption} from "tim/document/structure/derefOption";
  * Represents the various possible parts of a document.
  */
 export type DocumentPart =
-    | Paragraph
-    | Area
-    | ReferenceParagraph<Paragraph | Area>;
+    Paragraph | Area | ReferenceParagraph<Paragraph | Area>;
 
 export interface IDocumentPart {
     /**

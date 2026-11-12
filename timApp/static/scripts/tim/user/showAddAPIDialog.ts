@@ -13,9 +13,8 @@ import type {IUserApiKey} from "tim/user/IUser";
 Code source: showAddContactDialog.ts
  */
 export async function showAddAPIKeyDialog(onAdd: (key: IUserApiKey) => void) {
-    const {AddAPIKeyDialogComponent} = await import(
-        "./add-api-key-dialog.component"
-    );
+    const {AddAPIKeyDialogComponent} =
+        await import("./add-api-key-dialog.component");
 
     return (
         await angularDialog.open(

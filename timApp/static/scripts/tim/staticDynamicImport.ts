@@ -1,9 +1,7 @@
 export function staticDynamicImport(s: string) {
     switch (s) {
         case "/jsrunner/javascripts/build/jsrunner.js":
-            return import(
-                "modules/jsrunner/client/javascripts/jsrunner-plugin.component"
-            );
+            return import("modules/jsrunner/client/javascripts/jsrunner-plugin.component");
         case "/field/js/build/numericfield.js":
             return import("modules/fields/js/numericfield-plugin.component");
         case "/field/js/build/textfield.js":
@@ -73,9 +71,7 @@ export function staticDynamicImport(s: string) {
         case "timMessageListManagement":
             return import("tim/messaging/manage/message-list-manage.module");
         case "timExamGroupManager":
-            return import(
-                "tim/plugin/examGroupManager/exam-group-manager.component"
-            );
+            return import("tim/plugin/examGroupManager/exam-group-manager.component");
         case "oauthAuthorize":
             return import("tim/user/oauth-authorize.component");
         case "timArchive":
@@ -95,13 +91,9 @@ export function staticDynamicImport(s: string) {
         case "groupJoin":
             return import("tim/plugin/groupJoin/group-join.component");
         case "quantumCircuit":
-            return import(
-                "tim/plugin/quantumcircuit/quantum-circuit.component"
-            );
+            return import("tim/plugin/quantumcircuit/quantum-circuit.component");
         case "symbolbutton":
-            return import(
-                "tim/plugin/symbolbutton/symbol-button-plugin.component"
-            );
+            return import("tim/plugin/symbolbutton/symbol-button-plugin.component");
         case "steps":
             return import("tim/plugin/steps/steps-plugin.component");
     }

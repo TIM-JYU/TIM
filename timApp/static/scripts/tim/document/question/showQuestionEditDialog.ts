@@ -7,9 +7,8 @@ import type {
 export async function showQuestionEditDialog(
     params: IQuestionDialogParams
 ): Promise<IQuestionDialogResult> {
-    const {QuestionEditDialogComponent} = await import(
-        "./question-edit-dialog.component"
-    );
+    const {QuestionEditDialogComponent} =
+        await import("./question-edit-dialog.component");
     return (await angularDialog.open(QuestionEditDialogComponent, params))
         .result;
 }

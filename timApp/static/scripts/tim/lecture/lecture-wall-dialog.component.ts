@@ -80,7 +80,10 @@ export class LectureWallDialogComponent extends AngularDialogComponent<
     messages: ILectureMessage[] = [];
     private msgCount = 0;
 
-    constructor(private http: HttpClient, private zone: NgZone) {
+    constructor(
+        private http: HttpClient,
+        private zone: NgZone
+    ) {
         super();
     }
 

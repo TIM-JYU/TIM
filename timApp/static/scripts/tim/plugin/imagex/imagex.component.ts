@@ -609,7 +609,7 @@ const toRadians = Math.PI / 180;
 type ImageLoadResult = HTMLImageElement | Event;
 
 abstract class ObjBase<
-    T extends RequireExcept<CommonPropsT, OptionalCommonPropNames>
+    T extends RequireExcept<CommonPropsT, OptionalCommonPropNames>,
 > {
     public x: number;
     public y: number;

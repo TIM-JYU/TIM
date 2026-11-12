@@ -891,7 +891,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     showBookingButton() {
         return (
-            (!this.data.meta || this.data.meta.maxSize != 0) &&
+            this.data.meta?.maxSize != 0 &&
             !this.isEditEnabled() &&
             !this.userHasBooked()
         );

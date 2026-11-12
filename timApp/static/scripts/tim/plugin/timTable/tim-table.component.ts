@@ -427,8 +427,9 @@ export function defaultDataView(): DataViewSettings {
     };
 }
 
-export interface DataViewSettings
-    extends t.TypeOf<typeof DataViewSettingsType> {
+export interface DataViewSettings extends t.TypeOf<
+    typeof DataViewSettingsType
+> {
     // Currently PyCharm isn't able to analyze types generated via io-ts inside Angular templates,
     // which is why these two are defined twice
     tableWidth: string;
@@ -3057,17 +3058,14 @@ export class TimTableComponent
         }
         this.cellDataMatrix.splice(nrows); // truncate matrix in case the number of rows has decreased
         for (let iy = 0; iy < nrows; iy++) {
-            if (
-                !this.cellDataMatrix[iy] ||
-                this.cellDataMatrix[iy].length != ncols
-            ) {
+            if (this.cellDataMatrix[iy]?.length != ncols) {
                 this.cellDataMatrix[iy] = [];
                 for (let ix = 0; ix < ncols; ix++) {
                     this.cellDataMatrix[iy][ix] = this.createDummyCell(iy, ix);
                 }
             }
             const row = this.data.table.rows[iy];
-            if (!row || !row.row) {
+            if (!row?.row) {
                 continue;
             }
             for (let ix = 0; ix < row.row.length; ix++) {
@@ -4223,7 +4221,7 @@ export class TimTableComponent
         if (
             isCurrentCell ||
             this.noNeedFirstClick ||
-            (activeCell && activeCell.row === rowi && activeCell.col === coli)
+            (activeCell?.row === rowi && activeCell.col === coli)
         ) {
             if (this.currentCell) {
                 const newvalue = this.currentCell.editedCellContent;
@@ -5471,8 +5469,7 @@ export class TimTableComponent
                         this.cellDataMatrix[c.y][c.x].cell = newValue;
                     }
                     if (
-                        this.currentCell &&
-                        this.currentCell.row == cell.row &&
+                        this.currentCell?.row == cell.row &&
                         this.currentCell.col == cell.col
                     ) {
                         this.currentCell.editedCellContent = newValue;
@@ -6171,9 +6168,7 @@ export class TimTableComponent
      * @param index row number
      */
     showColumn(index: number) {
-        return (
-            !this.data.hiddenColumns || !this.data.hiddenColumns.includes(index)
-        );
+        return !this.data.hiddenColumns?.includes(index);
     }
 
     async clearFilters() {

@@ -31,7 +31,7 @@ jobs:
           cd timApp
           rm package-lock.json
           npm install --unsafe-perm --legacy-peer-deps
-          npm install --no-package-lock --legacy-peer-deps --no-save prettier@2.7.1
+          npm install --no-package-lock --legacy-peer-deps --no-save prettier@3.10.1
       - name: Check formatting
         run: cd timApp && npm run checkformat
 

@@ -246,8 +246,9 @@ const TSendGradesToSisuData = t.partial({
     users: t.array(t.string),
 });
 
-export interface SendGradesToSisuData
-    extends t.TypeOf<typeof TSendGradesToSisuData> {
+export interface SendGradesToSisuData extends t.TypeOf<
+    typeof TSendGradesToSisuData
+> {
     destCourse: string;
     destCourseGroup: string | null;
 }
@@ -423,7 +424,6 @@ class Distribution extends WithGtools {
     private readonly fieldName: string;
     public readonly autoadd: boolean = true;
 
-    // eslint-disable-next-line constructor-super
     constructor(
         gtools: GTools,
         fieldName: string,
@@ -1637,6 +1637,7 @@ export class Tools extends ToolsBase {
         if (gv1 == undefined) {
             return false;
         }
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
         const st1 = String(gv1).toLowerCase();
         const st2 = String(gv2).toLowerCase();
         if (st1 === "") {

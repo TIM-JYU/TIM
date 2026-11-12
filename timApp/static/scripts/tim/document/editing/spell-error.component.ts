@@ -69,9 +69,8 @@ export class SpellErrorComponent implements OnDestroy {
 }
 
 async function showSpellErrorDialog(s: ISpellErrorParams) {
-    const {SpellErrorDialogComponent} = await import(
-        "./spell-error-dialog.component"
-    );
+    const {SpellErrorDialogComponent} =
+        await import("./spell-error-dialog.component");
     return angularDialog.open<
         ISpellErrorParams,
         void,

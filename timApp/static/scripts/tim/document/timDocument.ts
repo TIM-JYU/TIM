@@ -13,7 +13,7 @@ import {documentglobals} from "tim/util/globals";
 type ParMapValue = [
     prev: Paragraph | undefined,
     curr: Paragraph,
-    next: Paragraph | undefined
+    next: Paragraph | undefined,
 ];
 
 export class TimDocument {

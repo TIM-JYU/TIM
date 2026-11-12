@@ -48,17 +48,10 @@ export type QuestionType =
     | "";
 
 export type MatrixType =
-    | "textArea"
-    | "radiobutton-horizontal"
-    | "checkbox"
-    | "inputText";
+    "textArea" | "radiobutton-horizontal" | "checkbox" | "inputText";
 
 export type AnswerFieldType =
-    | "radio"
-    | "checkbox"
-    | "matrix"
-    | "text"
-    | "inputText"; // TODO matrix seems wrong
+    "radio" | "checkbox" | "matrix" | "text" | "inputText"; // TODO matrix seems wrong
 
 export const RowCodec = t.type({
     text: t.string,
@@ -266,9 +259,7 @@ export interface IUniqueParId {
 }
 
 export type IUpdateResponse =
-    | IGotUpdatesResponse
-    | INoUpdatesResponse
-    | ILectureListResponse;
+    IGotUpdatesResponse | INoUpdatesResponse | ILectureListResponse;
 
 export interface IPointsClosed {
     points_closed: true;

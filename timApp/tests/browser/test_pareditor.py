@@ -55,6 +55,8 @@ class ParEditorTest(BrowserTest):
                 "pareditor/ace_hello_world",
                 "pareditor/ace_hello_world_2",
                 "pareditor/ace_hello_world_3",
+                "pareditor/ace_hello_world_4",  # ace-builds 1.45
+                "pareditor/ace_hello_world_5",
             ],
         )
         change_editor_button = get_change_editor_button(pareditor)
@@ -79,6 +81,8 @@ class ParEditorTest(BrowserTest):
                 "pareditor/ace_hello_world",
                 "pareditor/ace_hello_world_2",
                 "pareditor/ace_hello_world_3",
+                "pareditor/ace_hello_world_4",  # ace-builds 1.45
+                "pareditor/ace_hello_world_5",
             ],
         )
 
@@ -110,7 +114,13 @@ class ParEditorTest(BrowserTest):
         editor.click()
         ActionChains(self.drv).send_keys("d").perform()
         self.wait_for_preview_to_finish()
-        self.assert_same_screenshot(pareditor, "pareditor/autocomplete")
+        self.assert_same_screenshot(
+            pareditor,
+            [
+                "pareditor/autocomplete",
+                "pareditor/autocomplete_2",  # ace-builds 1.45
+            ],
+        )
         prefs = self.current_user.get_prefs()
         prefs.use_document_word_list = False
         self.current_user.set_prefs(prefs)
@@ -127,5 +137,6 @@ class ParEditorTest(BrowserTest):
             pareditor,
             [
                 "pareditor/autocomplete_no_document",
+                "pareditor/autocomplete_no_document_2",  # ace-builds 1.45
             ],
         )

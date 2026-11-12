@@ -530,7 +530,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
             return 0;
         }
         const id = activeObj.id;
-        if (!id || !id.startsWith("r")) {
+        if (!id?.startsWith("r")) {
             return 0;
         }
         const edits = this.questionMatrix.textareas.map((x) => x.nativeElement);

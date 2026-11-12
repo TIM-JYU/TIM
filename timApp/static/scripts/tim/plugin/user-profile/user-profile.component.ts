@@ -22,7 +22,7 @@ import type {
     IFileSpecification,
 } from "../../../../../modules/cs/js/util/file-select";
 
-interface ProfileData extends Object {
+interface ProfileData {
     username?: string;
     realname?: string;
     userid: number;
@@ -43,6 +43,7 @@ interface TimUserGroup {
 
 type ViewMode = "SHOW" | "EDIT";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as a type
 const UploadedFile = t.intersection([
     t.type({
         path: t.string,

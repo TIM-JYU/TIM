@@ -12,26 +12,6 @@ declare module "diff-match-patch" {
     }
 }
 declare module "bootstrap-sass";
-declare module "katex/contrib/auto-render/auto-render" {
-    interface Delimiter {
-        left: string;
-        right: string;
-        display: boolean;
-    }
-
-    interface KatexRenderOptions {
-        delimiters?: Delimiter[];
-        ignoredTags?: string[];
-        errorCallback: (s: string) => void;
-    }
-
-    const renderMathInElement: (
-        e: Element,
-        options?: KatexRenderOptions
-    ) => void;
-    export = renderMathInElement;
-}
-
 interface INotesPlugin {
     open(filePath?: string): void;
 }
@@ -49,16 +29,6 @@ interface IFixedReveal extends RevealStatic {
 declare module "reveal.js" {
     const r: IFixedReveal;
     export default r;
-}
-
-declare module "reveal.js/plugin/zoom/zoom.esm" {
-    const p: unknown;
-    export default p;
-}
-
-declare module "reveal.js/plugin/notes/notes.esm" {
-    const p: unknown;
-    export default p;
 }
 
 declare module "ace/snippets";

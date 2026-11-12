@@ -3,9 +3,8 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import type {IEditJsonEventOptions} from "tim/plugin/calendar/edit-json-event-dialog.component";
 
 export async function showEditJsonEventDialog(opts: IEditJsonEventOptions) {
-    const {EditJsonEventDialogComponent} = await import(
-        "./edit-json-event-dialog.component"
-    );
+    const {EditJsonEventDialogComponent} =
+        await import("./edit-json-event-dialog.component");
     return to2(
         (await angularDialog.open(EditJsonEventDialogComponent, opts)).result
     );

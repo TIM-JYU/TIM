@@ -15,7 +15,7 @@ import {TaskId} from "tim/plugin/taskid";
 export function getDefaults<
     MarkupType extends IGenericPluginMarkup,
     A extends IGenericPluginTopLevelFields<MarkupType>,
-    T extends Type<A, unknown>
+    T extends Type<A, unknown>,
 >(runtimeType: T, defaultMarkup: MarkupType) {
     const defaults: IGenericPluginTopLevelFields<MarkupType> = {
         info: null,

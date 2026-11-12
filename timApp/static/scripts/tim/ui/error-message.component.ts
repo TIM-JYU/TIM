@@ -30,7 +30,7 @@ export class ErrorMessageComponent {
     }
 
     getMessage() {
-        if (!this.for || !this.for.errors) {
+        if (!this.for?.errors) {
             return;
         }
         return formErrorMessages[Object.keys(this.for.errors)[0]];

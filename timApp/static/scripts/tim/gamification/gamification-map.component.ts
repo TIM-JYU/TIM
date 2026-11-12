@@ -31,7 +31,7 @@ type IParsedData = {
             id: number;
             name: string;
             link: string;
-        }
+        },
     ];
     demos: [
         {
@@ -40,7 +40,7 @@ type IParsedData = {
             link: string;
             maxPoints: number;
             gotPoints: number;
-        }
+        },
     ];
     buttonText: string;
 };
@@ -293,8 +293,7 @@ export class GamificationMapComponent {
 
         // if clicked on a "top tile", draw a full frame
         if (
-            tile.tileset.properties != null &&
-            tile.tileset.properties.frameProperty === 1 &&
+            tile.tileset.properties?.frameProperty === 1 &&
             !hasOwnProperty(this.json, tile, 1, 0)
         ) {
             /*
@@ -401,8 +400,7 @@ export class GamificationMapComponent {
             );
             // If clicked on a building with one floor, draw two frame tiles and a roof frame
         } else if (
-            tile.tileset.properties != null &&
-            tile.tileset.properties.buildingProperty === 1 && // && this.json.layers[tile.layerNo + 1] &&
+            tile.tileset.properties?.buildingProperty === 1 && // && this.json.layers[tile.layerNo + 1] &&
             !hasOwnProperty(this.json, tile, 1, -this.json.width) &&
             hasOwnProperty(this.json, tile, -1, 0)
         ) {
@@ -487,8 +485,7 @@ export class GamificationMapComponent {
             );
             // If clicked on a building with two floors, draw one frame tile and a roof frame
         } else if (
-            tile.tileset.properties != null &&
-            tile.tileset.properties.buildingProperty === 1 && // this.json.layers[tile.layerNo + 1] &&
+            tile.tileset.properties?.buildingProperty === 1 && // this.json.layers[tile.layerNo + 1] &&
             !hasOwnProperty(this.json, tile, 1, -this.json.width) &&
             hasOwnProperty(this.json, tile, -1, this.json.width) &&
             hasOwnProperty(this.json, tile, -2, this.json.width)
@@ -551,8 +548,7 @@ export class GamificationMapComponent {
             );
             // If clicked on a building with three floors and no roof, draw a roof frame
         } else if (
-            tile.tileset.properties != null &&
-            tile.tileset.properties.buildingProperty === 1 && // this.json.layers[tile.layerNo + 1] &&
+            tile.tileset.properties?.buildingProperty === 1 && // this.json.layers[tile.layerNo + 1] &&
             !hasOwnProperty(this.json, tile, 1, -this.json.width) &&
             hasOwnProperty(this.json, tile, -1, this.json.width) &&
             hasOwnProperty(this.json, tile, -2, this.json.width * 2) &&
@@ -902,17 +898,11 @@ export class GamificationMapComponent {
         this.images = images;
         // Find tilesets and spreadsheets needed for drawing a frame
         for (let j = 0; j < this.json.tilesets.length; j++) {
-            if (
-                this.json.tilesets[j].properties != null &&
-                this.json.tilesets[j].properties.frameProperty === 2
-            ) {
+            if (this.json.tilesets[j].properties?.frameProperty === 2) {
                 this.tileFrameSet = this.json.tilesets[j];
                 this.tileImage = this.images[j];
             }
-            if (
-                this.json.tilesets[j].properties != null &&
-                this.json.tilesets[j].properties.frameProperty === 3
-            ) {
+            if (this.json.tilesets[j].properties?.frameProperty === 3) {
                 this.roofFrameSet = this.json.tilesets[j];
                 this.roofImage = this.images[j];
             }

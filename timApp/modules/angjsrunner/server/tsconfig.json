@@ -10,6 +10,7 @@
     "esModuleInterop": true,
     "target": "ES2019",
     "baseUrl": ".",
+    "typeRoots": ["./node_modules/@types"],
     "paths": {
       "tim/plugin/*": ["../../../static/scripts/tim/plugin/*"],
       "io-ts": ["node_modules/io-ts"],

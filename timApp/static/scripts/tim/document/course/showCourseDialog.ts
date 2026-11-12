@@ -10,9 +10,8 @@ export async function showCourseDialog(d: IItem) {
 }
 
 export async function showCourseListDialog(d: ICourseListParams) {
-    const {CourseListDialogComponent} = await import(
-        "./course-list-dialog.component"
-    );
+    const {CourseListDialogComponent} =
+        await import("./course-list-dialog.component");
     return await (
         await angularDialog.open(CourseListDialogComponent, d)
     ).result;

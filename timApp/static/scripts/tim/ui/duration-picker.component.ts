@@ -53,13 +53,7 @@ export class DurationPickerComponent {
 }
 
 export type DurationChoice =
-    | "seconds"
-    | "minutes"
-    | "hours"
-    | "days"
-    | "weeks"
-    | "months"
-    | "years";
+    "seconds" | "minutes" | "hours" | "days" | "weeks" | "months" | "years";
 
 export const durationTypes: DurationChoice[] = [
     "seconds",

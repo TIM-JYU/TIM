@@ -136,10 +136,7 @@ class CWPD {
     }
 
     isUser(scope: IPwdWithoutSetPWD) {
-        return (
-            scope.path === "user" ||
-            (scope.attrs && scope.attrs.path === "user")
-        );
+        return scope.path === "user" || scope.attrs?.path === "user";
     }
 
     setPWD(pwd: string, scope: IPwdWithoutSetPWD) {
@@ -403,7 +400,7 @@ class LanguageTypes {
         if (def) {
             return def;
         }
-        return this.whatIsInAce(type) ?? (def as string);
+        return this.whatIsInAce(type) ?? def;
     }
 
     getTestType(type: string, language: string, def: string) {
@@ -2299,7 +2296,7 @@ ${fhtml}
             this.attrsall.userargs,
             (
                 this.markup.userargs ??
-                (isText && isArgs ? this.markup.filename ?? "" : "")
+                (isText && isArgs ? (this.markup.filename ?? "") : "")
             ).toString()
         );
         if (this.editor) {
@@ -2782,12 +2779,10 @@ ${fhtml}
         this.videoURL = "";
         this.wavURL = "";
         this.runSuccess = false;
-        if (
-            !(
-                languageTypes.isInArray(runType, csJSTypes) ||
-                this.markup.noConsoleClear
-            )
-        ) {
+        if (!(
+            languageTypes.isInArray(runType, csJSTypes) ||
+            this.markup.noConsoleClear
+        )) {
             this.result = "";
         }
         this.runTestGreen = false;
@@ -3126,8 +3121,10 @@ ${fhtml}
         }
         return {
             vid: vid,
-            width: this.markup.width ? getInt(this.markup.width) ?? dw : dw,
-            height: this.markup.height ? getInt(this.markup.height) ?? dh : dh,
+            width: this.markup.width ? (getInt(this.markup.width) ?? dw) : dw,
+            height: this.markup.height
+                ? (getInt(this.markup.height) ?? dh)
+                : dh,
         };
     }
 
@@ -3709,8 +3706,7 @@ ${fhtml}
         );
         if (r.ok) {
             const data = parseIfJson(r.result) as
-                | {msg: string; error: string}
-                | string;
+                {msg: string; error: string} | string;
 
             // Server always seems to give text/plain as result, so prepare for it.
             if (typeof data === "string") {

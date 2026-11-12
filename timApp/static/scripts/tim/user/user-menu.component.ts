@@ -132,7 +132,10 @@ export class UserMenuComponent implements OnInit {
     private groupSwitchOpened = false;
     restoreContextUser: string | null = null;
 
-    constructor(private access: AccessRoleService, private http: HttpClient) {}
+    constructor(
+        private access: AccessRoleService,
+        private http: HttpClient
+    ) {}
 
     ngOnInit(): void {
         if (!this.isLoggedIn()) {

@@ -591,6 +591,7 @@ export class BrowserQuantumCircuitSimulator extends QuantumCircuitSimulator {
             await timeout(0);
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         const resMatrix = dotPow(abs(output), 2) as Matrix;
         const res = [];
         const state = [];

@@ -4,3 +4,6 @@ README
 /modules/cs/MIRToolbox
 !*.ts
 !i18n/xlf-merge.js
+# The original JSRunner server is kept unchanged (the angjsrunner copy is the one in use).
+/modules/jsrunner/server
+/modules/jsrunner/shared

@@ -44,10 +44,10 @@ export interface InvalidMarkerState {
  */
 @Directive()
 export abstract class AngularPluginBase<
-        MarkupType extends IGenericPluginMarkup,
-        A extends IGenericPluginTopLevelFields<MarkupType>,
-        T extends Type<A, unknown>
-    >
+    MarkupType extends IGenericPluginMarkup,
+    A extends IGenericPluginTopLevelFields<MarkupType>,
+    T extends Type<A, unknown>,
+>
     extends PluginBaseCommon
     implements AfterContentInit, OnInit, PluginJson
 {

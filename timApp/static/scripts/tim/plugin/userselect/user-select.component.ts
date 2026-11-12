@@ -135,7 +135,10 @@ class ToggleOption {
     private val = false;
     enabled = false;
 
-    constructor(key: string, private toggleName: string) {
+    constructor(
+        key: string,
+        private toggleName: string
+    ) {
         this.storageValue = new TimStorage(key, t.boolean);
         this.val = this.storageValue.get() ?? false;
     }

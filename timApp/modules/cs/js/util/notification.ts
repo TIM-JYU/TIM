@@ -5,7 +5,10 @@ import {OrderedSet} from "./set";
 class Notification {
     timeoutHandle?: number;
 
-    constructor(public id: string, public content: string) {}
+    constructor(
+        public id: string,
+        public content: string
+    ) {}
 }
 
 @Component({

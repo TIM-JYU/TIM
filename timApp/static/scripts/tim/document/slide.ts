@@ -106,8 +106,8 @@ async function initReveal(rv: IFixedReveal, s: ISlideGlobals) {
     // Full list of configuration options available here:
     // https://revealjs.com/config/#reconfiguring
 
-    const zoom = (await import("reveal.js/plugin/zoom/zoom.esm")).default;
-    const notes = (await import("reveal.js/plugin/notes/notes.esm")).default;
+    const zoom = (await import("reveal.js/plugin/zoom")).default;
+    const notes = (await import("reveal.js/plugin/notes")).default;
     const [width, height] = s.slide_size;
     await rv.initialize({
         width: width,

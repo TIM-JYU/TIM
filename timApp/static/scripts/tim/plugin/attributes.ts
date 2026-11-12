@@ -10,8 +10,9 @@ export const PointsLimiterSettings = t.partial({
     max: t.number,
 });
 
-export interface IPointsLimiterSettings
-    extends t.TypeOf<typeof PointsLimiterSettings> {}
+export interface IPointsLimiterSettings extends t.TypeOf<
+    typeof PointsLimiterSettings
+> {}
 
 export const InvalidMarkerSettings = t.partial({
     deadline: t.string,
@@ -29,8 +30,9 @@ export const AnswerBrowserSettings = t.partial({
     clearAlertsOnAnswer: t.boolean,
     showMaxPoints: t.boolean,
 });
-export interface IAnswerBrowserSettings
-    extends t.TypeOf<typeof AnswerBrowserSettings> {
+export interface IAnswerBrowserSettings extends t.TypeOf<
+    typeof AnswerBrowserSettings
+> {
     // Empty
 }
 
@@ -195,16 +197,18 @@ export function getTopLevelFields<M extends IGenericPluginMarkup>(
     ]);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as a type
 const UnknownTopLevel = getTopLevelFields(GenericPluginMarkup);
 
 export interface IGenericPluginTopLevelFields<
-    MarkupType extends IGenericPluginMarkup
+    MarkupType extends IGenericPluginMarkup,
 > extends t.TypeOf<typeof UnknownTopLevel> {
     markup: MarkupType;
 }
 
-export interface IGenericPluginMarkup
-    extends t.TypeOf<typeof GenericPluginMarkup> {
+export interface IGenericPluginMarkup extends t.TypeOf<
+    typeof GenericPluginMarkup
+> {
     // should be empty
 }
 

@@ -26,7 +26,7 @@ export function createParContext(el: Element) {
 }
 
 function getDocumentForElement(el: Element) {
-    const root = getParContainerElem()!;
+    const root = getParContainerElem();
     if (root.contains(el)) {
         return getActiveDocument();
     }

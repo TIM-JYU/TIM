@@ -70,12 +70,7 @@ export class Swap {
 }
 
 export type Cell =
-    | Gate
-    | Control
-    | Swap
-    | MultiQubitGate
-    | MultiQubitGateCell
-    | undefined;
+    Gate | Control | Swap | MultiQubitGate | MultiQubitGateCell | undefined;
 
 /**
  * Quantum circuit board containing information about gates in circuit.
@@ -289,8 +284,7 @@ export class QuantumBoard {
     ) {
         if (oldPos.time === newPos.time) {
             if (
-                targetPos &&
-                targetPos.time === newPos.time &&
+                targetPos?.time === newPos.time &&
                 targetPos.target !== newPos.target &&
                 this.get(targetPos.target, targetPos.time) instanceof Gate
             ) {
@@ -316,8 +310,7 @@ export class QuantumBoard {
             }
         } else {
             if (
-                targetPos &&
-                targetPos.time === newPos.time &&
+                targetPos?.time === newPos.time &&
                 targetPos.target !== newPos.target &&
                 this.get(targetPos.target, targetPos.time) instanceof Gate
             ) {
@@ -576,7 +569,7 @@ export class QuantumBoard {
         if (pos.target === pos2?.target) {
             return;
         }
-        if (pos2 && pos.time === pos2.time) {
+        if (pos.time === pos2?.time) {
             this.remove(pos.target, pos.time);
             this.remove(pos2.target, pos2.time);
             this.board[pos.target][pos.time] = new Swap(pos2.target, editable);

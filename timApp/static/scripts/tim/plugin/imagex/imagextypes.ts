@@ -346,10 +346,7 @@ export type OptionalCommonPropNames =
     | "incorrectColor";
 export type OptionalFixedObjPropNames = OptionalCommonPropNames;
 export type OptionalDragObjectPropNames =
-    | OptionalFixedObjPropNames
-    | "xlimits"
-    | "ylimits"
-    | "lock";
+    OptionalFixedObjPropNames | "xlimits" | "ylimits" | "lock";
 export type OptionalTargetPropNames = "points" | OptionalFixedObjPropNames;
 export type OptionalPropNames =
     | OptionalFixedObjPropNames

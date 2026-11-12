@@ -5,7 +5,7 @@ import {staticDynamicImport} from "tim/staticDynamicImport";
 import {timLogTime} from "tim/util/timTiming";
 import type {MathDocument} from "mathjax-full/js/core/MathDocument";
 import {injectStyle, timeout} from "tim/util/utils";
-import type renderMathInElement from "katex/contrib/auto-render/auto-render";
+import type renderMathInElement from "katex/contrib/auto-render";
 
 export interface IPluginInfoResponse {
     js: string[];
@@ -122,9 +122,7 @@ export class ParagraphCompiler {
             return;
         }
         timLogTime("processAllMath start", "view");
-        const renderMathInElement = await import(
-            "katex/contrib/auto-render/auto-render"
-        );
+        const renderMathInElement = await import("katex/contrib/auto-render");
         mathelems.each((index, elem) => {
             const result = this.processMath(
                 renderMathInElement.default,
@@ -189,7 +187,7 @@ export class ParagraphCompiler {
         singleDollars?: boolean
     ): Element | null {
         let lastError: string | undefined;
-        katexFunction(elem, {
+        katexFunction(elem as HTMLElement, {
             errorCallback: (s) => {
                 lastError = s;
             },

@@ -38,7 +38,7 @@ function getLatexFromPreview(
     while (current !== previewRoot && current instanceof Element) {
         if (current.classList.contains("math")) {
             const annotation = current.querySelector("annotation");
-            if (!annotation || !annotation.textContent) {
+            if (!annotation?.textContent) {
                 return undefined;
             }
             const latex = annotation.textContent.trim();
@@ -74,7 +74,7 @@ function movePastFormulasBeforeClicked(
         }
         const annotation = mathElem.querySelector("annotation");
         // probably shouldn't happen
-        if (!annotation || !annotation.textContent) {
+        if (!annotation?.textContent) {
             continue;
         }
         // Inline formulas in editor can have line breaks, but in html they are replaced by spaces.

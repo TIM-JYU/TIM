@@ -187,7 +187,7 @@ export class VelpWindowComponent implements OnInit, DoCheck {
 
     setDefaultVisibility(def: number) {
         return this.vctrl.item.rights.teacher
-            ? this.velp.visible_to ?? 4 // Teachers' velps are public by default
+            ? (this.velp.visible_to ?? 4) // Teachers' velps are public by default
             : clamp(def, 1, this.visibleOptions.values.length);
     }
 

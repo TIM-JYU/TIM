@@ -80,7 +80,10 @@ export class TimMessageViewComponent implements OnInit {
         });
     }
 
-    constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {}
+    constructor(
+        private http: HttpClient,
+        private cdr: ChangeDetectorRef
+    ) {}
 
     timMessages?: TimMessageData[];
 

@@ -161,7 +161,10 @@ export class AnswerToQuestionDialogComponent
     answer?: AnswerTable;
     autoStart = false;
 
-    constructor(private http: HttpClient, private zone: NgZone) {
+    constructor(
+        private http: HttpClient,
+        private zone: NgZone
+    ) {
         super();
     }
 

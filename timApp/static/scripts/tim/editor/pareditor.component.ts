@@ -1464,7 +1464,7 @@ ${backTicks}
             return [];
         }
         const cache = this.diffCache;
-        if (cache && cache.old === trdiff.old && cache.new === trdiff.new) {
+        if (cache?.old === trdiff.old && cache.new === trdiff.new) {
             return cache.parts;
         }
         const dmp = new DiffMatchPatch();
@@ -1791,6 +1791,7 @@ ${backTicks}
         }
         if (
             !window.confirm(
+                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                 this.getOptions().deleteMsg || "Delete - are you sure?"
             )
         ) {
@@ -1940,10 +1941,7 @@ ${backTicks}
                 );
                 if (r.ok) {
                     const resultText = r.result;
-                    if (
-                        this.trdiff == undefined ||
-                        translatableText != this.trdiff.new
-                    ) {
+                    if (translatableText != this.trdiff?.new) {
                         this.editor!.replaceTranslation(resultText);
                     } else {
                     }
@@ -2653,7 +2651,7 @@ ${backTicks}
                     getWrapValue: () => this.wrapValue(),
                 },
                 this.getSaveTag() === "addAbove" ||
-                this.getSaveTag() === "addBelow"
+                    this.getSaveTag() === "addBelow"
                     ? "ace/mode/text"
                     : "ace/mode/markdown"
             );

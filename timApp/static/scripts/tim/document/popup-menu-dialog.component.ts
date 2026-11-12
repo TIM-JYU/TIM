@@ -123,7 +123,10 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
     };
     private p!: IPopupParams;
 
-    constructor(private http: HttpClient, private zone: NgZone) {
+    constructor(
+        private http: HttpClient,
+        private zone: NgZone
+    ) {
         super();
     }
 

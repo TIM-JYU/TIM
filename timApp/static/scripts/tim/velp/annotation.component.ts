@@ -344,7 +344,10 @@ export class AnnotationComponent
         ParCompiler.processAllMath($(el.nativeElement));
     }
 
-    constructor(public e: ElementRef, private http: HttpClient) {
+    constructor(
+        public e: ElementRef,
+        private http: HttpClient
+    ) {
         this.element = $(e.nativeElement);
     }
 

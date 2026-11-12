@@ -154,7 +154,7 @@ export class QuestionPreviewDialogComponent extends AngularDialogComponent<
     }
 
     printRandomizationInfo(): string {
-        if (!this.questiondata || !this.questiondata.markup.randomizedRows) {
+        if (!this.questiondata?.markup.randomizedRows) {
             return "";
         }
         let locks: number;

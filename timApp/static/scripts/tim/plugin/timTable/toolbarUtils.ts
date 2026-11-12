@@ -9,8 +9,7 @@ import type {
 } from "tim/plugin/timTable/tim-table-editor-toolbar-dialog.component";
 
 export let timTableToolbarInstance:
-    | TimTableEditorToolbarDialogComponentType
-    | undefined;
+    TimTableEditorToolbarDialogComponentType | undefined;
 
 export function setToolbarInstance(
     t: TimTableEditorToolbarDialogComponentType | undefined
@@ -30,7 +29,7 @@ export function handleToolbarKey(
         return false;
     }
     for (const templ of toolBarTemplates) {
-        if (!templ || !templ.shortcut) {
+        if (!templ?.shortcut) {
             continue;
         }
         const k = templ.shortcut.split("+");
@@ -91,9 +90,8 @@ export async function showTableEditorToolbar(p: ITimTableEditorToolbarParams) {
         }
         timTableToolbarInstance.hideThis(false);
     }
-    const {TimTableEditorToolbarDialogComponent} = await import(
-        "./tim-table-editor-toolbar-dialog.component"
-    );
+    const {TimTableEditorToolbarDialogComponent} =
+        await import("./tim-table-editor-toolbar-dialog.component");
     await angularDialog.open(TimTableEditorToolbarDialogComponent, p);
 }
 

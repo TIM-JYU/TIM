@@ -124,10 +124,10 @@ export function getNextId(params: EditPosition) {
     return params.type === EditType.Edit
         ? params.pars.next()?.originalPar.id
         : params.type === EditType.AddAbove
-        ? params.par.originalPar.id
-        : params.type === EditType.AddBelow
-        ? nextParContext(params.par)?.originalPar.id
-        : undefined;
+          ? params.par.originalPar.id
+          : params.type === EditType.AddBelow
+            ? nextParContext(params.par)?.originalPar.id
+            : undefined;
 }
 
 export class EditingHandler {
@@ -763,7 +763,7 @@ This will delete the whole ${
     <div class="readline read"></div>
 </div>
 `);
-        getParContainerElem()!.prepend(helpPar[0]);
+        getParContainerElem().prepend(helpPar[0]);
         await compileWithViewctrl(helpPar);
     }
 
@@ -1009,8 +1009,7 @@ auto_number_headings: 0${CURSOR}
         const {areasBeforeRef, areasAfterRef, refAreaInclusion} =
             getContextualAreaInfo(par);
         let areaWithSel:
-            | {sel: UserSelection<UnbrokenSelection>; area: Area}
-            | undefined;
+            {sel: UserSelection<UnbrokenSelection>; area: Area} | undefined;
         if (areasAfterRef.length === 0) {
             for (const ctx of areasBeforeRef) {
                 if (ctx instanceof Area && ctx.isStartOrEnd(par.par)) {

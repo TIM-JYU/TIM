@@ -8,8 +8,7 @@
 
 export type ReplacePair = [RegExp, string] | undefined;
 export type ReplaceFunction =
-    | [(what: string, to: string) => string, string]
-    | undefined;
+    [(what: string, to: string) => string, string] | undefined;
 
 export function isReplacePair(
     pair: ReplacePair | ReplaceFunction

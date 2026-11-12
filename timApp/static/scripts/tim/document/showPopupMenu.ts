@@ -6,9 +6,8 @@ import type {
 import type {Pos} from "tim/ui/pos";
 
 export async function showPopupMenu(p: IPopupParams, pos: Pos) {
-    const {PopupMenuDialogComponent} = await import(
-        "./popup-menu-dialog.component"
-    );
+    const {PopupMenuDialogComponent} =
+        await import("./popup-menu-dialog.component");
     return await angularDialog.open<
         IPopupParams,
         void,

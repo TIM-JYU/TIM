@@ -33,7 +33,7 @@ function resolveComponentFromTarget(target: Target): object | null {
                 // fallthrough to returning element itself as object
             }
         }
-        return target as unknown as object;
+        return target;
     }
 
     // If target looks like ElementRef: use its nativeElement
@@ -50,12 +50,12 @@ function resolveComponentFromTarget(target: Target): object | null {
                 // ignore
             }
         }
-        return maybeNative as unknown as object;
+        return maybeNative;
     }
 
     // If already an object instance (component), return it
     if (typeof target === "object") {
-        return target as object;
+        return target;
     }
 
     return null;
@@ -411,7 +411,7 @@ export function installDataWatcher(
  * @param target - The class constructor to decorate.
  * @returns void
  */
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 export function LogAllMethods(target: Function): void {
     const className = target.name;
 

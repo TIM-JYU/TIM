@@ -346,7 +346,7 @@ export function setContextSettingsFromObject(
     ctx.strokeStyle = obj.color ?? options.color;
     ctx.lineWidth = obj.lineWidth ?? options.w;
     ctx.fillStyle = obj.fillColor ?? "transparent";
-    ctx.globalAlpha = obj.eraser ? 1 : obj.opacity ?? options.opacity;
+    ctx.globalAlpha = obj.eraser ? 1 : (obj.opacity ?? options.opacity);
     ctx.globalCompositeOperation = obj.eraser
         ? "destination-out"
         : "source-over";
@@ -365,7 +365,7 @@ export function setContextSettingsFromLine(
 ) {
     ctx.strokeStyle = line.color ?? options.color;
     ctx.lineWidth = line.w ?? options.w;
-    ctx.globalAlpha = line.eraser ? 1 : line.opacity ?? options.opacity;
+    ctx.globalAlpha = line.eraser ? 1 : (line.opacity ?? options.opacity);
     ctx.globalCompositeOperation = line.eraser
         ? "destination-out"
         : "source-over";
@@ -534,7 +534,7 @@ export function setContextSettingsFromOptions(
 function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
     ctx.strokeStyle = seg.color ?? ctx.strokeStyle;
     ctx.lineWidth = numOrStringToNumber(seg.w ?? ctx.lineWidth);
-    ctx.globalAlpha = seg.eraser ? 1 : seg.opacity ?? 1;
+    ctx.globalAlpha = seg.eraser ? 1 : (seg.opacity ?? 1);
     ctx.globalCompositeOperation = seg.eraser
         ? "destination-out"
         : "source-over";

@@ -76,8 +76,9 @@ export interface IMailSendData {
     body: string;
 }
 
-export interface IItemRightActionData
-    extends t.TypeOf<typeof ItemRightActionT> {
+export interface IItemRightActionData extends t.TypeOf<
+    typeof ItemRightActionT
+> {
     item: string;
     group: string;
 }

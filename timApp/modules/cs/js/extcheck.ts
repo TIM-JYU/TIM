@@ -287,7 +287,7 @@ export class ExtcheckComponent extends CsController {
             this.penalty_container = undefined;
         } else {
             this.containers = data.output_boxes;
-            if (this.containers && this.containers.length == 0) {
+            if (this.containers?.length == 0) {
                 this.containers = undefined;
             }
             if (data.penalties && data.penalties.length != 0) {

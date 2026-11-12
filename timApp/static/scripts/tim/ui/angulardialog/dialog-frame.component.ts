@@ -18,11 +18,10 @@ import {Subject} from "rxjs";
 
 // angular2-draggable does not export these types from its public API,
 // and its internal files cannot be imported directly, so the types are derived from the public API.
-type IResizeEvent = AngularResizableDirective["rzStop"] extends EventEmitter<
-    infer T
->
-    ? T
-    : never;
+type IResizeEvent =
+    AngularResizableDirective["rzStop"] extends EventEmitter<infer T>
+        ? T
+        : never;
 type Size = ISize & {set(s: ISize): Size};
 
 export interface IAngularResizableDirectivePublic {

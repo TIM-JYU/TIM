@@ -12,27 +12,24 @@ export async function showLectureDialog(item: IItem | ILecture) {
 }
 
 export async function showStatisticsDialog(p: IStatisticsParams) {
-    const {QuestionStatisticsDialogComponent} = await import(
-        "./question-statistics-dialog.component"
-    );
+    const {QuestionStatisticsDialogComponent} =
+        await import("./question-statistics-dialog.component");
     return await (
         await angularDialog.open(QuestionStatisticsDialogComponent, p)
     ).result;
 }
 
 export async function showQuestionAnswerDialog(p: IAnswerQuestionParams) {
-    const {AnswerToQuestionDialogComponent} = await import(
-        "./answer-to-question-dialog.component"
-    );
+    const {AnswerToQuestionDialogComponent} =
+        await import("./answer-to-question-dialog.component");
     return await (
         await angularDialog.open(AnswerToQuestionDialogComponent, p)
     ).result;
 }
 
 export async function showLectureWall(messages: ILectureMessage[]) {
-    const {LectureWallDialogComponent} = await import(
-        "./lecture-wall-dialog.component"
-    );
+    const {LectureWallDialogComponent} =
+        await import("./lecture-wall-dialog.component");
     return await angularDialog.open<
         {messages: ILectureMessage[]},
         void,
@@ -41,18 +38,16 @@ export async function showLectureWall(messages: ILectureMessage[]) {
 }
 
 export async function showLectureEnding(lecture: ILecture) {
-    const {LectureEndingDialogComponent} = await import(
-        "./lecture-ending-dialog.component"
-    );
+    const {LectureEndingDialogComponent} =
+        await import("./lecture-ending-dialog.component");
     return await (
         await angularDialog.open(LectureEndingDialogComponent, lecture)
     ).result;
 }
 
 export async function showQuestionAskDialog(p: QuestionPreviewParams) {
-    const {QuestionPreviewDialogComponent} = await import(
-        "./question-preview-dialog.component"
-    );
+    const {QuestionPreviewDialogComponent} =
+        await import("./question-preview-dialog.component");
     return await (
         await angularDialog.open(QuestionPreviewDialogComponent, p)
     ).result;

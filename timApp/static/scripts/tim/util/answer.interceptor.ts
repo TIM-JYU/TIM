@@ -91,8 +91,8 @@ export class AnswerInterceptor implements HttpInterceptor {
                 body == null
                     ? data
                     : isPlainObject(body)
-                    ? {...body, ...data}
-                    : body,
+                      ? {...body, ...data}
+                      : body,
         });
 
         return next.handle(newRequest).pipe(

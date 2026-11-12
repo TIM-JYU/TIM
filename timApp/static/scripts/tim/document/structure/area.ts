@@ -17,7 +17,10 @@ enum AreaBoundary {
 export abstract class AreaPar {
     abstract kind: AreaBoundary;
 
-    constructor(public par: Paragraph, public areaname: string) {}
+    constructor(
+        public par: Paragraph,
+        public areaname: string
+    ) {}
 }
 
 export class AreaStartPar extends AreaPar {
