@@ -1,0 +1,23 @@
+# Alternative TIM image ("angtim") for the Angular upgrade.
+#
+# The image is the original TIM image (built from timApp/Dockerfile) with a single change:
+# Node.js 18 + npm 6 are replaced with Node.js 24 and the npm that is bundled with it.
+# Everything else (Python, TeX Live, Chrome, ...) comes unchanged from the original image,
+# and the original image is only read here, never rebuilt, retagged or pushed.
+#
+# Only the services that build the frontend use this image (see docker-compose.tmpl.yml).
+# Build with `./tim dev build angtim`.
+
+# Full name of the original TIM image, e.g. ghcr.io/tim-jyu/tim:<tag>. Given by the TIM CLI.
+ARG TIM_BASE_IMAGE
+FROM ${TIM_BASE_IMAGE}
+
+ARG NODE_MAJOR=24
+
+# Remove the old Node.js completely first: npm 6 was installed over the bundled npm with `npm i -g`,
+# so its files are not tracked by dpkg and would otherwise be left mixed with the new npm.
+RUN apt-get -q purge -y nodejs && \
+    rm -rf /usr/lib/node_modules /etc/apt/sources.list.d/nodesource* /etc/apt/keyrings/nodesource* /root/.npm && \
+    (curl -sL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash -) && \
+    bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}" && \
+    node --version && npm --version

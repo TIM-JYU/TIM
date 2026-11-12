@@ -5,7 +5,8 @@ from typing import List, Optional, Callable, Dict, NamedTuple
 from cli.config import get_config
 from cli.docker.run import run_docker
 from cli.docker.service_variables import (
-    tim_image_name,
+    angtim_image_name,
+    angtim_image_tag,
     tim_image_tag,
     csplugin_image_tag,
 )
@@ -31,18 +32,22 @@ If no tag is specified, the task is built with all tags.
 # 2. Specify the task and valid tags in the BUILD_TASKS dictionary.
 
 
-def build_tim(
+def build_angtim(
     tag: Optional[str], no_cache: bool, build_args: List[str]
 ) -> Optional[List[str]]:
-    assert tag is not None
+    """
+    Builds the alternative TIM image (newer Node.js on top of the original TIM image).
+
+    The original TIM image is only used as the base image; it is never built, tagged or pushed here.
+    """
     config = get_config()
-    image_suffix = "-base" if tag == "base" else ""
-    image_name = f"{config.images_repository}/{tim_image_name()}{image_suffix}"
-    image_name_specific = f"{image_name}:{tim_image_tag()}"
-    image_name_latest = f"{image_name}:latest"
+    base_image = f"{config.images_repository}/tim:{tim_image_tag()}"
+    image_name = (
+        f"{config.images_repository}/{angtim_image_name()}:{angtim_image_tag()}"
+    )
     cwd = Path.cwd()
-    dockerfile = cwd / "timApp" / "Dockerfile"
-    build_args_cli = []
+    dockerfile = cwd / "timApp" / "Dockerfile.angtim"
+    build_args_cli = ["--build-arg", f"TIM_BASE_IMAGE={base_image}"]
     if build_args:
         for arg in build_args:
             build_args_cli.append("--build-arg")
@@ -52,18 +57,14 @@ def build_tim(
             "build",
             *(["--no-cache"] if no_cache else []),
             *build_args_cli,
-            "--target",
-            tag,
             "--tag",
-            image_name_specific,
-            "--tag",
-            image_name_latest,
+            image_name,
             "--file",
             dockerfile.as_posix(),
             cwd.as_posix(),
         ],
     )
-    return [image_name_specific, image_name_latest]
+    return [image_name]
 
 
 def build_csplugin(
@@ -109,7 +110,9 @@ class BuildTask(NamedTuple):
 
 
 BUILD_TASKS: Dict[str, BuildTask] = {
-    "tim": BuildTask(["base", "complete"], build_tim),
+    # The original "tim" image is intentionally not buildable from this branch:
+    # only the alternative image with a newer Node.js is built and pushed.
+    "angtim": BuildTask(None, build_angtim),
     "csplugin": BuildTask(["base", "complete", "sudo"], build_csplugin),
 }
 

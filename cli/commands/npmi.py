@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any
 
-from cli.npm.run import run_npm
+from cli.npm.run import run_npm, run_jsrunner_npm
 
 info = {
     "help": "Run `npm install` to install TIM dependencies.",
@@ -34,7 +34,7 @@ def npmi() -> None:
 
     run_npm(["install"], "timApp")
     # JSRunner has native deps, so it has to be run in container always
-    run_npm(["install"], "timApp/modules/jsrunner/server", True)
+    run_jsrunner_npm(["install"])
 
 
 def run(*_: Any) -> None:

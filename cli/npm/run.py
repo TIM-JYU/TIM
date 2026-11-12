@@ -11,6 +11,8 @@ from cli.util.proc import run_cmd
 
 MAX_NPM_MAJOR_VERSION = 6
 
+JSRUNNER_SERVER_DIR = "timApp/modules/jsrunner/server"
+
 _npm_ok = False
 _npm_version_ok = False
 _npm_cmd: List[str] = []
@@ -63,6 +65,13 @@ def run_npm(
     workdir: str,
     run_in_container: Optional[bool] = None,
 ) -> None:
+    """
+    Runs npm in the given directory.
+
+    :param args: Arguments to npm.
+    :param workdir: Directory in which to run npm, relative to TIM root.
+    :param run_in_container: Whether to run npm in a container (default: everywhere except on Windows).
+    """
     if run_in_container is None:
         log_debug(f"OS identifier: {platform.system()}")
         run_in_container = platform.system() != "Windows"
@@ -87,3 +96,30 @@ def run_npm(
                 *args,
             ]
         )
+
+
+def run_jsrunner_npm(args: List[str]) -> None:
+    """
+    Runs npm for JSRunner server.
+
+    JSRunner has native dependencies, so npm is always run in a container.
+    The container is the JSRunner's own one (and not TIM's) so that the dependencies are
+    installed and built with the same Node.js that runs JSRunner.
+    """
+    log_debug(f"Running JSRunner npm with args: {args}")
+    run_compose(
+        [
+            "run",
+            "-T",
+            "--rm",
+            "--no-deps",
+            "--workdir",
+            f"/{JSRUNNER_SERVER_DIR}",
+            # The container's root file system is read-only, so tools must cache to /tmp
+            "-e",
+            "HOME=/tmp",
+            "jsrunner",
+            "npm",
+            *args,
+        ]
+    )

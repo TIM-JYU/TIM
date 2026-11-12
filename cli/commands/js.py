@@ -2,7 +2,7 @@ from argparse import ArgumentParser, REMAINDER
 from typing import List
 
 from cli.commands.npmi import npmi, needs_npmi
-from cli.npm.run import run_npm
+from cli.npm.run import run_npm, run_jsrunner_npm
 from cli.util.logging import log_info
 
 info = {"help": "Compile JavaScript files for production mode"}
@@ -19,7 +19,7 @@ def js(run_npmi: bool, extra_args: List[str], target: str = "browser") -> None:
         log_info("Running `npm install` to install build dependencies.")
         npmi()
     if target in ("server", "browser"):
-        run_npm(["run", "buildtools"], "timApp/modules/jsrunner/server", True)
+        run_jsrunner_npm(["run", "buildtools"])
     if target in ("browser",):
         run_npm(["run", "b", "--", *extra_args], "timApp")
 
