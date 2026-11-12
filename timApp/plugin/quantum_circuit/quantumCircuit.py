@@ -663,15 +663,13 @@ def parse_ignored(
     try:
         ignored = [int(q) for q in (qubits_to_ignore or [])]
     except (ValueError, TypeError):
-        return InvalidIgnoreQubitsError(gettext("Invalid value for ignored qubits."))
+        return InvalidIgnoreQubitsError("Invalid value for ignored qubits.")
     if len(set(ignored)) != len(ignored) or not all(0 <= k < n_qubits for k in ignored):
         return InvalidIgnoreQubitsError(
-            gettext(
-                "Could not set ignored qubits. Check that there are no duplicate indices and that all indices refer to existing qubits."
-            )
+            "Could not set ignored qubits. Check that there are no duplicate indices and that all indices refer to existing qubits."
         )
     if len(ignored) == n_qubits:
-        return InvalidIgnoreQubitsError(gettext("All qubits are marked to be ignored."))
+        return InvalidIgnoreQubitsError("All qubits are marked to be ignored.")
     return ignored
 
 
@@ -1063,6 +1061,9 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
                 points = 0.0
                 result = ""
                 error = asdict(sim_error) if sim_error else "Unknown error"
+
+                if isinstance(error, dict) and (message := error.get("message")):
+                    error["message"] = gettext(message)
 
     return {
         "save": {"userCircuit": user_circuit, "userInput": user_input},
