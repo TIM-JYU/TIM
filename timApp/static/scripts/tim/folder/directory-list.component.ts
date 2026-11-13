@@ -208,7 +208,7 @@ const DEFAULT_FILTER_TITLE = $localize`Regex filter (case-insensitive) or <, >, 
                     </span>
                 </th>
                 <th
-         mites kellonaika tuolee tuossa            *ngFor="let column of visibleColumns"
+                    *ngFor="let column of visibleColumns"
                     class="sort-table-header"
                     [class.minimize]="isMinimizable(column)"
                     [class.minimized]="isMinimized(column)"
@@ -225,13 +225,13 @@ const DEFAULT_FILTER_TITLE = $localize`Regex filter (case-insensitive) or <, >, 
                         [(ngModel)]="itemTypeFilter"
                         (ngModelChange)="applyFilters()"
                         (click)="$event.stopPropagation()"
-                        title="Show all items, files, or folders"
-                        aria-label="Show all items, files, or folders"
+                        title="Show all items, docs, or folders"
+                        aria-label="Show all items, docs, or folders"
                         i18n-title
                         i18n-aria-label
                     >
                         <option value="all" i18n>All</option>
-                        <option value="files" i18n>Files</option>
+                        <option value="docs" i18n>Docs</option>
                         <option value="folders" i18n>Folders</option>
                     </select>
                     <span *ngIf="sortState?.key === column.key" aria-hidden="true">
@@ -383,7 +383,7 @@ export class DirectoryListComponent {
 
     filteredItemList: DocumentOrFolder[] = [];
     filterValues: Record<DirectoryColumnKey, string> = {};
-    itemTypeFilter: "all" | "files" | "folders" = "all";
+    itemTypeFilter: "all" | "docs" | "folders" = "all";
     readonly columns = DIRECTORY_COLUMNS;
 
     get visibleColumns() {
