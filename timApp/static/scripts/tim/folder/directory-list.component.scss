@@ -26,3 +26,71 @@
     color: #fff;
     background-color: var(--directory-list-badge-bg-color, transparent);
 }
+
+.filter-count {
+    margin-bottom: 0.25em;
+    font-size: 0.8em;
+    font-weight: normal;
+}
+
+.count-cell {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.filters-row input::placeholder {
+    color: #aaa;
+    opacity: 1;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.sort-table-header {
+    cursor: pointer;
+    user-select: none;
+}
+
+.filter-input-wrapper {
+    position: relative;
+}
+
+.filter-input-wrapper input {
+    padding-right: 24px;
+}
+
+.clear-filter {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #888;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.clear-all-filters {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+:host th.minimized,
+:host td.minimized {
+    width: 2.5em;
+    min-width: 2.5em;
+    max-width: 2.5em;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+:host td.minimized > * {
+    display: none;
+}
