@@ -873,19 +873,28 @@ export function truncate(text: string, max: number) {
     return text;
 }
 
-export function parseIframeopts(iframeopts: string, framesrc: string) {
+export function parseIframeopts(
+    iframeopts: string,
+    framesrc: string
+): {sandbox: string | null; allow: string | null} {
     const parse = Range.prototype.createContextualFragment.bind(
         document.createRange()
     );
     const parsed = parse(`<div ${iframeopts}></div>`);
-    let sandbox = "";
+    let sandbox: string | null = "";
     let allow = null;
     for (const c of parsed.firstElementChild?.attributes ?? []) {
         if (c.name === "sandbox") {
             sandbox = c.value;
+            if (sandbox === "null") {
+                sandbox = null;
+            }
         }
         if (c.name === "allow") {
             allow = c.value;
+            if (allow === "null") {
+                allow = null;
+            }
         }
         // TODO: Handle possible other iframe options.
     }
@@ -895,7 +904,7 @@ export function parseIframeopts(iframeopts: string, framesrc: string) {
         canAllowScriptsAndSameOrigin = location.origin !== u.origin;
     } catch {}
     if (
-        sandbox.includes("allow-scripts") &&
+        sandbox?.includes("allow-scripts") &&
         sandbox.includes("allow-same-origin") &&
         !canAllowScriptsAndSameOrigin
     ) {

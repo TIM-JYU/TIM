@@ -189,7 +189,7 @@ function unwrapAllC(data: unknown): JSFrameData {
 
 export interface Iframesettings {
     allow: string | null;
-    sandbox: string;
+    sandbox: string | null;
     src: SafeResourceUrl;
     width: number | string | null;
     height: number | string | null;
