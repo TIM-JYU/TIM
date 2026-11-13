@@ -13,6 +13,7 @@
 .accessbadge {
     border-color: var(--directory-list-badge-color, transparent);
     color: var(--directory-list-badge-color);
+    white-space: nowrap;
 }
 
 .itemtags {
@@ -25,4 +26,120 @@
     border: var(--directory-list-badge-bg-color, transparent);
     color: #fff;
     background-color: var(--directory-list-badge-bg-color, transparent);
+}
+
+.filter-count {
+    margin-bottom: 0.25em;
+    font-size: 0.8em;
+    font-weight: normal;
+}
+
+.count-cell {
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.filters-row input::placeholder {
+    color: #aaa;
+    opacity: 1;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.sort-table-header {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.item-type-filter {
+    display: inline-block;
+    width: auto;
+    height: auto;
+    margin-left: 0.35em;
+    padding: 1px 3px;
+    vertical-align: middle;
+    font-weight: normal;
+}
+
+.directory-list-table {
+    display: table;
+    width: max-content !important;
+    max-width: 100%;
+    table-layout: auto;
+}
+
+.directory-list-table .date-column .column-content {
+    white-space: nowrap;
+}
+
+.directory-list-table th.minimized,
+.directory-list-table td.minimized {
+    width: 1.8em !important;
+    min-width: 1.8em;
+    max-width: 1.8em;
+    padding-right: 1px !important;
+    padding-left: 1px !important;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.filter-input-wrapper {
+    position: relative;
+}
+
+.filter-input-wrapper input {
+    padding-right: 24px;
+}
+
+.clear-filter {
+    position: absolute;
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #888;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.clear-all-filters {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.directory-list-table td.minimized > * {
+    display: none;
+}
+
+.directory-list-table th.minimized .glyphicon {
+    display: none;
+}
+
+.minimize-toggle {
+    margin-left: 0.2em;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #888;
+    font-size: 0.85em;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.directory-list-table th.minimized .minimize-toggle {
+    margin-left: 0;
+}
+
+.directory-list-table .date-column {
+    white-space: nowrap;
 }
