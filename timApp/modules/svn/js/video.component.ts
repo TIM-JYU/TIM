@@ -202,24 +202,15 @@ const ShowFileAll = t.type({
             </div>
 
             <ng-container *ngIf="videoOn">
-               <div *ngIf="iframesettings as iframesettings" class="iframeContainer"> 
-                <iframe *ngIf="iframesettings && isPdf"
-                        class="showVideo"
-                        allowfullscreen
-                        [src]="iframesettings.src"
-                        [style.width.px]="width"
-                        [style.height.px]="height"
-                        [attr.allow]="iframesettings.allow"
-                >
-                </iframe>
-                <span class="videoRow" *ngIf="iframesettings && !isPdf">
+               <div *ngIf="iframesettings as iframesettings" class="iframeContainer">
+                <span class="videoRow" *ngIf="iframesettings">
                     <iframe 
                             class="showVideo"
                             allowfullscreen
                             [src]="iframesettings.src"
                             [style.width.px]="width"
                             [style.height.px]="height"
-                            [sandbox]="iframesettings.sandbox"
+                            [attr.sandbox]="isPdf ? null : iframesettings.sandbox"
                             [attr.allow]="iframesettings.allow"
                     >
                     </iframe>
@@ -870,9 +861,8 @@ export class VideoComponent extends AngularPluginBase<
                 console.log(data);
             }
             const src = srcUrl.toString();
-            this.isPdf =
-                src.includes(".pdf") && // TODO: hack for Mac Safari see https://github.com/TIM-JYU/TIM/issues/2114
-                isSafari();
+            this.isPdf = src.includes(".pdf");
+            // && isSafari()  // TODO: hack for Mac Safari see https://github.com/TIM-JYU/TIM/issues/2114
             let defaultOpts = 'sandbox="allow-scripts allow-same-origin"';
             // let defaultOpts = 'sandbox="allow-same-origin"';
             if (this.markup.autoplay) {
