@@ -82,7 +82,7 @@ const PluginFields = t.intersection([
                   </span>
                   <h3>{{ lastStep?.name }}</h3>
                   @if (lastStep?.description) {
-                    <p [innerHTML]="$safeNavigationMigration(lastStep?.description) | purify"></p>
+                    <p [innerHTML]="lastStep?.description | purify"></p>
                   }
                 </div>
               </div>

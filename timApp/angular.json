@@ -24,12 +24,10 @@
       },
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular/build:application",
           "options": {
             "allowedCommonJsDependencies": [
-              "ace-builds/webpack-resolver",
               "diff-match-patch",
-              "bootstrap",
               "chart.js",
               "deep-equal",
               "humanize-duration",
@@ -78,11 +76,15 @@
               "vendor/mathquill/mathquill"
             ],
             "i18nMissingTranslation": "error",
-            "outputPath": "static/scripts/build",
+            "outputPath": {
+              "base": "static/scripts/build",
+              "browser": ""
+            },
             "deleteOutputPath": false,
             "index": "static/scripts/tim/index.html",
-            "main": "static/scripts/tim/main.ts",
-            "polyfills": "static/scripts/tim/polyfills.ts",
+            "polyfills": [
+              "static/scripts/tim/polyfills.ts"
+            ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
@@ -108,7 +110,13 @@
             ],
             "scripts": [
             ],
-            "webWorkerTsConfig": "tsconfig.worker.json"
+            "webWorkerTsConfig": "tsconfig.worker.json",
+            "browser": "static/scripts/tim/main.ts",
+            "stylePreprocessorOptions": {
+              "includePaths": [
+                "."
+              ]
+            }
           },
           "configurations": {
             "production": {
@@ -130,8 +138,6 @@
               "sourceMap": false,
               "namedChunks": false,
               "extractLicenses": true,
-              "vendorChunk": false,
-              "buildOptimizer": true,
               "budgets": [
                 {
                   "type": "initial",
@@ -150,24 +156,20 @@
               "sourceMap": true,
               "namedChunks": true,
               "extractLicenses": false,
-              "statsJson": false,
-              "vendorChunk": true,
-              "buildOptimizer": false
+              "statsJson": false
             },
             "development-fast": {
               "optimization": false,
               "sourceMap": false,
               "namedChunks": true,
               "extractLicenses": false,
-              "statsJson": false,
-              "vendorChunk": true,
-              "buildOptimizer": false
+              "statsJson": false
             }
           },
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@angular/build:dev-server",
           "options": {
           },
           "configurations": {
@@ -181,7 +183,7 @@
           "defaultConfiguration": "development"
         },
         "extract-i18n": {
-          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "builder": "@angular/build:extract-i18n",
           "options": {
             "buildTarget": "tim:build"
           }

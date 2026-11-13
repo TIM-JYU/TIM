@@ -532,7 +532,7 @@ export class ToggleComponent {
                     }
                     @if (group.examDocId && examByDocId.get(group.examDocId)) {
                       <option
-                        [ngValue]="$safeNavigationMigration(examByDocId.get(group.examDocId)?.docId)">
+                        [ngValue]="examByDocId.get(group.examDocId)?.docId">
                         {{ examByDocId.get(group.examDocId)?.name }}
                       </option>
                     }

@@ -20,7 +20,7 @@ import {
     EditorType,
     focusAfter,
 } from "tim/editor/BaseParEditor";
-import type {IEditor} from "../../../../modules/cs/js/editor/editor";
+import type {IEditor} from "modules/cs/js/editor/editor";
 
 export class TextAreaParEditor extends BaseParEditor implements IEditor {
     public editor: JQuery;

@@ -4,20 +4,21 @@
     "module": "es2020",
     "strict": true,
     "allowUnreachableCode": true,
-    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
     "outDir": "./dist/tsc",
     "moduleResolution": "bundler",
-    "baseUrl": ".",
-    "ignoreDeprecations": "6.0",
     "paths": {
       "tim/*": [
-        "static/scripts/tim/*"
+        "./static/scripts/tim/*"
       ],
       "vendor/*": [
-        "static/scripts/vendor/*"
+        "./static/scripts/vendor/*"
+      ],
+      "modules/*": [
+        "./modules/*"
       ]
     },
     "target": "ES2022",

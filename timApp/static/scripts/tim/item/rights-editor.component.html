@@ -377,7 +377,7 @@
         <button class="timButton"
           type="button"
           [disabled]="addDisabled() || !selectedOrg"
-          (click)="addOrEditPermission($safeNavigationMigration(selectedOrg?.name), accessType)">
+          (click)="addOrEditPermission(selectedOrg?.name, accessType)">
           {{ actionText() }} {{ selectedOrg?.name }}
         </button></div>
       </span>

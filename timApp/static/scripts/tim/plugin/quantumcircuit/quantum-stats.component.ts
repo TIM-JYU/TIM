@@ -36,13 +36,12 @@ export interface QuantumChartData {
               }
         
               @if (showExport) {
-                <div class="btn-group export-container">
-                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
-                    aria-haspopup="true" aria-expanded="false">
+                <div class="btn-group export-container" dropdown>
+                  <button type="button" class="btn btn-default dropdown-toggle" dropdownToggle>
                     <ng-container i18n>Export</ng-container>
                     <span class="caret"></span>
                   </button>
-                  <ul class="dropdown-menu">
+                  <ul class="dropdown-menu" *dropdownMenu role="menu">
                     <li (click)="handleExport($event, 'probabilities')"><a>
                       <ng-container i18n>Probabilities</ng-container>
                     </a></li>

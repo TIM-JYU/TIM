@@ -17,8 +17,8 @@ import {toPromise} from "tim/util/utils";
 import {PurifyModule} from "tim/util/purify.module";
 import {CommonModule} from "@angular/common";
 import {itemglobals} from "tim/util/globals";
-import {EditorModule} from "../../../../../modules/cs/js/editor/module";
-import {AceEditorComponent} from "../../../../../modules/cs/js/editor/ace";
+import {EditorModule} from "modules/cs/js/editor/module";
+import {AceEditorComponent} from "modules/cs/js/editor/ace";
 
 export interface IEditJsonEventOptions {
     filterParams: Record<string, string>;

@@ -230,7 +230,8 @@ def get_angularscripts(index_file: str, locale: str | None = None):
         bs = BeautifulSoup(html_data, "lxml")
         scripts: list[bs4.element.Tag] = [e for e in bs.find_all("script")]
         n = BeautifulSoup("", "lxml")
-        style = bs.find("link")
+        # The build may also add modulepreload links; only the stylesheet link is needed.
+        style = bs.find("link", rel="stylesheet")
         for s in scripts:
             n.append(s)
             if locale:

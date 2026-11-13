@@ -24,7 +24,7 @@ import {
     EditorType,
     focusAfter,
 } from "tim/editor/BaseParEditor";
-import type {IEditor} from "../../../../modules/cs/js/editor/editor";
+import type {IEditor} from "modules/cs/js/editor/editor";
 import AceAjax = Ace;
 import IAceEditor = Ace.Editor;
 

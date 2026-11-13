@@ -2426,7 +2426,7 @@ ${fhtml}
                 argsEdit[0].setAttribute("style", styleArgs);
             }
         }
-        this.element.bind("keydown", (event) => {
+        this.element.on("keydown", (event) => {
             if (event.ctrlKey || event.metaKey) {
                 switch (String.fromCharCode(event.which).toLowerCase()) {
                     case "s":

@@ -426,7 +426,7 @@ export class ViewCtrl {
         );
 
         // If you add 'mousedown' to bind, scrolling upon opening the menu doesn't work on Android
-        $("body,html").bind("scroll wheel DOMMouseScroll mousewheel", (e) => {
+        $("body,html").on("scroll wheel DOMMouseScroll mousewheel", (e) => {
             if (
                 (e.which && e.which > 0) ||
                 e.type === "mousedown" ||

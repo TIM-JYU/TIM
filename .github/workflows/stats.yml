@@ -43,7 +43,7 @@ jobs:
         run: |
           cd timApp
           npm install
-          npm install -g webpack-bundle-analyzer
+          npm install -g esbuild-visualizer
       - name: Generate bundle statistics
         run: cd timApp && npm run statshtml
       - name: Upload stats

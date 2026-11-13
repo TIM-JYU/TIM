@@ -68,38 +68,52 @@ const CbfieldAll = t.intersection([
     selector: "tim-cbfield-runner",
     template: `
 <div class="textfieldNoSaveDiv" [ngStyle]="cols">
-    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-    <p class="stem" *ngIf="stem">{{stem}}</p>
+    @if (markupError) {
+      <tim-markup-error [data]="markupError"></tim-markup-error>
+    }
+    @if (header) {
+      <h4 [innerHtml]="header | purify"></h4>
+    }
+    @if (stem) {
+      <p class="stem">{{stem}}</p>
+    }
      <span style="width: 100%">
-      <span *ngIf="inputstem"class="inputstem" [innerHtml]="inputstem | purify"></span>
-      <span  *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() ), alertFrame: saveFailed}">
-        <!-- <span *ngIf="isUnSaved()"  [ngClass]="{warnFrame: (isUnSaved() )  }">&nbsp;</span> -->
-        <input type="checkbox"
-               *ngIf="!isPlainText()"
-               [ngStyle]="cbStyle"
-               class="form-control"
-               [(ngModel)]="userword"
-               (ngModelChange)="autoSave()"
-               [disabled]="readonly || attrsall['preview']"
-               [tooltip]="errormessage"
-               [isOpen]="errormessage !== undefined"
-               >
-               <button class="timButton"
-                        *ngIf="!hasButton() && saveFailed"
-                        (click)="autoSave()">
-                    {{buttonText()}}
-               </button>
-         </span>
-         <span *ngIf="isPlainText()" style="">{{userword}}</span>
-         </span>
-        <button class="timButton"
-            *ngIf="!isPlainText() && hasButton()"
-            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
-            (click)="saveText()">
-        {{buttonText()}}
-        </button>
-    <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
+      @if (inputstem) {
+        <span class="inputstem" [innerHtml]="inputstem | purify"></span>
+      }
+      @if (!isPlainText()) {
+        <span [ngClass]="{warnFrame: (isUnSaved() ), alertFrame: saveFailed}">
+          <input type="checkbox"
+                 [ngStyle]="cbStyle"
+                 class="form-control"
+                 [(ngModel)]="userword"
+                 (ngModelChange)="autoSave()"
+                 [disabled]="readonly || attrsall['preview']"
+                 [tooltip]="errormessage"
+                 [isOpen]="errormessage !== undefined"
+                 >
+          @if (!hasButton() && saveFailed) {
+            <button class="timButton"
+                    (click)="autoSave()">
+                {{buttonText()}}
+            </button>
+          }
+        </span>
+      }
+      @if (isPlainText()) {
+        <span style="">{{userword}}</span>
+      }
+     </span>
+    @if (!isPlainText() && hasButton()) {
+      <button class="timButton"
+          [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
+          (click)="saveText()">
+      {{buttonText()}}
+      </button>
+    }
+    @if (footer) {
+      <p [innerHtml]="footer | purify" class="plgfooter"></p>
+    }
 </div>
 `,
     styleUrls: ["./cbfield-plugin.component.scss"],

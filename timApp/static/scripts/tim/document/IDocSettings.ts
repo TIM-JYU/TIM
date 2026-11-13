@@ -1,6 +1,6 @@
 import type {IAnswerBrowserSettings} from "tim/plugin/attributes";
 import * as t from "io-ts";
-import type {ITemplateButton} from "../../../../modules/cs/js/csPlugin";
+import type {ITemplateButton} from "modules/cs/js/csPlugin";
 
 export type MeetingDateEntry = [string, string, string];
 

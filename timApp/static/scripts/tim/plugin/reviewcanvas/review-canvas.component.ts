@@ -44,12 +44,9 @@ import {
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {TooltipDirective, TooltipModule} from "ngx-bootstrap/tooltip";
-import type {
-    IFile,
-    IFileSpecification,
-} from "../../../../../modules/cs/js/util/file-select";
-import {FileSelectManagerComponent} from "../../../../../modules/cs/js/util/file-select";
-import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
+import type {IFile, IFileSpecification} from "modules/cs/js/util/file-select";
+import {FileSelectManagerComponent} from "modules/cs/js/util/file-select";
+import {CsUtilityModule} from "modules/cs/js/util/module";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- used as a type
 const FileSubmission = t.intersection([

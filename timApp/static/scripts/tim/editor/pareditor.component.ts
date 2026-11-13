@@ -81,11 +81,11 @@ import type {IPluginInfoResponse} from "tim/editor/parCompiler";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {RestampDialogClose} from "tim/editor/restamp-dialog.component";
 import {TextAreaParEditor} from "tim/editor/TextAreaParEditor";
-import type {FormulaEvent} from "../../../../modules/cs/js/editor/math-editor/symbol-button-menu.component";
-import {selectFormulaFromPreview} from "../../../../modules/cs/js/editor/math-editor/formula-utils";
-import type {ITemplateButton} from "../../../../modules/cs/js/csPlugin";
-import {createTemplateButtons} from "../../../../modules/cs/js/csPlugin";
-import {EditorModule} from "../../../../modules/cs/js/editor/module";
+import type {FormulaEvent} from "modules/cs/js/editor/math-editor/symbol-button-menu.component";
+import {selectFormulaFromPreview} from "modules/cs/js/editor/math-editor/formula-utils";
+import type {ITemplateButton} from "modules/cs/js/csPlugin";
+import {createTemplateButtons} from "modules/cs/js/csPlugin";
+import {EditorModule} from "modules/cs/js/editor/module";
 
 markAsUsed(rangyinputs);
 

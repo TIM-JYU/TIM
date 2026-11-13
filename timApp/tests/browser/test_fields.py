@@ -134,6 +134,19 @@ copy: target
             self.wait_until_hidden(f"#{task} .alertFrame")
             self.wait_until_hidden(f"#{task} bs-tooltip-container")
 
+        # The plugins are loaded lazily after the page load event,
+        # so wait for them before blocking the network.
+        for task in (
+            "textfield",
+            "numericfield",
+            "cbfield",
+            "cbcountfield",
+            "rbfield",
+        ):
+            self.wait_until_present_and_vis(f"#{task} input")
+        self.wait_until_present_and_vis("#dropdown select")
+        self.wait_until_present_and_vis("#dragsource li")
+        self.wait_until_present_and_vis("#dragtarget .dropword")
         self.set_network_state(False)
 
         send_input("textfield", "Hello")

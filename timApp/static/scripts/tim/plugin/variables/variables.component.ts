@@ -9,7 +9,7 @@ import {
 import DOMPurify from "dompurify";
 import type {Changes} from "tim/util/angularchanges";
 import {TimDefer} from "tim/util/timdefer";
-import type setData from "../../../../../modules/cs/static/dfa/vars.js";
+import type setData from "modules/cs/static/dfa/vars.js";
 
 @Component({
     selector: "tim-variables",

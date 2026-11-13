@@ -39,7 +39,11 @@ module.exports = function createTimConfig({
                 "@limegrass/import-alias": importAliasPlugin,
             },
             rules: {
-                "@limegrass/import-alias/import-alias": "error",
+                "@limegrass/import-alias/import-alias": [
+                    "error",
+                    // Plugin code may import its sibling files relatively.
+                    {relativeImportOverrides: [{path: "modules", depth: 2}]},
+                ],
                 "@typescript-eslint/adjacent-overload-signatures": "error",
                 "@typescript-eslint/array-type": "off",
                 // These three replace the former @typescript-eslint/ban-types rule.
@@ -117,7 +121,7 @@ module.exports = function createTimConfig({
                         args: "none",
                         caughtErrors: "none",
                         ignoreRestSiblings: false,
-                        varsIgnorePattern: "^(.*[iI]gnored|_)$",
+                        varsIgnorePattern: "^(.*(?:i|I)gnored|_)$",
                     },
                 ],
                 "@typescript-eslint/ban-ts-comment": [

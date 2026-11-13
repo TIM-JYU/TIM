@@ -6,7 +6,6 @@ import {
     NgZone,
     provideZoneChangeDetection,
 } from "@angular/core";
-import bootstrap from "bootstrap";
 import $ from "jquery";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
@@ -89,7 +88,7 @@ if (environment.production) {
     enableProdMode();
 }
 
-markAsUsed(bootstrap, loadMap, selfExpire, markAllAsRead);
+markAsUsed(loadMap, selfExpire, markAllAsRead);
 
 /**
  * Registers the components that can appear in HTML that comes from the server

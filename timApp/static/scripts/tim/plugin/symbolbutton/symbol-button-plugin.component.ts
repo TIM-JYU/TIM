@@ -31,15 +31,12 @@ import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {ace} from "tim/editor/ace";
 import type {Ace} from "ace-builds/src-noconflict/ace";
-import {EditorModule} from "../../../../../modules/cs/js/editor/module";
-import type {ITemplateButton} from "../../../../../modules/cs/js/csPlugin";
-import {
-    createTemplateButtons,
-    TemplateButton,
-} from "../../../../../modules/cs/js/csPlugin";
-import type {SymbolButtonMenuComponent} from "../../../../../modules/cs/js/editor/math-editor/symbol-button-menu.component";
-import type {FormulaEvent} from "../../../../../modules/cs/js/editor/math-editor/symbol-button-menu.component";
-import {CURSOR} from "../../../../../modules/cs/js/editor/editor";
+import {EditorModule} from "modules/cs/js/editor/module";
+import type {ITemplateButton} from "modules/cs/js/csPlugin";
+import {createTemplateButtons, TemplateButton} from "modules/cs/js/csPlugin";
+import type {SymbolButtonMenuComponent} from "modules/cs/js/editor/math-editor/symbol-button-menu.component";
+import type {FormulaEvent} from "modules/cs/js/editor/math-editor/symbol-button-menu.component";
+import {CURSOR} from "modules/cs/js/editor/editor";
 
 type IAceEditor = Ace.Editor;
 

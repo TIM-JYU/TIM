@@ -52,6 +52,7 @@ import {
     Swap,
 } from "tim/plugin/quantumcircuit/quantum-board";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {copyToClipboard, isIOS, timeout} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {GateService} from "tim/plugin/quantumcircuit/gate.service";
@@ -1611,6 +1612,7 @@ export class QuantumCircuitComponent
         FormsModule,
         PurifyModule,
         InstanceofModule,
+        BsDropdownModule,
     ],
     providers: [
         provideCharts(withDefaultRegisterables()),

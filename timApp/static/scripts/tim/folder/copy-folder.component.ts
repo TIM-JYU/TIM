@@ -129,7 +129,7 @@ const COPY_HELP_ADDRESS: string = "/view/tim/TIM-ohjeet#hakemistonkopionti";
               @if (copyingFolder == 'finished') {
                 <span>
                   <ng-container i18n>Folder </ng-container>{{ currentItem.name }}<ng-container i18n> copied to </ng-container>
-                  <a href="/manage/{{ newFolder?.path }}" [innerText]="$safeNavigationMigration(newFolder?.path)"></a>.
+                  <a href="/manage/{{ newFolder?.path }}" [innerText]="newFolder?.path ?? ''"></a>.
                 </span>
               }
               @if (copyErrors) {

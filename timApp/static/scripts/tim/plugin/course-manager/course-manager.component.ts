@@ -5,7 +5,7 @@ import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 
 import {type AngularError, type Result, toPromise} from "tim/util/utils";
-import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
+import {CsUtilityModule} from "modules/cs/js/util/module";
 
 interface TemplateData {
     copy_to_path: string;

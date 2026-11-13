@@ -1,6 +1,13 @@
 import $ from "jquery";
-import "./jquery-ui-sortable.min.js";
-import "./jquery.ui.touch-punch.min.js";
+// jQuery UI modules register themselves on jQuery. They are listed in dependency order
+// so that they load correctly also with bundlers that have no AMD support.
+import "jquery-ui/ui/version";
+import "jquery-ui/ui/widget";
+import "jquery-ui/ui/data";
+import "jquery-ui/ui/scroll-parent";
+import "jquery-ui/ui/widgets/mouse";
+import "jquery-ui/ui/widgets/sortable";
+import "./touch-punch";
 import DOMPurify from "dompurify";
 import {shuffle} from "tim/plugin/util";
 import * as t from "io-ts";

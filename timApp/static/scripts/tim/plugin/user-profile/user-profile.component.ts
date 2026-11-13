@@ -15,12 +15,9 @@ import {FormsModule} from "@angular/forms";
 
 import {Users} from "tim/user/userService";
 import type {ICurrentUser} from "tim/user/IUser";
-import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
-import {FileSelectManagerComponent} from "../../../../../modules/cs/js/util/file-select";
-import type {
-    IFile,
-    IFileSpecification,
-} from "../../../../../modules/cs/js/util/file-select";
+import {CsUtilityModule} from "modules/cs/js/util/module";
+import {FileSelectManagerComponent} from "modules/cs/js/util/file-select";
+import type {IFile, IFileSpecification} from "modules/cs/js/util/file-select";
 
 interface ProfileData {
     username?: string;

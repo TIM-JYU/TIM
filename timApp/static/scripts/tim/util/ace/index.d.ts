@@ -1,6 +1,6 @@
 /* eslint-disable */
 
-declare module "ace-builds/webpack-resolver";
+declare module "ace-builds/esm-resolver";
 declare module "ace-builds/src-noconflict/ext-language_tools";
 declare module "ace-builds/src-noconflict/ace" {
     export namespace Ace {

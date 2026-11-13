@@ -20,8 +20,8 @@ import type {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {toPromise} from "tim/util/utils";
 import {CommonModule} from "@angular/common";
-import {AceEditorComponent} from "../../../../modules/cs/js/editor/ace";
-import {EditorModule} from "../../../../modules/cs/js/editor/module";
+import {AceEditorComponent} from "modules/cs/js/editor/ace";
+import {EditorModule} from "modules/cs/js/editor/module";
 
 export interface IEditJsonEventOptions {
     filterParams: Record<string, string>;

@@ -4,7 +4,7 @@ import {Component} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 
-import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
+import {CsUtilityModule} from "modules/cs/js/util/module";
 
 @Component({
     selector: "tim-participant-list",
