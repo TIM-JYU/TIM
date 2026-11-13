@@ -267,7 +267,7 @@
         </table>
         <span></span>
         <tabset>
-          <tab heading="Create a translation" [active]="false">
+          <tab heading="Create a translation" timStartClosed>
             <div class="form-group"><label for="translationTitle">Title:</label>
             <input id="translationTitle" class="form-control" type="text"
               [(ngModel)]="newTranslation.title" (ngModelChange)="checkCannotTranslate()" />

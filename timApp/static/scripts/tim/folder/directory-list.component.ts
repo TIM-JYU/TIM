@@ -170,8 +170,8 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
           <p>There are no items to show.</p>
         }
         @if (canCreate) {
-          <tabset>
-            <tab [active]="false" (selectTab)="tabSelection(0)">
+          <tabset (pointerdown)="tabsTouched = true" (keydown)="tabsTouched = true">
+            <tab timStartClosed (selectTab)="tabSelection(0)">
               <ng-template tabHeading>
                 <span>Create a new document</span>
                 <span class="glyphicon glyphicon-file icon-inline" aria-hidden="true"></span>
@@ -179,7 +179,7 @@ const AccessLevelBadgeInfo: Record<AccessLevelBadge, string> = {
               <create-item itemType="document" itemLocation="{{ item.path }}"
               [enable]="activeTab === 0"></create-item>
             </tab>
-            <tab [active]="false" (selectTab)="tabSelection(1)">
+            <tab timStartClosed (selectTab)="tabSelection(1)">
               <ng-template tabHeading>
                 <span>Create a new folder</span>
                 <span class="glyphicon glyphicon-folder-open icon-inline" aria-hidden="true"></span>
@@ -206,6 +206,8 @@ export class DirectoryListComponent {
     displayAccessBadges: boolean;
     displayDocumentTags: boolean;
     activeTab: number = -1;
+    // Whether the user has interacted with the create tabs.
+    protected tabsTouched = false;
     currentSortOrder: string;
     sortByNameAsc: boolean;
     sortByModifiedDesc: boolean;
@@ -353,6 +355,11 @@ export class DirectoryListComponent {
     }
 
     protected tabSelection(tabNum: number) {
+        // ngx-bootstrap selects the first tab by itself when the page loads.
+        // Only a selection made by the user may move the focus to the tab's form.
+        if (!this.tabsTouched) {
+            return;
+        }
         this.activeTab = tabNum;
     }
 

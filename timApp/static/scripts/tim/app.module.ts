@@ -37,6 +37,7 @@ import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 import {SideBarMenuModule} from "tim/sidebarmenu/side-bar-menu.module";
 import {DirectoryListComponent} from "tim/folder/directory-list.component";
 import {TabsModule} from "ngx-bootstrap/tabs";
+import {TabStartClosedDirective} from "tim/ui/tab-start-closed.directive";
 import {TemplateListComponent} from "tim/document/editing/template-list.component";
 import {ConsentChoiceComponent} from "tim/ui/consent-choice.component";
 import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
@@ -122,6 +123,7 @@ setStandaloneHttpInterceptors(() => [
         TypeaheadModule,
         TooltipModule,
         TabsModule,
+        TabStartClosedDirective,
         PopoverModule,
         DraggableModule,
     ],
