@@ -11555,6 +11555,22 @@ Syötä useiden käyttäjien osoitteet allekkain tai pilkulla erotettuina.</targ
           <context context-type="linenumber">118</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="870377192701417570" datatype="html">
+        <source>No inputs were checked.</source>
+        <target state="translated">Yhtään syötettä ei tarkistettu.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1900227520329592924" datatype="html">
+        <source>Check that modelInput matches at least one input where the ignored qubits are 0.</source>
+        <target state="translated">Tarkista, että modelInput vastaa vähintään yhtä syötettä, jossa ohitettavien kubittien arvot ovat 0.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">124</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

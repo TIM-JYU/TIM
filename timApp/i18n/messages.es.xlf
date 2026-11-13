@@ -11563,6 +11563,22 @@ Separate multiple addresses with commas or write each address on a new line.</so
           <context context-type="linenumber">118</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="870377192701417570" datatype="html">
+        <source>No inputs were checked.</source>
+        <target state="translated">No se comprobó ninguna entrada.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1900227520329592924" datatype="html">
+        <source>Check that modelInput matches at least one input where the ignored qubits are 0.</source>
+        <target state="translated">Comprueba que modelInput coincida con al menos una entrada en la que los qubits ignorados tengan el valor 0.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">124</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

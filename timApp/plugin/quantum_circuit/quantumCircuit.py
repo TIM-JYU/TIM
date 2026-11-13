@@ -184,6 +184,11 @@ class CircuitUnInterpretableError:
     errorType: str = "circuit-uninterpretable"
 
 
+@dataclass
+class NoInputsCheckedError:
+    errorType: str = "no-inputs-checked"
+
+
 ErrorType = Union[
     ConditionsNotSatisfiedError,
     ConditionNotInterpretableError,
@@ -199,6 +204,7 @@ ErrorType = Union[
     TooLongTimeoutError,
     CircuitUnInterpretableError,
     InvalidIgnoreQubitsError,
+    NoInputsCheckedError,
 ]
 
 
@@ -251,7 +257,7 @@ class QuantumCircuitMarkup(GenericMarkupModel):
     removeControls: bool | None = None
     touchOffset: int | None = None
 
-    ignoreQubits: list[str] | None = None
+    ignoreQubits: list[int] | None = None
 
 
 @dataclass
@@ -559,7 +565,7 @@ def run_all_simulations(
     custom_gates: dict[str, np.ndarray],
     model_input: list[str] | None,
     threaded_sim_params: ThreadedSimParams,
-    qubits_to_ignore: list[str] | None = None,
+    qubits_to_ignore: list[int] | None = None,
 ) -> None:
     """
     Runs simulator with all inputs comparing model_circuit to user_circuit.
@@ -576,12 +582,14 @@ def run_all_simulations(
         threaded_sim_params.result = False, TooManyQubitsError(n_qubits, 20)
         return
 
-    parsed = parse_ignored(qubits_to_ignore, n_qubits)
+    parsed = validate_ignored(qubits_to_ignore, n_qubits)
     if isinstance(parsed, InvalidIgnoreQubitsError):
         threaded_sim_params.result = False, parsed
         return
     ignored = parsed
 
+    ignored_set = set(ignored)
+    compared = 0
     for i in range(2**n_qubits):
         if threaded_sim_params.needs_to_be_stopped:
             threaded_sim_params.result = False, None
@@ -597,6 +605,9 @@ def run_all_simulations(
         if not check_input_valid:
             continue
         input_list = [int(d) for d in bitstring_reversed]
+        if any(input_list[k] for k in ignored):
+            continue
+        compared += 1
         try:
             success1, expected = run_simulation(
                 model_circuit, input_list, n_qubits, custom_gates
@@ -618,7 +629,6 @@ def run_all_simulations(
             )
             return
 
-        ignored_set = set(ignored)
         if isinstance(actual, tuple) and isinstance(expected, tuple):
             expected_probs = _drop_ignored(expected[1], n_qubits, ignored)
             actual_probs = _drop_ignored(actual[1], n_qubits, ignored)
@@ -630,7 +640,9 @@ def run_all_simulations(
                     shown_input, list(expected_probs), list(actual_probs)
                 )
                 return
-
+    if compared == 0:
+        threaded_sim_params.result = False, NoInputsCheckedError()
+        return
     threaded_sim_params.result = True, None
 
 
@@ -651,18 +663,17 @@ def _drop_ignored(
     return arr.reshape((2,) * n_qubits).sum(axis=axes).reshape(-1)
 
 
-def parse_ignored(
-    qubits_to_ignore: list[str] | None, n_qubits: int
+def validate_ignored(
+    qubits_to_ignore: list[int] | None, n_qubits: int
 ) -> list[int] | InvalidIgnoreQubitsError:
     """
-    Parse the ignored qubits into a list of integers.
+    Validate the ignored qubits as a list of integers.
     :param qubits_to_ignore: list of qubits to ignore
     :param n_qubits: number of qubits
     :return: list of qubits as integers
     """
-    try:
-        ignored = [int(q) for q in (qubits_to_ignore or [])]
-    except (ValueError, TypeError):
+    ignored = list(qubits_to_ignore or [])
+    if not all(isinstance(k, int) and not isinstance(k, bool) for k in ignored):
         return InvalidIgnoreQubitsError("Invalid value for ignored qubits.")
     if len(set(ignored)) != len(ignored) or not all(0 <= k < n_qubits for k in ignored):
         return InvalidIgnoreQubitsError(
@@ -680,7 +691,7 @@ def run_all_simulations_threaded(
     custom_gates: dict[str, np.ndarray],
     model_input: list[str] | None,
     max_run_timeout: int | None,
-    qubits_to_ignore: list[str] | None,
+    qubits_to_ignore: list[int] | None,
 ) -> tuple[bool, ErrorType | None]:
     sim_params = ThreadedSimParams(False, (True, None))
 
