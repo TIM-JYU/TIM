@@ -876,19 +876,16 @@ export function truncate(text: string, max: number) {
 export function parseIframeopts(
     iframeopts: string,
     framesrc: string
-): {sandbox: string | null; allow: string | null} {
+): {sandbox: string; allow: string | null} {
     const parse = Range.prototype.createContextualFragment.bind(
         document.createRange()
     );
     const parsed = parse(`<div ${iframeopts}></div>`);
-    let sandbox: string | null = "";
+    let sandbox: string = "";
     let allow = null;
     for (const c of parsed.firstElementChild?.attributes ?? []) {
         if (c.name === "sandbox") {
             sandbox = c.value;
-            if (sandbox === "null") {
-                sandbox = null;
-            }
         }
         if (c.name === "allow") {
             allow = c.value;
@@ -904,7 +901,7 @@ export function parseIframeopts(
         canAllowScriptsAndSameOrigin = location.origin !== u.origin;
     } catch {}
     if (
-        sandbox?.includes("allow-scripts") &&
+        sandbox.includes("allow-scripts") &&
         sandbox.includes("allow-same-origin") &&
         !canAllowScriptsAndSameOrigin
     ) {

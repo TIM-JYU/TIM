@@ -140,11 +140,16 @@ const ShowFileMarkup = t.intersection([
         ),
     }),
 ]);
-const ShowFileAll = t.type({
-    info: Info,
-    markup: ShowFileMarkup,
-    preview: t.boolean,
-});
+const ShowFileAll = t.intersection([
+    t.partial({
+        plugin: t.string,
+    }),
+    t.type({
+        info: Info,
+        markup: ShowFileMarkup,
+        preview: t.boolean,
+    }),
+]);
 
 // noinspection TypeScriptUnresolvedVariable
 @Component({
@@ -203,19 +208,11 @@ const ShowFileAll = t.type({
 
             <ng-container *ngIf="videoOn">
                <div *ngIf="iframesettings as iframesettings" class="iframeContainer">
-                <span class="videoRow" *ngIf="iframesettings">
-                    <iframe 
-                            class="showVideo"
-                            allowfullscreen
-                            [src]="iframesettings.src"
-                            [style.width.px]="width"
-                            [style.height.px]="height"
-                            [attr.sandbox]="isPdf ? null : iframesettings.sandbox"
-                            [attr.allow]="iframesettings.allow"
-                    >
-                    </iframe>
-                  <!-- <button class="settings-btn" (click)="toggleSettings()" type="button" title="More settings">⋮</button> -->
-                </span>            
+                    <span
+                        class="videoRow"
+                        *ngIf="iframesettings"
+                        #iframeHost>
+                    </span>            
                     <span class="margin-5-right zoom-controls iframe-setting-label" >
                         <span class="zoom-label">Zoom:</span>
                         <a class="zoom-minus" (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
@@ -385,6 +382,13 @@ export class VideoComponent extends AngularPluginBase<
     t.TypeOf<typeof ShowFileAll>,
     typeof ShowFileAll
 > {
+    @ViewChild("iframeHost")
+    set iframeHost(ref: ElementRef<HTMLSpanElement> | undefined) {
+        if (ref) {
+            this.createIframe(ref.nativeElement);
+        }
+    }
+
     get videoClass() {
         let a = "";
         if (this.markup.audio) {
@@ -434,6 +438,7 @@ export class VideoComponent extends AngularPluginBase<
     private origSize!: string;
     private origWidth?: number;
     private origHeight?: number;
+    private iframeUrl = "";
 
     // Removing the ElementRef caused the video's advanced controls not to work properly.
     @ViewChild("video") video?: ElementRef<HTMLVideoElement>;
@@ -801,6 +806,237 @@ export class VideoComponent extends AngularPluginBase<
         return this.markup.autoplay ?? true;
     }
 
+    private blobUrl: string | null = null;
+
+    private revokeBlobUrl(): void {
+        if (this.blobUrl) {
+            URL.revokeObjectURL(this.blobUrl);
+            this.blobUrl = null;
+        }
+    }
+
+    ngOnDestroy(): void {
+        this.revokeBlobUrl();
+    }
+
+    /**
+     * Render a styled error notice directly into the host element instead of an iframe.
+     *
+     * @param host Target container element where the error box is placed.
+     * @param message English error description explaining why the PDF failed to load.
+     */
+    private showPdfError(host: HTMLSpanElement, message: string): void {
+        const wrapper = document.createElement("div");
+        wrapper.className = "showVideo pdfError";
+        wrapper.style.boxSizing = "border-box";
+        wrapper.style.padding = "16px";
+
+        if (this.width != null) {
+            wrapper.style.width = `${this.width}px`;
+        }
+
+        const box = document.createElement("div");
+        box.style.fontFamily = "sans-serif";
+        box.style.color = "#db0404";
+        box.style.border = "1px solid #f5c6cb";
+        box.style.borderRadius = "4px";
+        box.style.padding = "16px";
+
+        const title = document.createElement("strong");
+        title.textContent = "Failed to load PDF file:";
+
+        box.append(
+            title,
+            document.createElement("br"),
+            document.createTextNode(message)
+        );
+        wrapper.appendChild(box);
+        host.replaceChildren(wrapper);
+    }
+
+    /**
+     * Create and mount an iframe for the configured URL, validating PDF content safely.
+     *
+     * @param host Target container element for the iframe or error notice.
+     */
+    private async createIframe(host: HTMLSpanElement): Promise<void> {
+        this.revokeBlobUrl();
+
+        if (!this.iframesettings || !this.iframeUrl) {
+            return;
+        }
+
+        const isShowPdf = this.attrsall.plugin === "showPdf";
+
+        let parsedUrl: URL | null;
+        try {
+            parsedUrl = new URL(this.iframeUrl, window.location.origin);
+        } catch {
+            parsedUrl = null;
+        }
+
+        if (parsedUrl == null && isShowPdf) {
+            return this.showPdfError(host, "Invalid PDF URL.");
+        }
+
+        const iframe = document.createElement("iframe");
+        iframe.className = "showVideo";
+        iframe.allowFullscreen = true;
+
+        if (this.iframesettings.allow) {
+            iframe.setAttribute("allow", this.iframesettings.allow);
+        }
+        if (this.width != null) {
+            iframe.style.width = `${this.width}px`;
+        }
+        if (this.height != null) {
+            iframe.style.height = `${this.height}px`;
+        }
+
+        const isSameOrigin =
+            parsedUrl != null && parsedUrl.origin === window.location.origin;
+        const pathnameLower = parsedUrl ? parsedUrl.pathname.toLowerCase() : "";
+
+        // Hint that the URL might point to a PDF (never trusted blindly)
+        const looksLikePdf =
+            isShowPdf ||
+            pathnameLower.endsWith(".pdf") ||
+            pathnameLower.includes("/print/");
+
+        let handledAsPdf = false;
+
+        if (isSameOrigin) {
+            const mimeType = looksLikePdf
+                ? "application/pdf"
+                : await this.getUrlMimeType(this.iframeUrl, true);
+
+            if (mimeType === "application/pdf") {
+                try {
+                    const safeBlobUrl = await this.tryCreateSafePdfBlobUrl(
+                        this.iframeUrl
+                    );
+                    if (safeBlobUrl) {
+                        this.blobUrl = safeBlobUrl;
+                        iframe.setAttribute("src", safeBlobUrl);
+                        handledAsPdf = true;
+                    } else if (isShowPdf) {
+                        return this.showPdfError(
+                            host,
+                            "File is not a valid PDF document."
+                        );
+                    }
+                } catch (error) {
+                    console.error("Error validating local PDF file:", error);
+                    if (isShowPdf) {
+                        return this.showPdfError(
+                            host,
+                            "Error validating PDF file."
+                        );
+                    }
+                }
+            } else if (isShowPdf) {
+                return this.showPdfError(
+                    host,
+                    "No PDF document found at the given URL."
+                );
+            }
+        } else if (parsedUrl != null) {
+            const mimeType = looksLikePdf
+                ? "application/pdf"
+                : await this.getUrlMimeType(this.iframeUrl, false);
+
+            if (mimeType === "application/pdf") {
+                // External PDF -> route through backend proxy for validation and safe headers
+                const proxyUrl = `/getpdfproxy?url=${encodeURIComponent(
+                    this.iframeUrl
+                )}`;
+                iframe.setAttribute("src", proxyUrl);
+                handledAsPdf = true;
+            } else if (isShowPdf) {
+                return this.showPdfError(
+                    host,
+                    "No PDF document found at the given URL."
+                );
+            }
+        }
+
+        if (!handledAsPdf) {
+            // Non-PDF embeds (and fake .pdf URLs in generic iframe mode) stay strictly sandboxed
+            iframe.setAttribute("sandbox", this.iframesettings.sandbox ?? "");
+            iframe.setAttribute("src", this.iframeUrl);
+        }
+
+        host.replaceChildren(iframe);
+    }
+
+    private async tryCreateSafePdfBlobUrl(url: string): Promise<string | null> {
+        const response = await fetch(url);
+        if (!response.ok) {
+            return null;
+        }
+
+        const contentType = (
+            response.headers.get("Content-Type") ?? ""
+        ).toLowerCase();
+        if (
+            !(
+                contentType.includes("application/pdf") ||
+                contentType.includes("application/octet-stream")
+            )
+        ) {
+            return null;
+        }
+
+        const buffer = await response.arrayBuffer();
+        if (buffer.byteLength < 5) {
+            return null;
+        }
+
+        // Verify magic bytes (%PDF-)
+        const header = new Uint8Array(buffer.slice(0, 5));
+        const headerString = String.fromCharCode(...header);
+        if (headerString !== "%PDF-") {
+            return null;
+        }
+
+        const safeBlob = new Blob([buffer], {type: "application/pdf"});
+        return URL.createObjectURL(safeBlob);
+    }
+
+    /**
+     * Determine the MIME type of URL (using a local HEAD request or the backend /check_type endpoint).
+     */
+    private async getUrlMimeType(
+        url: string,
+        isSameOrigin: boolean
+    ): Promise<string | null> {
+        try {
+            if (isSameOrigin) {
+                const response = await fetch(url, {method: "HEAD"});
+                if (!response.ok) {
+                    return null;
+                }
+                const rawCt = (
+                    response.headers.get("Content-Type") ?? ""
+                ).toLowerCase();
+                return rawCt.split(";")[0].trim() || null;
+            } else {
+                const response = await fetch(
+                    `/get_mimetype?url=${encodeURIComponent(url)}`
+                );
+                if (!response.ok) {
+                    return null;
+                }
+                const data = (await response.json()) as {
+                    mimetype?: string | null;
+                };
+                return data.mimetype ?? null;
+            }
+        } catch {
+            return null;
+        }
+    }
+
     toggleVideo() {
         if (this.videoOn) {
             this.hideVideo();
@@ -875,6 +1111,9 @@ export class VideoComponent extends AngularPluginBase<
                     defaultOpts,
                 src
             );
+
+            this.iframeUrl = src;
+
             this.iframesettings = {
                 src: this.domSanitizer.bypassSecurityTrustResourceUrl(src),
                 width: this.width ?? null,

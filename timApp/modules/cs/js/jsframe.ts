@@ -189,7 +189,7 @@ function unwrapAllC(data: unknown): JSFrameData {
 
 export interface Iframesettings {
     allow: string | null;
-    sandbox: string | null;
+    sandbox: string;
     src: SafeResourceUrl;
     width: number | string | null;
     height: number | string | null;
@@ -526,8 +526,7 @@ export class JsframeComponent
         }
 
         const iframeopts =
-            this.markup.iframeopts ??
-            "sandbox='allow-scripts allow-same-origin allow-popups'";
+            this.markup.iframeopts ?? "sandbox='allow-scripts allow-popups'";
 
         const opts = parseIframeopts(iframeopts, src);
         const sandbox = opts.sandbox;

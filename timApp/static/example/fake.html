@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<title>Iframe security test (Auto)</title>
+<style>
+  body { font-family: sans-serif; padding: 15px; background: #fff0f0; }
+  h1 { margin-top: 0; font-size: 1.3em; }
+  .pass { color: #155724; background: #d4edda; padding: 4px 8px; border-radius: 4px; margin: 4px 0; }
+  .warn { color: #721c24; background: #f8d7da; padding: 4px 8px; border-radius: 4px; margin: 4px 0; font-weight: bold; }
+  .info { color: #0c5460; background: #d1ecf1; padding: 4px 8px; border-radius: 4px; margin: 4px 0; }
+  pre { background: #222; color: #eee; padding: 10px; white-space: pre-wrap; font-size: 12px; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Iframe-tietoturvatesti (Automaattinen)</h1>
+<div id="summary"></div>
+<h3>Yksityiskohtainen loki:</h3>
+<pre id="log"></pre>
+
+<script>
+const summary = document.getElementById("summary");
+const log = document.getElementById("log");
+
+function addSummary(text, type) {
+    const div = document.createElement("div");
+    div.className = type; // "pass" (suojattu), "warn" (vaara!), "info"
+    div.textContent = text;
+    summary.appendChild(div);
+}
+
+function report(message) {
+    log.textContent += message + "\n";
+    console.log(message);
+}
+
+async function runAllTests() {
+    report("=== ALOITETAAN AUTOMAATTISET TESTIT ===");
+    report("Origin: " + location.origin);
+    report("Href: " + location.href);
+
+    // 0. JavaScriptin ajo
+    addSummary("⚠️ JavaScriptin suoritus: SALLITTU", "warn");
+
+    // 1. Parent DOM, evästeet ja localStorage
+    report("\n--- 1. PARENT DOM & STORAGE ---");
+    let parentLeaked = false;
+    try {
+        const pHref = parent.location.href;
+        report("Parent URL: " + pHref);
+        parentLeaked = true;
+    } catch(e) { report("Parent URL estetty: " + e.name); }
+
+    try {
+        const pTitle = parent.document.title;
+        report("Parent title: " + pTitle);
+        parentLeaked = true;
+    } catch(e) { report("Parent DOM estetty: " + e.name); }
+
+    try {
+        const pCookie = parent.document.cookie;
+        report("Parent cookie: " + pCookie);
+        parentLeaked = true;
+    } catch(e) { report("Parent cookie estetty: " + e.name); }
+
+    try {
+        const pStorage = parent.localStorage.length;
+        report("Parent localStorage: " + pStorage);
+        parentLeaked = true;
+    } catch(e) { report("Parent localStorage estetty: " + e.name); }
+
+    if (parentLeaked) {
+        addSummary("🚨 KRIITTINEN: Pääsivun DOM / evästeet / localStorage LUETTAVISSA!", "warn");
+    } else {
+        addSummary("✅ Pääsivun DOM, evästeet ja localStorage: ESTETTY", "pass");
+    }
+
+    // 2. PostMessage
+    report("\n--- 2. POSTMESSAGE ---");
+    try {
+        parent.postMessage({ type: "IFRAME_SECURITY_TEST", message: "Auto-test" }, "*");
+        report("PostMessage lähetetty.");
+        addSummary("ℹ️ PostMessage-viestintä pääikkunaan: SALLITTU (normaalia)", "info");
+    } catch(e) {
+        report("PostMessage estetty: " + e);
+    }
+
+    // 3. Top navigation (testataan ilman että katkaistaan testiä heti)
+    report("\n--- 3. TOP NAVIGATION ---");
+    try {
+        // Yritetään lukea tai muuttaa top-ikkunan sijaintia
+        window.top.location.href = "javascript:void(0)";
+        report("Top navigation sallittu!");
+        addSummary("⚠️ Pääikkunan uudelleenohjaus (Top Navigation): SALLITTU", "warn");
+    } catch(e) {
+        report("Top navigation estetty: " + e.name);
+        addSummary("✅ Pääikkunan uudelleenohjaus (Top Navigation): ESTETTY", "pass");
+    }
+
+    // 4. Form submit (kohdistetaan piilotettuun iframeen, ettei sivu vaihdu)
+    report("\n--- 4. FORM SUBMIT ---");
+    try {
+        const hiddenTarget = document.createElement("iframe");
+        hiddenTarget.name = "hidden_form_target";
+        hiddenTarget.style.display = "none";
+        document.body.appendChild(hiddenTarget);
+
+        const form = document.createElement("form");
+        form.method = "GET";
+        form.action = "about:blank";
+        form.target = "hidden_form_target";
+
+        const input = document.createElement("input");
+        input.name = "test";
+        input.value = "1";
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+
+        report("Lomakkeen lähetys suoritettu.");
+        addSummary("⚠️ Lomakkeiden lähetys (allow-forms): SALLITTU", "warn");
+    } catch(e) {
+        report("Lomakkeen lähetys estetty: " + e.name);
+        addSummary("✅ Lomakkeiden lähetys: ESTETTY", "pass");
+    }
+
+    // 5. Popup (huom: selain voi estää ilman klikkausta)
+    report("\n--- 5. POPUP ---");
+    try {
+        const w = window.open("about:blank", "_blank");
+        if (w) {
+            w.close();
+            report("Popup avautui!");
+            addSummary("⚠️ Ponnahdusikkunat (allow-popups): SALLITTU", "warn");
+        } else {
+            report("Popup estettiin (sandbox tai selaimen popup-esto).");
+            addSummary("✅ Ponnahdusikkunat: ESTETTY (tai selaimen popup-esto aktiivinen)", "pass");
+        }
+    } catch(e) {
+        report("Popup virhe: " + e.name);
+        addSummary("✅ Ponnahdusikkunat: ESTETTY", "pass");
+    }
+
+    // 6. Verkkoyhteys (Fetch)
+    report("\n--- 6. NETWORK (FETCH) ---");
+    try {
+        // Testataan yhteyttä data-osoitteeseen tai ulkoiseen osoitteeseen
+        const res = await fetch("data:text/plain,ok");
+        report("Fetch data-URL onnistui: " + res.status);
+
+        // Testataan ulkoinen verkkokutsu (esim. example.com, joka epäonnistuu jos CSP estää)
+        await fetch("https://example.com", { mode: "no-cors" });
+        report("Ulkoinen fetch-pyyntö lähti verkkoon!");
+        addSummary("⚠️ Ulkoiset verkkopyynnöt (fetch): SALLITTU (tietovuotoriski)", "warn");
+    } catch(e) {
+        report("Verkkopyyntö estetty: " + e);
+        addSummary("✅ Ulkoiset verkkopyynnöt (fetch): ESTETTY (CSP tai sandbox)", "pass");
+    }
+}
+
+// Suoritetaan heti kun DOM on valmis
+window.addEventListener("DOMContentLoaded", runAllTests);
+</script>
+
+</body>
+</html>
