@@ -149,8 +149,7 @@ export class AppModule implements DoBootstrap {
     }
 
     ngDoBootstrap(appRef: ApplicationRef) {
-        // ngx-bootstrap has no Bootstrap 3 mode anymore; see ngxBootstrapCompat.scss.
-        setTheme("bs4");
+        setTheme("bs5");
         setApplicationRef(appRef, this.zone);
         initServerComponents(appRef, this.injector);
     }

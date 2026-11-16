@@ -146,7 +146,7 @@ annotation .fulldiv {
     }
 
     @media screen and (max-height: 800px) {
-        min-height: 2rem;
+        min-height: 1.25rem;
     }
 }
 
@@ -164,9 +164,9 @@ annotation .fulldiv {
     }
 
     @media screen and (max-height: 800px) {
-        font-size: 1.2rem;
-        max-height: 4.8rem;
-        line-height: 1rem;
+        font-size: 0.75rem;
+        max-height: 3rem;
+        line-height: 0.625rem;
     }
 }
 
@@ -178,8 +178,8 @@ annotation .fulldiv {
     margin-bottom: 4px;
 
     @media screen and (max-height: 800px) {
-        font-size: 1.2rem;
-        line-height: 1rem;
+        font-size: 0.75rem;
+        line-height: 0.625rem;
     }
 }
 
@@ -364,7 +364,7 @@ annotation .fulldiv {
     font-size: 0.9em;
 
     @media screen and (max-height: 800px) {
-        font-size: 0.9rem;
+        font-size: 0.5625rem;
     }
 }
 
@@ -372,10 +372,10 @@ annotation .fulldiv {
     max-width: 59%;
     display: inline-block;
     float: right;
-    margin-right: 0.3rem;
+    margin-right: 0.1875rem;
 
     @media screen and (max-height: 800px) {
-        font-size: 0.9rem;
+        font-size: 0.5625rem;
     }
 }
 
@@ -414,7 +414,7 @@ annotation .fulldiv {
     }
 
     @media screen and (max-height: 800px) {
-        font-size: 1.2rem;
+        font-size: 0.75rem;
         margin-top: 5px;
         margin-bottom: 4px;
     }
@@ -471,7 +471,7 @@ annotation .fulldiv {
 }
 
 .velp legend{
-    font-size: 1.5rem;
+    font-size: 0.9375rem;
     font-weight: 600;
 
     @media screen and (max-height: 1080px) {
@@ -479,7 +479,7 @@ annotation .fulldiv {
     }
 
     @media screen and (max-height: 800px) {
-        font-size: 1.2rem;
+        font-size: 0.75rem;
     }
 }
 
@@ -577,11 +577,11 @@ position: absolute;
 }
 
 .velp .header{
-    font-size: 1.5rem;
+    font-size: 0.9375rem;
     font-weight: 600;
 
     @media screen and (max-height: 800px) {
-        font-size: 1.2rem;
+        font-size: 0.75rem;
         margin-bottom: 4px;
     }
 }
@@ -733,8 +733,8 @@ $inactive: whitesmoke;
 }
 
 .velp-color-selector {
-    height: 2.35rem;
-    width: 5rem;
+    height: 1.4688rem;
+    width: 3.125rem;
     padding: 3px;
     vertical-align: top;
     border-block: unset;
@@ -743,8 +743,8 @@ $inactive: whitesmoke;
 }
 
 .btn-restore-velp-color {
-    height: 2.35rem;
-    width: 2rem;
+    height: 1.4688rem;
+    width: 1.25rem;
     padding: 2px 0;
     vertical-align: top;
 }
@@ -758,7 +758,7 @@ $inactive: whitesmoke;
 }
 
 .btn-create-new-velp {
-    padding-top: 0.3rem;
+    padding-top: 0.1875rem;
 }
 
 .icon-plus-add-velp {
@@ -766,7 +766,7 @@ $inactive: whitesmoke;
 }
 
 .btn-set-vg-visible {
-    font-size: 1.2rem;
+    font-size: 0.75rem;
 }
 
 input[type="color"]::-webkit-color-swatch-wrapper {

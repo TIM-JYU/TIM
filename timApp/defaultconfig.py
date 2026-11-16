@@ -68,8 +68,7 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 IMMEDIATE_PRELOAD = False
 LIBSASS_STYLE = "compressed"
 LIBSASS_INCLUDES = [
-    "node_modules/bootstrap-sass/assets/stylesheets",
-    "node_modules/eonasdan-bootstrap-datetimepicker/src/sass",
+    "node_modules",
     "static",
 ]
 TIM_NAME = os.environ.get("COMPOSE_PROJECT_NAME", "tim")

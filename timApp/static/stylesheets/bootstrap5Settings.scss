@@ -1,0 +1,231 @@
+// Settings for Bootstrap 5.
+//
+// TIM was built on Bootstrap 3. These settings make Bootstrap 5 keep the Bootstrap 3 metrics
+// and colours, taking the values from the Bootstrap 3 variables (bootstrap3Variables.scss),
+// which TIM's variables.scss and the style documents of users may have changed.
+// Everything is "!default", so a style document can also set a Bootstrap 5 variable directly.
+//
+// Must be imported after bootstrap3Variables and before Bootstrap 5.
+
+// Bootstrap 5 computes its sizes in rem with a 16px root, while Bootstrap 3 has a base size in pixels.
+// The pixel value is put back after Bootstrap 5 has been imported (see all.scss).
+$tim-font-size-base-px: $font-size-base;
+$font-size-base: if(unit($font-size-base) == "px", ($font-size-base / 16px) * 1rem, $font-size-base);
+
+// TIM has a variable of its own with this name, which is meant for document paragraphs only;
+// Bootstrap 5 would apply it to the whole page. It is also put back after the import.
+$tim-body-text-align: $body-text-align;
+$body-text-align: null;
+
+// Options
+$enable-rfs: false !default;
+$enable-smooth-scroll: false !default;
+$enable-shadows: true !default;
+$enable-gradients: false !default;
+$enable-dark-mode: false !default;
+$enable-negative-margins: false !default;
+// The grid classes are written by bootstrap3Compat.scss, which needs a different ".row".
+$enable-grid-classes: false !default;
+// Bootstrap 3 has white text on every coloured button, label and progress bar.
+$min-contrast-ratio: 1.8 !default;
+
+// Colours
+$primary: $brand-primary !default;
+$success: $brand-success !default;
+$info: $brand-info !default;
+$warning: $brand-warning !default;
+$danger: $brand-danger !default;
+$secondary: $gray-light !default;
+$body-color: $text-color !default;
+$border-color: #ddd !default;
+
+$primary-text-emphasis: $state-info-text !default;
+$primary-bg-subtle: $state-info-bg !default;
+$primary-border-subtle: $state-info-border !default;
+$success-text-emphasis: $state-success-text !default;
+$success-bg-subtle: $state-success-bg !default;
+$success-border-subtle: $state-success-border !default;
+$info-text-emphasis: $state-info-text !default;
+$info-bg-subtle: $state-info-bg !default;
+$info-border-subtle: $state-info-border !default;
+$warning-text-emphasis: $state-warning-text !default;
+$warning-bg-subtle: $state-warning-bg !default;
+$warning-border-subtle: $state-warning-border !default;
+$danger-text-emphasis: $state-danger-text !default;
+$danger-bg-subtle: $state-danger-bg !default;
+$danger-border-subtle: $state-danger-border !default;
+
+// Bootstrap 5 derives the dark mode colours from these with colour functions, which fail for
+// values such as "inherit" that TIM and style documents use. Dark mode itself is disabled above.
+$code-color-dark: #e685b5 !default;
+$link-color-dark: #6ea8fe !default;
+$link-hover-color-dark: #8bb9fe !default;
+
+// Links
+$link-decoration: none !default;
+
+// Grid: the Bootstrap 3 tiers keep their names and widths; xl and xxl are not used by TIM.
+$grid-breakpoints: (
+    xs: 0,
+    sm: $screen-sm-min,
+    md: $screen-md-min,
+    lg: $screen-lg-min,
+    xl: max($screen-lg-min + 320px, 1600px),
+    xxl: max($screen-lg-min + 640px, 1920px),
+) !default;
+$container-max-widths: (
+    sm: $container-sm,
+    md: $container-md,
+    lg: $container-lg,
+    xl: $container-lg + 320px,
+    xxl: $container-lg + 640px,
+) !default;
+
+// Shapes
+$border-radius: $border-radius-base !default;
+$border-radius-sm: $border-radius-small !default;
+$border-radius-lg: $border-radius-large !default;
+
+// Typography
+$font-size-sm: if(unit($font-size-small) == "px", ($font-size-small / 16px) * 1rem, $font-size-small) !default;
+$font-size-lg: if(unit($font-size-large) == "px", ($font-size-large / 16px) * 1rem, $font-size-large) !default;
+$h1-font-size: $font-size-h1 !default;
+$h2-font-size: $font-size-h2 !default;
+$h3-font-size: $font-size-h3 !default;
+$h4-font-size: $font-size-h4 !default;
+$h5-font-size: $font-size-h5 !default;
+$h6-font-size: $font-size-h6 !default;
+$headings-margin-bottom: ($line-height-computed / 2) !default;
+$paragraph-margin-bottom: ($line-height-computed / 2) !default;
+$lead-font-size: 21px !default;
+$lead-font-weight: 300 !default;
+$small-font-size: 85% !default;
+$hr-margin-y: $line-height-computed !default;
+$hr-border-color: $hr-border !default;
+$hr-opacity: 1 !default;
+$mark-bg: $state-warning-bg !default;
+$mark-padding: .2em !default;
+$legend-font-size: ($font-size-base * 1.5) !default;
+$legend-margin-bottom: $line-height-computed !default;
+$blockquote-margin-y: $line-height-computed !default;
+$dt-font-weight: 700 !default;
+
+// Buttons and form controls
+$input-btn-padding-y: $padding-base-vertical !default;
+$input-btn-padding-x: $padding-base-horizontal !default;
+$input-btn-padding-y-sm: $padding-small-vertical !default;
+$input-btn-padding-x-sm: $padding-small-horizontal !default;
+$input-btn-padding-y-lg: $padding-large-vertical !default;
+$input-btn-padding-x-lg: $padding-large-horizontal !default;
+$input-btn-line-height: $line-height-base !default;
+$input-btn-focus-width: 3px !default;
+$btn-border-radius: $btn-border-radius-base !default;
+$btn-border-radius-sm: $btn-border-radius-small !default;
+$btn-border-radius-lg: $btn-border-radius-large !default;
+$btn-line-height-sm: $line-height-small !default;
+$btn-line-height-lg: $line-height-large !default;
+$btn-disabled-opacity: .65 !default;
+$btn-link-color: $link-color !default;
+$btn-link-hover-color: $link-hover-color !default;
+$btn-transition: none !default;
+$btn-box-shadow: none !default;
+$btn-active-box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125) !default;
+
+$input-font-weight: inherit !default;
+$input-border-color: $input-border !default;
+$input-border-radius-sm: $input-border-radius-small !default;
+$input-border-radius-lg: $input-border-radius-large !default;
+$input-focus-border-color: $input-border-focus !default;
+$input-placeholder-color: $input-color-placeholder !default;
+$input-disabled-bg: $input-bg-disabled !default;
+$input-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075) !default;
+$input-focus-box-shadow: 0 0 8px rgba($input-border-focus, .6) !default;
+$input-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s !default;
+$box-shadow-inset: inset 0 1px 1px rgba(0, 0, 0, .075) !default;
+$thumbnail-box-shadow: none !default;
+$modal-content-box-shadow-xs: 0 3px 9px rgba(0, 0, 0, .5) !default;
+$modal-content-box-shadow-sm-up: 0 5px 15px rgba(0, 0, 0, .5) !default;
+// TIM uses the class "form-label" for its own purposes.
+$form-label-margin-bottom: 0 !default;
+$form-text-margin-top: 5px !default;
+$form-text-color: lighten($text-color, 25%) !default;
+$input-group-addon-color: $input-color !default;
+
+// Tables
+$table-cell-padding-y: $table-cell-padding !default;
+$table-cell-padding-x: $table-cell-padding !default;
+$table-cell-padding-y-sm: $table-condensed-cell-padding !default;
+$table-cell-padding-x-sm: $table-condensed-cell-padding !default;
+$table-striped-bg: $table-bg-accent !default;
+$table-hover-bg: $table-bg-hover !default;
+$table-active-bg: $table-bg-active !default;
+$table-th-font-weight: 700 !default;
+$table-caption-color: $text-muted !default;
+
+// Components
+$alert-padding-y: $alert-padding !default;
+$alert-padding-x: $alert-padding !default;
+$alert-margin-bottom: $line-height-computed !default;
+
+$badge-font-size: $font-size-small !default;
+$badge-padding-y: 3px !default;
+$badge-padding-x: 7px !default;
+
+$dropdown-font-size: $font-size-base !default;
+$dropdown-padding-y: 5px !default;
+$dropdown-border-color: $dropdown-border !default;
+$dropdown-item-padding-y: 3px !default;
+$dropdown-item-padding-x: 20px !default;
+$dropdown-box-shadow: 0 6px 12px rgba(0, 0, 0, .175) !default;
+$dropdown-spacer: 2px !default;
+
+$nav-link-padding-y: .625rem !default; // 10px; Bootstrap 5 adds this to the base font size
+$nav-link-padding-x: .9375rem !default; // 15px
+$nav-link-color: $link-color !default;
+$nav-link-hover-color: $link-hover-color !default;
+$nav-link-transition: none !default;
+$nav-tabs-link-active-color: $nav-tabs-active-link-hover-color !default;
+$nav-tabs-link-active-bg: $nav-tabs-active-link-hover-bg !default;
+$nav-tabs-link-active-border-color: $nav-tabs-active-link-hover-border-color $nav-tabs-active-link-hover-border-color transparent !default;
+$nav-pills-link-active-color: $nav-pills-active-link-hover-color !default;
+$nav-pills-link-active-bg: $nav-pills-active-link-hover-bg !default;
+
+$list-group-border-color: $list-group-border !default;
+$list-group-item-padding-y: 10px !default;
+$list-group-item-padding-x: 15px !default;
+
+$progress-height: $line-height-computed !default;
+$progress-font-size: $font-size-small !default;
+$progress-box-shadow: inset 0 1px 2px rgba(0, 0, 0, .1) !default;
+$progress-bar-transition: width .6s ease !default;
+
+$pagination-padding-y: $padding-base-vertical !default;
+$pagination-padding-x: $padding-base-horizontal !default;
+$pagination-border-color: $pagination-border !default;
+$pagination-hover-border-color: $pagination-hover-border !default;
+$pagination-active-border-color: $pagination-active-border !default;
+$pagination-disabled-border-color: $pagination-disabled-border !default;
+
+$breadcrumb-padding-y: $breadcrumb-padding-vertical !default;
+$breadcrumb-padding-x: $breadcrumb-padding-horizontal !default;
+$breadcrumb-divider-color: $breadcrumb-color !default;
+$breadcrumb-margin-bottom: $line-height-computed !default;
+$breadcrumb-border-radius: $border-radius-base !default;
+
+$tooltip-font-size: $font-size-small !default;
+$tooltip-padding-y: 3px !default;
+$tooltip-padding-x: 8px !default;
+$popover-font-size: $font-size-base !default;
+$popover-header-bg: $popover-title-bg !default;
+$popover-header-font-size: $font-size-base !default;
+$popover-header-padding-y: 8px !default;
+$popover-header-padding-x: 14px !default;
+$popover-body-padding-y: 9px !default;
+$popover-body-padding-x: 14px !default;
+$popover-box-shadow: 0 5px 10px rgba(0, 0, 0, .2) !default;
+
+// Bootstrap 3 measures these arrows by half of their width.
+$tooltip-arrow-width: 10px;
+$tooltip-arrow-height: 5px !default;
+$popover-arrow-width: 22px;
+$popover-arrow-height: 11px !default;

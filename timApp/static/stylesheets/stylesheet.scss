@@ -602,6 +602,8 @@ div.error {
 }
 
 .border {
+    // Bootstrap 5 has a utility class of the same name that takes its colour from this property.
+    --bs-border-color: #{$basic-border-color};
     border: 1px solid $basic-border-color;
     border-radius: 0;
 }

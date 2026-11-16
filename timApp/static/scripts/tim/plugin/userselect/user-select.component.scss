@@ -1,4 +1,4 @@
-@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap/variables";
+@import "static/stylesheets/bootstrap3Variables";
 
 :host {
   width: 100%;
@@ -10,7 +10,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.625rem;
 
   & > * {
     margin-top: 0.2em;
@@ -80,40 +80,40 @@ form.search {
     align-items: center;
 
     tim-loading {
-      margin-right: 0.5rem;
+      margin-right: 0.3125rem;
     }
 
     @media (max-width: $screen-xs-max) {
-      margin-top: 1rem;
+      margin-top: 0.625rem;
     }
   }
 }
 
 
 .search-result {
-  margin-top: 0.5rem;
+  margin-top: 0.3125rem;
 }
 
 .progress {
-  height: 1rem;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+  height: 0.625rem;
+  margin-top: 0.3125rem;
+  margin-bottom: 0.3125rem;
 }
 
 
 tim-alert {
   display: block;
-  margin-top: 1rem;
+  margin-top: 0.625rem;
 
   .alert-details {
-    margin-top: 1rem;
+    margin-top: 0.625rem;
   }
 
   &.small {
-    font-size: 1.2rem;
+    font-size: 0.75rem;
 
     ::ng-deep div.alert {
-      padding: 0.8rem;
+      padding: 0.5rem;
     }
   }
 }
@@ -124,14 +124,14 @@ tr.user-row {
 }
 
 .action-buttons {
-  margin-top: 1rem;
+  margin-top: 0.625rem;
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
   align-items: center;
 
   & > * {
-    margin: 0.5rem;
+    margin: 0.3125rem;
   }
 
   & > *:last-child {
@@ -143,22 +143,22 @@ tr.user-row {
     align-items: stretch;
 
     & > *:last-child {
-      margin-right: 0.5rem;
+      margin-right: 0.3125rem;
     }
   }
 }
 
 .more-matches-info {
-  font-size: 1.2rem;
+  font-size: 0.75rem;
   color: #aeaeae;
   font-style: italic;
 }
 
 table {
   width: 100%;
-  margin-top: 2rem;
+  margin-top: 1.25rem;
   border: none;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3125rem;
 
   thead {
     border-bottom: 2px solid var(--basic-border-color);

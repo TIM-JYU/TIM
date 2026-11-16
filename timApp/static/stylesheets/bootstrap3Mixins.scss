@@ -1,0 +1,240 @@
+// Bootstrap 3 mixins.
+//
+// TIM's stylesheets and the style documents of users may call mixins of Bootstrap 3 that
+// Bootstrap 5 no longer has. They are kept here under their old names.
+// Adapted from bootstrap-sass 3.4.1 (Copyright 2011-2019 Twitter, Inc., MIT licence).
+//
+// Not included: mixins that Bootstrap 5 still has under the same name (clearfix, transition,
+// border-top-radius, ...) and the ones whose arguments changed (button-variant, button-size,
+// alert-variant), which keep their Bootstrap 5 meaning.
+//
+// Must be imported after Bootstrap 5.
+
+// Utilities
+@mixin center-block() {
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+@mixin hide-text() {
+    font: 0/0 a;
+    color: transparent;
+    text-shadow: none;
+    background-color: transparent;
+    border: 0;
+}
+
+@mixin text-hide() {
+    @include hide-text();
+}
+
+@mixin text-overflow() {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@mixin size($width, $height) {
+    width: $width;
+    height: $height;
+}
+
+@mixin square($size) {
+    @include size($size, $size);
+}
+
+@mixin opacity($opacity) {
+    opacity: $opacity;
+}
+
+@mixin placeholder($color: $input-color-placeholder) {
+    &::placeholder {
+        color: $color;
+        opacity: 1;
+    }
+}
+
+@mixin tab-focus() {
+    outline: 5px auto -webkit-focus-ring-color;
+    outline-offset: -2px;
+}
+
+@mixin img-responsive($display: block) {
+    display: $display;
+    max-width: 100%;
+    height: auto;
+}
+
+@mixin hyphens($mode: auto) {
+    hyphens: $mode;
+    word-wrap: break-word;
+}
+
+@mixin user-select($select) {
+    user-select: $select;
+}
+
+@mixin box-sizing($boxmodel) {
+    box-sizing: $boxmodel;
+}
+
+@mixin resizable($direction) {
+    overflow: auto;
+    resize: $direction;
+}
+
+// In Bootstrap 5 this mixin does nothing unless shadows are enabled; in Bootstrap 3 it always applies.
+@mixin box-shadow($shadow...) {
+    box-shadow: $shadow;
+}
+
+@mixin transition-property($transition-property...) {
+    transition-property: $transition-property;
+}
+
+@mixin transition-delay($transition-delay) {
+    transition-delay: $transition-delay;
+}
+
+@mixin transition-duration($transition-duration...) {
+    transition-duration: $transition-duration;
+}
+
+@mixin transition-timing-function($timing-function) {
+    transition-timing-function: $timing-function;
+}
+
+@mixin transition-transform($transition...) {
+    transition: transform $transition;
+}
+
+@mixin rotate($degrees) {
+    transform: rotate($degrees);
+}
+
+@mixin scale($ratio...) {
+    transform: scale($ratio);
+}
+
+@mixin translate($x, $y) {
+    transform: translate($x, $y);
+}
+
+@mixin translate3d($x, $y, $z) {
+    transform: translate3d($x, $y, $z);
+}
+
+@mixin skew($x, $y) {
+    transform: skewX($x) skewY($y);
+}
+
+@mixin animation($animation) {
+    animation: $animation;
+}
+
+@mixin border-right-radius($radius) {
+    border-top-right-radius: $radius;
+    border-bottom-right-radius: $radius;
+}
+
+@mixin border-left-radius($radius) {
+    border-top-left-radius: $radius;
+    border-bottom-left-radius: $radius;
+}
+
+@mixin gradient-horizontal($start-color: #555, $end-color: #333, $start-percent: 0%, $end-percent: 100%) {
+    background-image: linear-gradient(to right, $start-color $start-percent, $end-color $end-percent);
+    background-repeat: repeat-x;
+}
+
+@mixin gradient-vertical($start-color: #555, $end-color: #333, $start-percent: 0%, $end-percent: 100%) {
+    background-image: linear-gradient(to bottom, $start-color $start-percent, $end-color $end-percent);
+    background-repeat: repeat-x;
+}
+
+@mixin responsive-visibility($parent) {
+    #{$parent} {
+        display: block !important;
+    }
+    table#{$parent} {
+        display: table !important;
+    }
+    tr#{$parent} {
+        display: table-row !important;
+    }
+    th#{$parent},
+    td#{$parent} {
+        display: table-cell !important;
+    }
+}
+
+@mixin responsive-invisibility($parent) {
+    #{$parent} {
+        display: none !important;
+    }
+}
+
+// Grid
+@mixin container-fixed($gutter: $grid-gutter-width) {
+    padding-right: ceil(($gutter / 2));
+    padding-left: floor(($gutter / 2));
+    margin-right: auto;
+    margin-left: auto;
+    @include clearfix();
+}
+
+@mixin make-xs-column($columns, $gutter: $grid-gutter-width) {
+    position: relative;
+    float: left;
+    width: percentage(($columns / $grid-columns));
+    min-height: 1px;
+    padding-right: ($gutter / 2);
+    padding-left: ($gutter / 2);
+}
+
+@mixin make-xs-column-offset($columns) {
+    margin-left: percentage(($columns / $grid-columns));
+}
+
+@mixin tim-make-column($min-width, $columns, $gutter) {
+    position: relative;
+    min-height: 1px;
+    padding-right: ($gutter / 2);
+    padding-left: ($gutter / 2);
+
+    @media (min-width: $min-width) {
+        float: left;
+        width: percentage(($columns / $grid-columns));
+    }
+}
+
+@mixin tim-make-column-offset($min-width, $columns) {
+    @media (min-width: $min-width) {
+        margin-left: percentage(($columns / $grid-columns));
+    }
+}
+
+@mixin make-sm-column($columns, $gutter: $grid-gutter-width) {
+    @include tim-make-column($screen-sm-min, $columns, $gutter);
+}
+
+@mixin make-sm-column-offset($columns) {
+    @include tim-make-column-offset($screen-sm-min, $columns);
+}
+
+@mixin make-md-column($columns, $gutter: $grid-gutter-width) {
+    @include tim-make-column($screen-md-min, $columns, $gutter);
+}
+
+@mixin make-md-column-offset($columns) {
+    @include tim-make-column-offset($screen-md-min, $columns);
+}
+
+@mixin make-lg-column($columns, $gutter: $grid-gutter-width) {
+    @include tim-make-column($screen-lg-min, $columns, $gutter);
+}
+
+@mixin make-lg-column-offset($columns) {
+    @include tim-make-column-offset($screen-lg-min, $columns);
+}

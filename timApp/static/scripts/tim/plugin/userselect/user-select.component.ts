@@ -215,7 +215,7 @@ class ToggleOption {
                   <li role="menuitem">
                     <a class="dropdown-item" (click)="option.value = !option.value">
                       @if (option.value) {
-                        <i class="glyphicon glyphicon-ok" style="margin-right: 1rem;"></i>
+                        <i class="glyphicon glyphicon-ok" style="margin-right: 0.625rem;"></i>
                       }
                       <span>{{option.name}}</span>
                     </a>

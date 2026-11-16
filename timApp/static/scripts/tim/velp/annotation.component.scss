@@ -4,7 +4,7 @@
 }
 
 .annHeader {
-  font-size: 1.5rem;
+  font-size: 0.9375rem;
 }
 
 .inlineAnnotation {
@@ -19,7 +19,7 @@
 
 .annotation-info {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 1.3rem;
+  font-size: 0.8125rem;
   color: black;
   font-style: normal;
   word-break: normal;
@@ -43,7 +43,7 @@
 }
 
 .annotationVisibleText {
-  font-size: 0.9rem;
+  font-size: 0.5625rem;
 }
 
 .annotation-info em {
@@ -93,7 +93,7 @@
 }
 
 .annotation-info .username {
-  font-size: 0.9rem;
+  font-size: 0.5625rem;
 }
 
 .annTopSection {
@@ -101,8 +101,8 @@
 }
 
 .annqmark {
-  margin-left: 0.2rem;
-  margin-top: 0.1rem;
+  margin-left: 0.125rem;
+  margin-top: 0.0625rem;
 }
 
 .saveChanges {
@@ -124,8 +124,8 @@
 }
 
 .annotation-color-selector {
-  height: 1.8rem;
-  width: 4rem;
+  height: 1.125rem;
+  width: 2.5rem;
   padding: 3px;
   vertical-align: top;
   border-block: unset;
@@ -134,8 +134,8 @@
 }
 
 .btn-restore-annotation-color {
-  height: 1.8rem;
-  width: 1.8rem;
+  height: 1.125rem;
+  width: 1.125rem;
   padding: 0;
   margin-left: 2px;
   color: black;
@@ -143,7 +143,7 @@
 }
 
 .glyph-delete-annotation {
-  font-size: 3rem;
+  font-size: 1.875rem;
   padding: 0;
   vertical-align: middle;
 }

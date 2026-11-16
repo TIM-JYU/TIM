@@ -3,10 +3,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.625rem;
 
   & > *:not(:last-child) {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3125rem;
   }
 }
 
@@ -16,7 +16,7 @@
   align-items: center;
 
   & > *:not(:last-child) {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3125rem;
   }
 }
 
@@ -30,10 +30,10 @@ video {
 }
 
 .info-messages {
-  margin-bottom: 1rem;
+  margin-bottom: 0.625rem;
 
   & > span {
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.125rem;
   }
 }
 

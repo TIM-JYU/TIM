@@ -8,9 +8,20 @@
   }
 }
 
-@import "bootstrap";
+// Bootstrap 5 with the metrics, variable names and class names of Bootstrap 3.
+@import "bootstrap3Variables";
+@import "bootstrap5Settings";
+// The print styles of Bootstrap 3 come first, as they did in Bootstrap 3.
+@import "bootstrap-sass/assets/stylesheets/bootstrap/print";
+@import "bootstrap5";
+// Put back the values that bootstrap5Settings changed only for the import of Bootstrap 5:
+// the base font size (rem there, pixels in TIM's stylesheets and in style documents)
+// and TIM's own $body-text-align.
+$font-size-base: $tim-font-size-base-px;
+$body-text-align: $tim-body-text-align;
+@import "bootstrap3Mixins";
+@import "bootstrap3Compat";
 @import "bootstrap-print";
-@import "ngxBootstrapCompat";
 @import "stylesheet";
 @import "common";
 @import "menustyle";

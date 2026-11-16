@@ -48,6 +48,7 @@
     "angular-resizable-element": "^8.0.3",
     "angular2-draggable": "^16.0.0",
     "backspace-disabler": "^1.1.3",
+    "bootstrap": "^5.3.9",
     "bootstrap-sass": "<=3.4.1",
     "calendar-utils": "^0.12.5",
     "chart.js": "^4.6.1",
