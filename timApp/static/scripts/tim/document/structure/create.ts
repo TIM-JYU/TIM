@@ -27,7 +27,8 @@ export function createParContext(el: Element) {
 
 function getDocumentForElement(el: Element) {
     const root = getParContainerElem();
-    if (root.contains(el)) {
+    // Slide views have no paragraph container; the active document has no paragraphs there.
+    if (!root || root.contains(el)) {
         return getActiveDocument();
     }
     // If the element wasn't in the main content area, this must be in the previews.

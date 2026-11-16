@@ -445,7 +445,10 @@ export class JsframeComponent
         if (this.isDrawio()) {
             (async () => {
                 await this.viewctrl.documentUpdate;
-                this.viewctrl.addParMenuEntry(this, this.getPar()!);
+                const par = this.getPar();
+                if (par) {
+                    this.viewctrl.addParMenuEntry(this, par);
+                }
             })();
         }
         this.initFrameData = unwrapAllC(this.markup.data);

@@ -151,7 +151,10 @@ import {
     showTableEditorToolbar,
     timTableToolbarInstance,
 } from "tim/plugin/timTable/toolbarUtils";
-import {createParContext} from "tim/document/structure/create";
+import {
+    createParContext,
+    getParContainerElem,
+} from "tim/document/structure/create";
 import {CommonModule} from "@angular/common";
 import {prepareMenubarItems} from "tim/plugin/timTable/tim-table-editor-toolbar-dialog.component";
 import {showInputDialog} from "tim/ui/showInputDialog";
@@ -1411,7 +1414,10 @@ export class TimTableComponent
         }
 
         await this.viewctrl.documentUpdate;
-        this.viewctrl.addParMenuEntry(this, this.getPar()!);
+        const menuPar = this.getPar();
+        if (menuPar) {
+            this.viewctrl.addParMenuEntry(this, menuPar);
+        }
 
         if (this.data.dataView) {
             // Column operations are not supported in data view mode
@@ -6257,7 +6263,8 @@ export class TimTableComponent
 
     public getPar() {
         const res = this.element.parents(".par")[0];
-        if (!res) {
+        // Slide views have no paragraph container, so the document structure is not built there.
+        if (!res || !getParContainerElem()) {
             return undefined;
         }
         return createParContext(res);

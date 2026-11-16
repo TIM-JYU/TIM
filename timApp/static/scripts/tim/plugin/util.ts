@@ -4,7 +4,10 @@ import {FormModeOption} from "tim/document/viewctrl";
 import {isLeft} from "fp-ts/lib/Either";
 import type {IAnswer} from "tim/answer/IAnswer";
 import type {IUser} from "tim/user/IUser";
-import {createParContext} from "tim/document/structure/create";
+import {
+    createParContext,
+    getParContainerElem,
+} from "tim/document/structure/create";
 import type {
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
@@ -157,11 +160,15 @@ export abstract class PluginBaseCommon {
 
     /**
      * Returns the plugin's parent paragraph.
-     * If the plugin is not attached to a paragraph or the paragraph is not attached to a document, returns null.
+     * If the plugin is not attached to a paragraph or the paragraph is not attached to a document, returns undefined.
+     * The latter is the case in slide views, where the document structure is not built.
      */
     public getPar() {
         const parElement = this.element.parents(".par")[0];
         if (!parElement.parentElement) {
+            return undefined;
+        }
+        if (!getParContainerElem()) {
             return undefined;
         }
         return createParContext(parElement);
