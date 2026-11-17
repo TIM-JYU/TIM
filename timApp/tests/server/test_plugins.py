@@ -1959,6 +1959,7 @@ needed_len: 6
                 "valid": True,
                 "show_points": True,
             },
+            plugin_kind="pali",
         )
         self.assert_same_html(
             r.cssselect(".parContent")[1],

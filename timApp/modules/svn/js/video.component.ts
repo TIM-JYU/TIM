@@ -142,7 +142,7 @@ const ShowFileMarkup = t.intersection([
 ]);
 const ShowFileAll = t.intersection([
     t.partial({
-        plugin: t.string,
+        plugin_kind: t.string,
     }),
     t.type({
         info: Info,
@@ -866,7 +866,7 @@ export class VideoComponent extends AngularPluginBase<
             return;
         }
 
-        const isShowPdf = this.attrsall.plugin === "showPdf";
+        const isShowPdf = this.attrsall.plugin_kind === "showPdf";
 
         let parsedUrl: URL | null;
         try {

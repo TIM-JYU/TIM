@@ -1404,6 +1404,7 @@ class TimRouteTestBase(TimDbTest):
         state=None,
         toplevel=None,
         info=None,
+        plugin_kind: str | None = None,
     ):
         if not toplevel:
             toplevel = {}
@@ -1428,6 +1429,7 @@ class TimRouteTestBase(TimDbTest):
             "current_user_id": self.current_user.name,
             "userPrint": False,
             "viewmode": True,
+            "plugin_kind": plugin_kind,
         }
         return expected_json
 
@@ -1441,6 +1443,8 @@ class TimRouteTestBase(TimDbTest):
 
     def assert_plugin_json(self, e: HtmlElement, content: dict[str, Any]):
         json_str = self.get_plugin_json(e)
+        if content["plugin_kind"] is None:
+            json_str["plugin_kind"] = None
         self.assertEqual(content, json_str)
 
     def get_state(self, aid: int, **kwargs):

@@ -8,7 +8,7 @@ class InlinePluginTest(TimRouteTest):
     # Previously server wrapped inlineplugins in a span element, but now the client-side does the wrapping
     def test_inline_plugins(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {defaultplugin=pali id=Lm7y6R7n5XIb}
 *Hello* {#t1#}, {#tx:nonexistent#} and {#t2#} $x$
@@ -23,14 +23,10 @@ Hi {#t3#} $x$
         r = self.get(d.url, as_tree=True)
         e = r.cssselect(".par")[0]
         expected_json = self.create_plugin_json(
-            d,
-            "t1",
-            "Lm7y6R7n5XIb",
+            d, "t1", "Lm7y6R7n5XIb", plugin_kind="pali"
         )
         expected_json2 = self.create_plugin_json(
-            d,
-            "t2",
-            "Lm7y6R7n5XIb",
+            d, "t2", "Lm7y6R7n5XIb", plugin_kind="pali"
         )
         self.assert_same_html(
             e,
@@ -77,6 +73,7 @@ Hi {#t3#} $x$
                 "show_points": True,
             },
             state=s,
+            plugin_kind="pali",
         )
         self.assert_same_html(
             e,
@@ -103,6 +100,7 @@ Hi {#t3#} $x$
             d,
             "t3",
             "spOMcE20X2aX",
+            plugin_kind="pali",
         )
         self.assert_same_html(
             r.cssselect(".par")[1],
@@ -132,6 +130,7 @@ Hi {#t3#} $x$
                 "header": "hi",
                 "footer": "ho",
             },
+            plugin_kind="pali",
         )
         self.assert_same_html(
             r.cssselect(".par")[2],
