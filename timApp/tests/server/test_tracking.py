@@ -1,6 +1,6 @@
 """Server tests for answer tracking:
 
-- /trackEvents route (csplugin edit tracking log file)
+- /saveEditSteps route (csplugin edit tracking log file)
 - imagex markup option `track` (drag tracking sessions stored in the answer)
 - csplugin markup option `track` (edit tracking summary stored in the answer)
 """
@@ -35,7 +35,7 @@ class TrackEventsRouteTest(TimRouteTest):
 
     def post_events(self, ev: list, **kwargs):
         return self.json_post(
-            "/trackEvents",
+            "/saveEditSteps",
             {"task": "1.t", "sid": "abc123", "seq": 0, "t0": 1762700000.3, "ev": ev}
             | kwargs,
         )
@@ -79,7 +79,7 @@ class TrackEventsRouteTest(TimRouteTest):
         self.login_test1()
         with self.temp_config({"EDIT_TRACK_LOG_FILE": LOG_NAME}):
             self.json_post(
-                "/trackEvents",
+                "/saveEditSteps",
                 {"task": "1.t", "sid": "s", "t0": 1, "ev": [["u", 0.1]]},
             )
         self.assertEqual(0, self.read_log()[0]["seq"])
@@ -102,7 +102,9 @@ class TrackEventsRouteTest(TimRouteTest):
     def test_missing_fields_rejected(self):
         self.login_test1()
         with self.temp_config({"EDIT_TRACK_LOG_FILE": LOG_NAME}):
-            self.json_post("/trackEvents", {"task": "1.t", "ev": []}, expect_status=422)
+            self.json_post(
+                "/saveEditSteps", {"task": "1.t", "ev": []}, expect_status=422
+            )
         self.assertEqual([], self.read_log())
 
 

@@ -692,7 +692,7 @@ def log_answer_request(
             f.write(to_json_str(j) + "\n")
 
 
-@answers.post("/trackEvents")
+@answers.post("/saveEditSteps")
 def post_track_events(
     task: str, sid: str, t0: float, ev: list[Any], seq: int = 0
 ) -> Response:

@@ -3,7 +3,7 @@
  *
  * Records how text is written (typing bursts, pastes, copies, drops, large inserts,
  * undo, leaving the page, runs, resets) and sends the events in small batches to
- * the `/trackEvents` route, which appends them to a log file. A per-session summary
+ * the `/saveEditSteps` route, which appends them to a log file. A per-session summary
  * is also kept and sent with each answer (see `summary()`).
  *
  * Pasted/copied text itself is never stored, only its length and a short hash.
@@ -52,7 +52,7 @@ const BURST_IDLE_MS = 2000;
 const BIG_INSERT = 20;
 const FLUSH_INTERVAL_MS = 30000; // also flushed immediately on away / pagehide / run
 const MAX_QUEUE = 2000;
-const TRACK_URL = "/trackEvents";
+const TRACK_URL = "/saveEditSteps";
 
 /** Converts "\r\n" and "\r" line endings to "\n". */
 export function normalizeNewlines(s: string): string {
