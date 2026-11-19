@@ -320,7 +320,9 @@ export interface TrackSession {
     // Page load time, epoch seconds with 0.1 s precision. Event time = t + sum of dt so far
     // (exact: dt values are computed from rounded elapsed time, so they don't drift).
     t: number;
-    init: TrackPos[]; // objects not at their markup default position at page load
+    // Positions of all draggable objects at page load (after the saved answer is applied).
+    // Sessions recorded before this change list only objects not at their markup default.
+    init: TrackPos[];
     e: TrackEvent[];
 }
 

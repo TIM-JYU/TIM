@@ -1498,17 +1498,28 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # Edit tracking summary (markup option "track"), one entry per tracking session.
             if get_json_param(query.jso, "markup", "track", False) is True:
-                state = query.jso.get("state")
-                prev_state = state if isinstance(state, dict) else {}
-                track_summary = merge_track_summaries(
-                    prev_state.get("trackSummary"),
-                    # If the code didn't change, keep the previous summary so that an
-                    # unchanged run doesn't create a new answer just for the summary.
-                    get_json_param(query.jso, "input", "trackSummary", None)
-                    if usercode != prev_state.get("usercode")
-                    or submitted_files != prev_state.get("submittedFiles")
-                    else None,
-                )
+                # "state" is the answer selected in the browser; "latestState" is sent when
+                # that is not the user's newest answer (e.g. another tab saved in between).
+                selected_state = query.jso.get("state")
+                latest_state = query.jso.get("latestState", selected_state)
+                if not isinstance(selected_state, dict):
+                    selected_state = {}
+                if not isinstance(latest_state, dict):
+                    latest_state = {}
+                if usercode == latest_state.get(
+                    "usercode"
+                ) and submitted_files == latest_state.get("submittedFiles"):
+                    # The code is the same as in the newest answer: keep its summary so
+                    # that an unchanged run doesn't create a new answer just for it.
+                    track_summary = merge_track_summaries(
+                        latest_state.get("trackSummary")
+                    )
+                else:
+                    track_summary = merge_track_summaries(
+                        selected_state.get("trackSummary"),
+                        latest_state.get("trackSummary"),
+                        get_json_param(query.jso, "input", "trackSummary", None),
+                    )
                 if track_summary:
                     save["trackSummary"] = track_summary
 

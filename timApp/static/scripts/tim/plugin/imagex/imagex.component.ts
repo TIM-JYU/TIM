@@ -224,6 +224,8 @@ class DragTask {
             event.preventDefault();
             this.upEvent(event, touchEventToTouch(event));
         });
+        document.addEventListener("mouseup", this.endDragOutsideCanvas);
+        window.addEventListener("blur", this.endDragOutsideCanvas);
 
         if (imgx.markup.freeHandShortCuts) {
             this.frontCanvas.addEventListener(
@@ -470,7 +472,21 @@ class DragTask {
                 event.preventDefault();
             }
             this.mousePosition = posToRelative(this.frontCanvas, p);
+            this.endDrag();
+        } else if (this.mouseDown) {
+            this.frontCanvas.style.cursor = "default";
+            this.mouseDown = false;
+            this.drawing.upEvent(posToRelative(this.frontCanvas, p));
+        }
+        this.imgx.checkChanges();
+    }
 
+    /**
+     * Ends the current drag where the object is now: snaps it to a target, records the
+     * move for tracking and redraws.
+     */
+    private endDrag() {
+        if (this.activeDragObject) {
             const isTarget = areObjectsOnTopOf(
                 this.activeDragObject.obj,
                 this.targets,
@@ -508,12 +524,25 @@ class DragTask {
                 this.drawDragTask();
                 this.drawing.redrawAll();
             }
-        } else if (this.mouseDown) {
-            this.frontCanvas.style.cursor = "default";
-            this.mouseDown = false;
-            this.drawing.upEvent(posToRelative(this.frontCanvas, p));
         }
-        this.imgx.checkChanges();
+    }
+
+    /**
+     * The canvas doesn't get the mouseup if the button is released outside it (or the
+     * window loses focus), which used to leave the drag active and the move untracked.
+     * A release on the canvas is handled by its own listener first, so this is then a no-op.
+     */
+    private readonly endDragOutsideCanvas = () => {
+        if (this.activeDragObject) {
+            this.frontCanvas.style.cursor = "default";
+            this.endDrag();
+            this.imgx.checkChanges();
+        }
+    };
+
+    destroy() {
+        document.removeEventListener("mouseup", this.endDragOutsideCanvas);
+        window.removeEventListener("blur", this.endDragOutsideCanvas);
     }
 
     addRightAnswers(answers: RightAnswerT[]) {
@@ -1740,6 +1769,7 @@ export class ImageXComponent
         if (!this.attrsall.preview) {
             this.vctrl.removeTimComponent(this);
         }
+        this.dt?.destroy();
     }
 
     initCode() {
@@ -1761,13 +1791,11 @@ export class ImageXComponent
         if (!this.markup.track) {
             return;
         }
-        this.trackInit = this.drags
-            .map((d): TrackPos => [d.id, Math.round(d.x), Math.round(d.y)])
-            .filter(
-                ([, x, y], i) =>
-                    x !== Math.round(this.drags[i].values.position[0]) ||
-                    y !== Math.round(this.drags[i].values.position[1])
-            );
+        // Every object is listed, also those at their markup default position, so that
+        // each session shows its full starting board without needing the markup.
+        this.trackInit = this.drags.map(
+            (d): TrackPos => [d.id, Math.round(d.x), Math.round(d.y)]
+        );
         const saved = (this.attrsall.state?.track ?? []).filter(isTrackSession);
         const stored: TrackSession[] = [];
         const prefix = this.trackStoragePrefix();
@@ -1877,6 +1905,26 @@ export class ImageXComponent
             return;
         }
         e.splice(i, 1);
+        if (e.length === 0) {
+            // The marker was the session's only event: drop the session too, so that an
+            // empty session isn't kept in localStorage and saved with a later answer.
+            this.lastTrackElapsedTenths -= Math.round(ev.dt * 10);
+            this.trackLog = this.trackLog.filter(
+                (s) => s !== this.currentTrackSession
+            );
+            this.currentTrackSession = undefined;
+            const prefix = this.trackStoragePrefix();
+            if (prefix) {
+                try {
+                    window.localStorage.removeItem(
+                        prefix + this.trackSessionId
+                    );
+                } catch (err) {
+                    // ignore
+                }
+            }
+            return;
+        }
         if (i < e.length) {
             const next = e[i];
             if (Array.isArray(next)) {

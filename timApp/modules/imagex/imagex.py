@@ -306,20 +306,26 @@ class ImagexServer(TimServer):
         # Drag tracking log (markup option "track"): list of sessions, one per page load.
         # Read the setting from markup directly: get_param would find input["track"] first.
         if (query.jso.get("markup") or {}).get("track") is True:
-            prev_state = query.jso.get("state")
-            prev_track = (
-                prev_state.get("track") if isinstance(prev_state, dict) else None
-            )
-            new_track = get_json_param(query.jso, "input", "track", None)
-            # If the board didn't change, keep the previous log so that the answer is
-            # identical to the previous one and TIM doesn't store a duplicate.
-            if (
-                isinstance(prev_state, dict)
-                and prev_state.get("userAnswer") == save["userAnswer"]
-                and prev_state.get("drawings") == save.get("drawings")
-            ):
-                new_track = None
-            merged = merge_track_sessions(prev_track, new_track)
+            # "state" is the answer selected in the browser; "latestState" is sent when
+            # that is not the user's newest answer (e.g. another tab saved in between).
+            selected_state = query.jso.get("state")
+            latest_state = query.jso.get("latestState", selected_state)
+            if not isinstance(selected_state, dict):
+                selected_state = {}
+            if not isinstance(latest_state, dict):
+                latest_state = {}
+            if latest_state.get("userAnswer") == save[
+                "userAnswer"
+            ] and latest_state.get("drawings") == save.get("drawings"):
+                # The board is the same as in the newest answer: keep its log so that the
+                # answer is identical to it and TIM doesn't store a duplicate.
+                merged = merge_track_sessions(latest_state.get("track"))
+            else:
+                merged = merge_track_sessions(
+                    selected_state.get("track"),
+                    latest_state.get("track"),
+                    get_json_param(query.jso, "input", "track", None),
+                )
             if merged:
                 save["track"] = merged
         result["save"] = save
