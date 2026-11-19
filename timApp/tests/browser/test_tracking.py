@@ -126,7 +126,8 @@ class ImagexTrackingTest(TrackingBrowserTestBase):
         track = answers[0].content_as_json["track"]
         self.assertEqual(1, len(track))
         s1 = track[0]
-        self.assertEqual([], s1["init"])
+        # init lists every object, also those at their markup default position
+        self.assertEqual([["apple", 50, 50]], s1["init"])
         self.assertEqual(2, len(s1["e"]))
         drag1, save1 = s1["e"]
         self.assertEqual("apple", drag1[0])
@@ -226,6 +227,65 @@ class ImagexTrackingTest(TrackingBrowserTestBase):
             ],
         )
         self.assertEqual([], self.local_storage_keys(prefix))
+
+    def test_imagex_unchanged_save_leaves_no_empty_session(self):
+        """Save on a freshly loaded, unchanged board: the removed save marker must not
+        leave an empty session in localStorage or in a later answer."""
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(initial_par=IMAGEX_DOC)
+        task_id = f"{d.id}.t"
+        prefix = f"imagexTrack_{self.test_user_1.id}_{task_id}_"
+        self.goto_document(d)
+        self.canvas()
+        self.clear_local_storage()
+        time.sleep(1)
+        self.drag((90, 90), (150, 100))
+        self.click_save()
+        self.wait_for_answers(task_id, 1)
+        self.refresh()
+        self.canvas()
+        time.sleep(1)
+        self.click_save()  # new page load, nothing moved
+        time.sleep(2)
+        self.wait_for_answers(task_id, 1)
+        self.assertEqual([], self.local_storage_keys(prefix))
+        self.drag((150, 100), (250, 150))
+        self.click_save()
+        track = self.wait_for_answers(task_id, 2)[0].content_as_json["track"]
+        self.assertEqual(2, len(track))
+        for s in track:
+            self.assertGreater(len(s["e"]), 0)
+
+    def test_imagex_release_outside_canvas_is_tracked(self):
+        """A drag that ends with the button released outside the canvas is recorded."""
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(initial_par=IMAGEX_DOC)
+        task_id = f"{d.id}.t"
+        self.goto_document(d)
+        c = self.canvas()
+        self.clear_local_storage()
+        time.sleep(1)
+        w, h = c.size["width"], c.size["height"]
+        ActionChains(self.drv).move_to_element_with_offset(
+            c, 90 - w // 2, 90 - h // 2
+        ).click_and_hold().move_by_offset(10, 10).move_to_element_with_offset(
+            c, 200 - w // 2, 150 - h // 2
+        ).move_to_element_with_offset(
+            c, w // 2 + 60, 150 - h // 2  # outside the right edge
+        ).release().perform()
+        time.sleep(0.3)
+        self.click_save()
+        content = self.wait_for_answers(task_id, 1)[0].content_as_json
+        events = content["track"][0]["e"]
+        self.assertEqual(2, len(events))
+        move, save = events
+        self.assertEqual("apple", move[0])
+        self.assertEqual("save", save["type"])
+        # The logged position is where the object was saved.
+        pos = content["userAnswer"]["drags"][0]["position"]
+        self.assertEqual([round(pos[0]), round(pos[1])], move[1:3])
 
     def test_imagex_no_tracking_when_disabled(self):
         self.login_browser_quick_test1()

@@ -972,11 +972,17 @@ def post_answer_impl(
     # TODO: get state from AB selected answer if new_task == true
     # TODO: Why state is needed for new answers?
     # TODO: Stack gets default for the field there???
+    latest_state = state
+    selected_other_answer = False
     answer_id = answer_browser_data.get("answer_id", None)
     if answer_id is not None and curr_user.logged_in:
         answer = db.session.get(Answer, answer_id)
         if answer:
             state = try_load_json(answer.content)
+            selected_other_answer = (
+                answerinfo.latest_answer is not None
+                and answer.id != answerinfo.latest_answer.id
+            )
 
     preprocessor = answer_call_preprocessors.get(plugin.type)
     if preprocessor:
@@ -992,6 +998,12 @@ def post_answer_impl(
         "taskID": tid.doc_task,
         "info": info,
     }
+    # Tracking logs (markup option `track` in imagex and csplugin) accumulate over answers,
+    # so they must be merged with the newest answer also when the browser has an older
+    # answer selected (e.g. another tab saved after this one was loaded).
+    # Sent only for tracked tasks so that other plugins get the same data as before.
+    if selected_other_answer and plugin.values.get("track") is True:
+        answer_call_data["latestState"] = latest_state
 
     result = {}
     result_errors: list[str] = [error] if error else []

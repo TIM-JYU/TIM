@@ -161,6 +161,36 @@ targets:
         self.answer(d, [session("s1", 100, 1)], x=14)
         self.assertEqual([s2, s1_longer], self.latest(d)["track"])
 
+    def test_stale_window_keeps_sessions_saved_by_another_window(self):
+        """A window that still has an older answer selected (answer_id) must not drop
+        what another window saved after it was loaded."""
+        d = self.create_doc(initial_par=self.MARKUP.format(track="true"))
+        task = f"{d.id}.t"
+
+        def answer_from(answer_id: int, track: list, x: int):
+            inp = {
+                "drags": [{"did": "obj1", "id": "apple", "position": [x, 10]}],
+                "track": track,
+            }
+            return self.post_answer("imagex", task, user_input=inp, answer_id=answer_id)
+
+        s1 = session("s1", 100, 2)
+        first = self.answer(d, [s1], x=11)["savedNew"]
+        # Window 2 (loaded with the first answer) saves its own session.
+        s2 = session("s2", 200, 3)
+        answer_from(first, [s1, s2], x=12)
+        self.assertEqual([s1, s2], self.latest(d)["track"])
+        # Window 1 still has the first answer selected and knows nothing about s2.
+        s1_longer = session("s1", 100, 5)
+        answer_from(first, [s1_longer], x=13)
+        self.assertEqual([s1_longer, s2], self.latest(d)["track"])
+        # A stale window whose board equals the answer it has selected, but not the
+        # newest answer, creates a new answer and its log is kept.
+        s3 = session("s3", 300, 1)
+        r = answer_from(first, [s1, s3], x=11)
+        self.assertIsNotNone(r["savedNew"])
+        self.assertEqual([s1_longer, s2, s3], self.latest(d)["track"])
+
     def test_unchanged_board_creates_no_new_answer(self):
         d = self.create_doc(initial_par=self.MARKUP.format(track="true"))
         s1 = session("s1", 100, 2)
@@ -253,6 +283,28 @@ track: {track}
         merged = self.answers(d)[0].content_as_json["trackSummary"]
         self.assertEqual(b["s1"], merged["s1"])
         self.assertEqual(4, merged["s2"]["n"])
+
+    def test_stale_window_keeps_summaries_saved_by_another_window(self):
+        d = self.create_doc(initial_par=self.MARKUP.format(track="true"))
+        task = f"{d.id}.t"
+
+        def answer_from(answer_id: int, code: str, summary: dict):
+            inp = {"usercode": code, "type": "text", "trackSummary": summary}
+            return self.post_answer(
+                "csPlugin", task, user_input=inp, answer_id=answer_id
+            )
+
+        s1 = {"t": 100, "n": 3, "typed": 5}
+        first = self.answer(d, "a", {"s1": s1})["savedNew"]
+        s2 = {"t": 200, "n": 2, "typed": 3}
+        answer_from(first, "ab", {"s2": s2})
+        # The first window still has the first answer selected and doesn't know s2.
+        s1_longer = {"t": 100, "n": 7, "typed": 9}
+        answer_from(first, "abc", {"s1": s1_longer})
+        self.assertEqual(
+            {"s1": s1_longer, "s2": s2},
+            self.answers(d)[0].content_as_json["trackSummary"],
+        )
 
     def test_unchanged_code_creates_no_new_answer(self):
         d = self.create_doc(initial_par=self.MARKUP.format(track="true"))
