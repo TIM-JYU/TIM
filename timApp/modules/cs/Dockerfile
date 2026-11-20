@@ -137,9 +137,9 @@ bash -c "${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
 # JDK
-ENV JDK_VERSION=25.0.1
+ENV JDK_VERSION=27.0.1.1
 # Grab this path from download links of https://jdk.java.net/
-ENV OPENJDK_DL_PATH=2fbf10d8c78e40bd87641c434705079d/8
+ENV OPENJDK_DL_PATH=c3a705caf5044be8aa0b09e62be69b20/4
 RUN wget -q https://download.java.net/java/GA/jdk${JDK_VERSION}/${OPENJDK_DL_PATH}/GPL/openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  tar -xf openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
  rm openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz
@@ -151,10 +151,12 @@ RUN java -version
 # run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
 
 # JavaFX for OpenJDK
-ENV OPENJFX_VERSION=25.0.1
-RUN wget -q https://download2.gluonhq.com/openjfx/${OPENJFX_VERSION}/openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
-    unzip openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
-    rm openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip
+# OpenJFX is now available at jdk.java.net/javafx{ver}, so use it instead of the earlier Gluon versions
+ENV OPENJFX_VERSION=27.0.1.1
+ENV OPENJFX_DL_PATH=4203860ff4c24974842812208c84e50d/1
+RUN wget -q https://download.java.net/java/GA/javafx${OPENJFX_VERSION}/${OPENJFX_DL_PATH}/openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.tar.gz && \
+  tar -xf openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.tar.gz && \
+  rm openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.tar.gz
 
 # Rust (nightly)
 ENV CARGO_HOME=/cargo
