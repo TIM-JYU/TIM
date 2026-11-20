@@ -315,7 +315,7 @@ RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-dev gfo
 # Scala
 RUN bash -c "${APT_INSTALL} openjdk-21-jre-headless && ${APT_CLEANUP}"
 ENV SCALA_VERSION 2.13.15
-RUN wget -q https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.deb && \
+RUN wget -q https://github.com/scala/scala/releases/download/v${SCALA_VERSION}/scala-${SCALA_VERSION}.deb && \
  dpkg -i scala-${SCALA_VERSION}.deb && \
  rm scala-${SCALA_VERSION}.deb
 
