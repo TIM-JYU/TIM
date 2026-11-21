@@ -138,6 +138,8 @@ type MessageToFrame =
           taskId: string;
       };
 
+type SizeValue = number | string; // number = px, string = "NN%"
+
 type MessageFromFrame =
     | {
           msg: "data";
@@ -156,7 +158,8 @@ type MessageFromFrame =
           fullscreen: boolean;
       }
     | {msg: "Inited"}
-    | {msg: "runJsRunner"; taskId: string};
+    | {msg: "runJsRunner"; taskId: string}
+    | {msg: "setSize"; width?: SizeValue | null; height?: SizeValue | null};
 
 /**
  * Returns the given data (un)wrapped so that there is exactly one layer of "c".
@@ -493,6 +496,11 @@ export class JsframeComponent
         return "";
     }
 
+    private baseSize?: {
+        width: number | string | null;
+        height: number | string | null;
+    };
+
     updateIframeSettings() {
         if (this.attrsall.preview) {
             // return "";
@@ -540,6 +548,7 @@ export class JsframeComponent
             width: w,
             height: h,
         };
+        this.baseSize = {width: w, height: h};
         this.iframeload = new TimDefer<void>();
     }
 
@@ -728,6 +737,22 @@ export class JsframeComponent
         c.port1.postMessage(obj);
     }
 
+    private originalSize?: {
+        width: number | string | null;
+        height: number | string | null;
+    };
+
+    private sanitizeSize(v: unknown): number | string | undefined {
+        if (typeof v === "number" && Number.isFinite(v)) {
+            return Math.min(Math.max(Math.round(v), 20), 4000);
+        }
+        // Sama sääntö kuin getDesiredSize:ssa: vain "NN%" kelpaa merkkijonona
+        if (typeof v === "string" && /^[0-9]{1,3}%$/.test(v)) {
+            return v;
+        }
+        return undefined;
+    }
+
     async addListener() {
         if (this.channel) {
             return this.channel;
@@ -779,6 +804,13 @@ export class JsframeComponent
                     document.body.classList.remove("fullscreen-frame");
                     this.c();
                 }
+            }
+            if (d.msg === "setSize" && this.iframesettings && this.baseSize) {
+                this.iframesettings.width =
+                    this.sanitizeSize(d.width) ?? this.baseSize.width;
+                this.iframesettings.height =
+                    this.sanitizeSize(d.height) ?? this.baseSize.height;
+                this.c();
             }
             if (d.msg === "Inited" && this.isDrawio()) {
                 const data = this.getDataFromMarkup();
