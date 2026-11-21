@@ -63,6 +63,7 @@
             if (iframe != null) {
                 document.body.removeChild(iframe);
             }
+            requestSize(); // Reset size to default when closing the editor
             window.port2.postMessage({msg: "frameClosed", fullscreen: !TIMJS.frm});
             // Do not clean up any eventListeners or tim-drawio communication variables here,
             // or else we may get stuck if browser cancels exit.
@@ -74,6 +75,19 @@
             // }
             // drw = null;
         };
+
+        function requestSize(size) {
+            if (window.port2) {
+                window.port2.postMessage(Object.assign({msg: "setSize"}, size || {}));
+            }
+        }
+
+        function requestSizeAtLeast(size) {
+            var req = {};
+            if (size.height && window.innerHeight < size.height) req.height = size.height;
+            if (size.width && window.innerWidth < size.width) req.width = size.width;
+            if (Object.keys(req).length > 0) requestSize(req);
+        }
 
         function edit(elt) {
 
@@ -89,6 +103,12 @@
                 drw.focus();
                 return;
             }
+
+            requestSizeAtLeast({
+                height: (TIMJS.options && TIMJS.options.editorHeight) || 600,
+                width: TIMJS.options && TIMJS.options.editorWidth
+            });
+
             elt = document.getElementById('diagram');
             iframe = document.createElement('iframe');
             iframe.setAttribute('frameborder', '0');
