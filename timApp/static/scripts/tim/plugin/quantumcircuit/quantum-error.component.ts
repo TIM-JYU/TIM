@@ -113,6 +113,16 @@ interface AnswerIncorrectRow {
                 <p i18n>Couldn't interpret circuits</p>
                 <p>{{error.message}}</p>
             </div>
+            
+            <div *ngIf="error.errorType === 'invalid-ignore-qubits'">
+                <p i18n>Could not set helper qubits.</p>
+                <p>{{error.message}}</p>
+            </div>
+            
+            <div *ngIf="error.errorType === 'no-inputs-checked'">
+                <p i18n>No inputs were checked.</p>
+                <p i18n>Check that modelInput matches at least one input where the ignored qubits are 0.</p>
+            <div>
         </div>
     `,
     styleUrls: ["quantum-error.component.scss"],

@@ -148,6 +148,12 @@ class TooManyQubitsError:
 
 
 @dataclass
+class InvalidIgnoreQubitsError:
+    message: str
+    errorType: str = "invalid-ignore-qubits"
+
+
+@dataclass
 class TooManyMomentsError:
     moments: int
     maxMoments: int
@@ -178,6 +184,11 @@ class CircuitUnInterpretableError:
     errorType: str = "circuit-uninterpretable"
 
 
+@dataclass
+class NoInputsCheckedError:
+    errorType: str = "no-inputs-checked"
+
+
 ErrorType = Union[
     ConditionsNotSatisfiedError,
     ConditionNotInterpretableError,
@@ -192,6 +203,8 @@ ErrorType = Union[
     SimulationTimedOutError,
     TooLongTimeoutError,
     CircuitUnInterpretableError,
+    InvalidIgnoreQubitsError,
+    NoInputsCheckedError,
 ]
 
 
@@ -243,6 +256,8 @@ class QuantumCircuitMarkup(GenericMarkupModel):
 
     removeControls: bool | None = None
     touchOffset: int | None = None
+
+    ignoreQubits: list[int] | None = None
 
 
 @dataclass
@@ -550,6 +565,7 @@ def run_all_simulations(
     custom_gates: dict[str, np.ndarray],
     model_input: list[str] | None,
     threaded_sim_params: ThreadedSimParams,
+    qubits_to_ignore: list[int] | None = None,
 ) -> None:
     """
     Runs simulator with all inputs comparing model_circuit to user_circuit.
@@ -559,12 +575,21 @@ def run_all_simulations(
     :param custom_gates: custom gates available to simulator
     :param model_input: pattern defining which inputs are used out of all permutations
     :param threaded_sim_params: Used to pass info to and from thread
+    :param qubits_to_ignore: list of qubits to ignore
     :return: Nothing. return value is passed through threaded_sim_params
     """
     if n_qubits > 20:
         threaded_sim_params.result = False, TooManyQubitsError(n_qubits, 20)
         return
 
+    parsed = validate_ignored(qubits_to_ignore, n_qubits)
+    if isinstance(parsed, InvalidIgnoreQubitsError):
+        threaded_sim_params.result = False, parsed
+        return
+    ignored = parsed
+
+    ignored_set = set(ignored)
+    compared = 0
     for i in range(2**n_qubits):
         if threaded_sim_params.needs_to_be_stopped:
             threaded_sim_params.result = False, None
@@ -580,6 +605,9 @@ def run_all_simulations(
         if not check_input_valid:
             continue
         input_list = [int(d) for d in bitstring_reversed]
+        if any(input_list[k] for k in ignored):
+            continue
+        compared += 1
         try:
             success1, expected = run_simulation(
                 model_circuit, input_list, n_qubits, custom_gates
@@ -601,17 +629,59 @@ def run_all_simulations(
             )
             return
 
-        if (
-            isinstance(actual, tuple)
-            and isinstance(expected, tuple)
-            and not check_answer(actual[1], expected[1])
-        ):
-            threaded_sim_params.result = False, AnswerIncorrectError(
-                bitstring_reversed, list(expected[1]), list(actual[1])
-            )
-            return
-
+        if isinstance(actual, tuple) and isinstance(expected, tuple):
+            expected_probs = _drop_ignored(expected[1], n_qubits, ignored)
+            actual_probs = _drop_ignored(actual[1], n_qubits, ignored)
+            if not check_answer(actual_probs, expected_probs):
+                shown_input = "".join(
+                    c for k, c in enumerate(bitstring_reversed) if k not in ignored_set
+                )
+                threaded_sim_params.result = False, AnswerIncorrectError(
+                    shown_input, list(expected_probs), list(actual_probs)
+                )
+                return
+    if compared == 0:
+        threaded_sim_params.result = False, NoInputsCheckedError()
+        return
     threaded_sim_params.result = True, None
+
+
+def _drop_ignored(
+    probabilities: np.ndarray, n_qubits: int, qubits_to_ignore: list[int]
+) -> np.ndarray:
+    """
+    Process the ignored qubits by summing the probabilities.
+    :param probabilities: probabilities from simulation
+    :param n_qubits: Number of qubits
+    :param qubits_to_ignore: helper qubits that are ignored
+    :return: marginalized probabilities
+    """
+    arr = np.asarray(probabilities, dtype=np.float64)
+    if not qubits_to_ignore:
+        return arr
+    axes = tuple(n_qubits - 1 - k for k in qubits_to_ignore)
+    return arr.reshape((2,) * n_qubits).sum(axis=axes).reshape(-1)
+
+
+def validate_ignored(
+    qubits_to_ignore: list[int] | None, n_qubits: int
+) -> list[int] | InvalidIgnoreQubitsError:
+    """
+    Validate the ignored qubits as a list of integers.
+    :param qubits_to_ignore: list of qubits to ignore
+    :param n_qubits: number of qubits
+    :return: list of qubits as integers
+    """
+    ignored = list(qubits_to_ignore or [])
+    if not all(isinstance(k, int) and not isinstance(k, bool) for k in ignored):
+        return InvalidIgnoreQubitsError("Invalid value for ignored qubits.")
+    if len(set(ignored)) != len(ignored) or not all(0 <= k < n_qubits for k in ignored):
+        return InvalidIgnoreQubitsError(
+            "Could not set ignored qubits. Check that there are no duplicate indices and that all indices refer to existing qubits."
+        )
+    if len(ignored) == n_qubits:
+        return InvalidIgnoreQubitsError("All qubits are marked to be ignored.")
+    return ignored
 
 
 def run_all_simulations_threaded(
@@ -621,6 +691,7 @@ def run_all_simulations_threaded(
     custom_gates: dict[str, np.ndarray],
     model_input: list[str] | None,
     max_run_timeout: int | None,
+    qubits_to_ignore: list[int] | None,
 ) -> tuple[bool, ErrorType | None]:
     sim_params = ThreadedSimParams(False, (True, None))
 
@@ -642,6 +713,7 @@ def run_all_simulations_threaded(
             custom_gates,
             model_input,
             sim_params,
+            qubits_to_ignore,
         ),
     )
     t.start()
@@ -941,6 +1013,8 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
 
     max_run_timeout = args.markup.maxRunTimeout
 
+    qubits_to_ignore = args.markup.ignoreQubits
+
     points = 1.0
     result = "saved"
     error = None
@@ -988,6 +1062,7 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
                 custom_gates,
                 model_input,
                 max_run_timeout,
+                qubits_to_ignore,
             )
 
             if ok:
@@ -997,6 +1072,9 @@ def answer(args: QuantumCircuitAnswerModel) -> PluginAnswerResp:
                 points = 0.0
                 result = ""
                 error = asdict(sim_error) if sim_error else "Unknown error"
+
+                if isinstance(error, dict) and (message := error.get("message")):
+                    error["message"] = gettext(message)
 
     return {
         "save": {"userCircuit": user_circuit, "userInput": user_input},

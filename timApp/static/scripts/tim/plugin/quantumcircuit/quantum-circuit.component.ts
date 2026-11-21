@@ -165,6 +165,7 @@ const QuantumCircuitMarkup = t.intersection([
             })
         ),
         lazyBody: nullable(t.string),
+        ignoreQubits: nullable(t.array(t.number)),
     }),
     GenericPluginMarkup,
     t.type({
@@ -268,6 +269,13 @@ export const ServerError = t.union([
     t.type({
         message: t.string,
         errorType: t.literal("circuit-uninterpretable"),
+    }),
+    t.type({
+        message: t.string,
+        errorType: t.literal("invalid-ignore-qubits"),
+    }),
+    t.type({
+        errorType: t.literal("no-inputs-checked"),
     }),
 ]);
 

@@ -11547,8 +11547,8 @@ Separate multiple addresses with commas or write each address on a new line.</so
         </context-group>
       </trans-unit>
       <trans-unit id="5792644276297781479" datatype="html">
-        <source>Gate counts don&apos;t match:</source>
-        <target state="new">Gate counts don&apos;t match:</target>
+        <source>Gate counts don't match:</source>
+        <target state="new">Gate counts don't match:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">26</context>
@@ -11568,6 +11568,30 @@ Separate multiple addresses with commas or write each address on a new line.</so
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
           <context context-type="linenumber">28</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7427707969011543133" datatype="html">
+        <source>Could not set helper qubits.</source>
+        <target state="translated">Impossibile impostare i qubit ausiliari.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="870377192701417570" datatype="html">
+        <source>No inputs were checked.</source>
+        <target state="translated">Nessun input è stato verificato.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1900227520329592924" datatype="html">
+        <source>Check that modelInput matches at least one input where the ignored qubits are 0.</source>
+        <target state="translated">Verifica che modelInput corrisponda ad almeno un input in cui i qubit ignorati hanno valore 0.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/quantumcircuit/quantum-error.component.ts</context>
+          <context context-type="linenumber">124</context>
         </context-group>
       </trans-unit>
     </body>
