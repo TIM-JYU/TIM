@@ -795,6 +795,8 @@ def create_environment(
     env.filters["isview"] = view_ctx.isview
     env.filters["docsetting"] = GetDocumentSettingMacro(doc).get_document_setting
 
+    env.globals["viewroute"] = view_ctx.viewroute
+
     if macros:
         counters = AutoCounters(macros, doc)
         env.set_counters(counters)  # used in print.py
