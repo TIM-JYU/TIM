@@ -806,7 +806,7 @@ def update_tim_msg_doc_settings(
     :param message_body: Message body
     :return:
     """
-    s = message_doc.document.get_settings().get_dict().get("macros", {})
+    s = message_doc.document.get_settings().get_yaml_block().get("macros", {})
     s["subject"] = message_body.messageSubject
     if sender:
         s["sendername"] = sender.name

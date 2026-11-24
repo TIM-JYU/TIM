@@ -26,7 +26,7 @@ def get_course_settings() -> Response:
     d = DocEntry.find_by_path("settings/courses")
     if not d:
         return json_response({})
-    return json_response(d.document.get_settings().get_dict().values)
+    return json_response(d.document.get_settings().get_yaml_block().values)
 
 
 @course_blueprint.get("/documents/<string:foldername>")

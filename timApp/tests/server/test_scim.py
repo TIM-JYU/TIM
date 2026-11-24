@@ -959,7 +959,7 @@ class ScimTest(TimRouteTest):
                 },
                 "preamble": "sisugroups",
             },
-            d.document.get_settings().get_dict().values,
+            d.document.get_settings().get_yaml_block().values,
         )
         self.assertEqual(
             {
@@ -1164,7 +1164,7 @@ class ScimTest(TimRouteTest):
                     "sisugroup": "jy-CUR-4668-jy-studysubgroup-9515-students",
                 },
             },
-            d.document.get_settings().get_dict().values,
+            d.document.get_settings().get_yaml_block().values,
         )
         self.assertEqual(admin, d.document.get_changelog().entries[0].group_id)
         self.json_post(

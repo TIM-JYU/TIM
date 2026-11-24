@@ -90,8 +90,8 @@ def add_nonumber(md: str) -> str:
             - line starting with # may continue next line and have \ at the end
                  - undefined
 
-    :param md: markdown to be converted
-    :return: markdown with headings marked as unnumbered
+    :param md: Markdown to be converted
+    :return: Markdown with headings marked as unnumbered
     """
     mds = md.split("\n\n")
     result = ""
@@ -137,7 +137,8 @@ def get_tex_settings_and_macros(
         template_settings = template_doc.document.get_settings()
         pdoc_macros.update(template_settings.get_texmacroinfo(view_ctx).get_macros())
 
-    pdoc_macros.update(settings.get_texmacroinfo(view_ctx).get_macros())
+    if tformat == PrintFormat.LATEX or tformat == PrintFormat.PDF:
+        pdoc_macros.update(settings.get_texmacroinfo(view_ctx).get_macros())
 
     return (
         settings,
@@ -189,14 +190,14 @@ class DocumentPrinter:
     ) -> str:
         """
         Gets the content of the DocEntry assigned for this DocumentPrinter object.
-        Fetches the markdown for the documents paragraphs, checks whether the
+        Fetches the Markdown for the documents paragraphs, checks whether the
         paragraph should be printed determined by a boolean 'print'-attribute,
-        and returns the markdown for all the paragraphs that should be printed.
+        and returns the Markdown for all the paragraphs that should be printed.
 
-        Returns the (markdown) contents of the file as a single string, as that's the
+        Returns the (Markdown) contents of the file as a single string, as that's the
         format pypandoc likes to handle.
 
-        :return: The TIM documents contents in markdown format. Excludes the paragraphs that have attribute
+        :return: The TIM documents contents in Markdown format. Excludes the paragraphs that have attribute
                  print="false"
         """
 
@@ -258,7 +259,9 @@ class DocumentPrinter:
         if self.texfiles and self.texfiles is str:
             self.texfiles = [self.texfiles]
 
-        texmacros = get_tex_macros(self._doc_entry.document)
+        texmacros = None
+        if target_format == PrintFormat.LATEX or target_format == PrintFormat.PDF:
+            texmacros = get_tex_macros(self._doc_entry.document)
 
         if texmacros:
             view_ctx = view_ctx.copy(extramacros=json.dumps(texmacros))
@@ -281,7 +284,7 @@ class DocumentPrinter:
             )
         }
 
-        par_infos: [  # TODO: Why this was list[]
+        par_infos: list[  # TODO: Why this was list[]
             tuple[
                 DocParagraph,
                 DocSettings,
@@ -325,34 +328,45 @@ class DocumentPrinter:
                     )
                 except PluginException:
                     plugin_yaml = {}
-                plugin_yaml_beforeprint = get_value(plugin_yaml, "texbeforeprint")
-                if plugin_yaml_beforeprint is not None:
-                    bppar = DocParagraph.create(
-                        doc=self._doc_entry.document, md=plugin_yaml_beforeprint
-                    )
-                    par_infos.append(p_info)
-                    pars_to_print.append(bppar)
+                if (
+                    target_format == PrintFormat.LATEX
+                    or target_format == PrintFormat.PDF
+                ):
+                    plugin_yaml_beforeprint = get_value(plugin_yaml, "texbeforeprint")
+                    if plugin_yaml_beforeprint is not None:
+                        bppar = DocParagraph.create(
+                            doc=self._doc_entry.document, md=plugin_yaml_beforeprint
+                        )
+                        par_infos.append(p_info)
+                        pars_to_print.append(bppar)
 
-                plugin_yaml_print = get_value(plugin_yaml, "texprint")
-                if plugin_yaml_print is not None:
-                    ppar = DocParagraph.create(
-                        doc=self._doc_entry.document, md=plugin_yaml_print
-                    )
+                    plugin_yaml_print = get_value(plugin_yaml, "texprint")
+                    if plugin_yaml_print is not None:
+                        ppar = DocParagraph.create(
+                            doc=self._doc_entry.document, md=plugin_yaml_print
+                        )
                 par_infos.append(p_info)
                 pars_to_print.append(ppar)
 
-                plugin_yaml_afterprint = get_value(plugin_yaml, "texafterprint")
-                if plugin_yaml_afterprint is not None:
-                    appar = DocParagraph.create(
-                        doc=self._doc_entry.document, md=plugin_yaml_afterprint
-                    )
-                    par_infos.append(p_info)
-                    pars_to_print.append(appar)
+                if (
+                    target_format == PrintFormat.LATEX
+                    or target_format == PrintFormat.PDF
+                ):
+                    plugin_yaml_afterprint = get_value(plugin_yaml, "texafterprint")
+                    if plugin_yaml_afterprint is not None:
+                        appar = DocParagraph.create(
+                            doc=self._doc_entry.document, md=plugin_yaml_afterprint
+                        )
+                        par_infos.append(p_info)
+                        pars_to_print.append(appar)
 
             else:
                 par_infos.append(p_info)
                 pars_to_print.append(ppar)
 
+        plugin_output_format = PluginOutputFormat.MD
+        # if target_format == PrintFormat.LATEX or target_format == PrintFormat.PDF:
+        #    plugin_output_format = PluginOutputFormat.MD
         # render markdown for plugins
         presult = pluginify(
             doc=self._doc_entry.document,
@@ -360,7 +374,7 @@ class DocumentPrinter:
             user_ctx=user_ctx,
             view_ctx=view_ctx,
             pluginwrap=PluginWrap.Nothing,
-            output_format=PluginOutputFormat.MD,
+            output_format=plugin_output_format,
             user_print=plugins_user_print,
             target_format=tformat,
             protect_raw_inline_plugins=True,
@@ -414,11 +428,15 @@ class DocumentPrinter:
                         if cls == "nonumber":
                             nonumber = "{.unnumbered}"
                         else:
-                            if target_format == "html":
+                            if target_format == PrintFormat.HTML:
                                 beginraw += '<div class="' + cls + '">'
                                 endraw += "</div>"
-                            elif target_format == "plain":
+                            elif target_format == PrintFormat.PLAIN:
                                 beginraw = ""
+                                endraw = ""
+                            elif target_format == PrintFormat.MD:
+                                beginraw = ""
+                                endraw = ""
                             else:
                                 is_env = cls in environment_classes
                                 raw_type = "RAWTEXENV" if is_env else "RAWTEX"
@@ -455,6 +473,16 @@ class DocumentPrinter:
                                          env=pdoc_macro_env,
                                          ignore_errors=True)
                 """
+            if p.is_plugin() and target_format == PrintFormat.MD:
+                md = p.md
+                md = expand_macros(
+                    text=md,
+                    macros=pdoc_macros,
+                    settings=settings,
+                    env=pdoc_macro_env,
+                    ignore_errors=False,
+                )
+                md = f"````` {{plugin={p.attrs.get("plugin")}}}\n{md}\n`````"
             if md.find("§") >= 0:  # check if slide fragments
                 md = md.replace("<§", "").replace("§>", "").replace("§§", "")
             if md.find("---") >= 0:  # check if slide separator
@@ -479,7 +507,7 @@ class DocumentPrinter:
         """
         Gets the content of the DocEntry assigned for this
         DocumentPrinter object. Builds autonumber counters
-        from %%"name"|c_????%% filters.
+        from %% "name"|c_????%% filters.
 
         :return: counters for autonumbering
         """
@@ -599,7 +627,7 @@ class DocumentPrinter:
         :param user_ctx: The user context.
         :param view_ctx: The view context.
         :param target_format: The target file format
-        :param plugins_user_print: Whether or not to print user input from plugins (instead of default values)
+        :param plugins_user_print: Whether to print user input from plugins (instead of default values)
         :param path:  filepath to write
         :param eol_type: EOL type. Allows same option as Pandoc (crlf, lf, native)
         :return: Converted document as bytearray
@@ -971,9 +999,9 @@ def tim_convert_text(
     :param list filters: pandoc filters e.g. filters=['pandoc-citeproc']
     :param removethis: lines that contains this text are removed from generated LaTeX file
     :param texfiles: what files need to copy
-    :returns: converted string (unicode) or an empty string if an outputfile was given
+    :returns: converted string (Unicode) or an empty string if an outputfile was given
     :param eol_type: EOL type to use. Allowed values are same as Pandoc (crlf, lf, native)
-    :rtype: unicode
+    :rtype: Unicode
 
     :raises RuntimeError: if any of the inputs are not valid of if pandoc fails with an error
     :raises OSError: if pandoc is not found; make sure it has been installed and is available at
@@ -1012,7 +1040,7 @@ def tim_convert_input(
     is_pdf = outputfile and outputfile.find(".pdf") >= 0
     latex_file = outputfile
 
-    # To get access to pandoc-citeproc when we use a included copy of pandoc,
+    # To get access to pandoc-citeproc when we use an included copy of pandoc,
     # we need to add the pypandoc/files dir to the PATH
     new_env = os.environ.copy()
     files_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "files")
@@ -1084,7 +1112,7 @@ def tim_convert_input(
         try:
             bsource = source.encode("utf-8")
         except (UnicodeDecodeError, UnicodeEncodeError):
-            # assume that it is already a utf-8 encoded string
+            # assume that it is already an utf-8 encoded string
             bsource = source
         try:
             stdout, stderr = p.communicate(bsource if string_input else None)

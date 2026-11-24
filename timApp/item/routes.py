@@ -1455,7 +1455,7 @@ def create_item_direct(
             index_page.title = item_title
         preamble = DocEntry.find_by_path(df.path + "/templates/preambles/preamble")
         if preamble:
-            macros = preamble.document.get_settings().get_dict().get("macros", {})
+            macros = preamble.document.get_settings().get_yaml_block().get("macros", {})
             macros["homepath"] = df.path
             preamble.document.add_setting("macros", macros)
         db.session.commit()

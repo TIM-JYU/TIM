@@ -189,4 +189,6 @@ a: %%a%%
             "YAML would be invalid after replacement, so not doing anything",
             repls[2].error,
         )
-        self.assertEqual("bar", d.document.get_settings().get_dict()["macros"]["b"])
+        self.assertEqual(
+            "bar", d.document.get_settings().get_yaml_block()["macros"]["b"]
+        )

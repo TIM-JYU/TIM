@@ -494,7 +494,7 @@ class GroupTest2(TimRouteTest):
         self.assertEqual("Administrators", d.parent.owners[0].name)
         self.assertEqual(
             {"group": "edittest1", "fields": ["info"], "maxRows": "40em"},
-            d.document.get_settings().get_dict()["macros"],
+            d.document.get_settings().get_yaml_block()["macros"],
         )
         self.login_test1()
         self.get("/groups/show/edittest1", expect_status=403)

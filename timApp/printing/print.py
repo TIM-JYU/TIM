@@ -280,7 +280,7 @@ def get_printed_document(
     elif doc_settings.is_textplain():
         textplain = doc_settings.is_textplain()
     if textplain:
-        if textplain is True:
+        if textplain:
             suffix = Path(doc_path).suffix
             if suffix:
                 def_file_type = suffix[1:].lower()
@@ -295,7 +295,7 @@ def get_printed_document(
 
     line = request.args.get("line")
 
-    if file_type.lower() not in (f.value for f in PrintFormat):
+    if file_type is None or file_type.lower() not in (f.value for f in PrintFormat):
         file_type = "plain"
         # raise RouteException("The supplied query parameter 'file_type' was invalid.")
 
@@ -310,6 +310,7 @@ def get_printed_document(
         print_type != PrintFormat.PLAIN
         and print_type != PrintFormat.RST
         and print_type != PrintFormat.ICS
+        and print_type != PrintFormat.MD
     ):
         template_doc, template_doc_id, template_error, _ = get_template_doc(
             doc, template_doc_id
@@ -556,7 +557,7 @@ def handle_doc_numbering(
     remote_counter_macros = ""
 
     for remote_ref in remote_refs:
-        remote_doc_path = remote_refs.get(remote_ref).get("doc", None)
+        remote_doc_path = remote_refs[remote_ref].get("doc")
         if not remote_doc_path:
             continue
         if remote_doc_path.startswith("/"):
@@ -691,7 +692,7 @@ def check_print_cache(
         url_macros=url_macros,
         urlparams=urlparams,
     )
-    if path is not None and os.path.exists(path):
+    if path is not None and Path(path).exists():
         return path
 
     return None
@@ -718,7 +719,7 @@ def create_printed_doc(
     Adds a marking for a printed document to the db
 
     :param doc_entry: Document that is being printed
-    :param template_doc: printing template used
+    :param template_doc: printing-template used
     :param file_type: File type for the document
     :param temp: Is the document stored only temporarily (gets deleted after some time)
     :param user_ctx: The user context.
@@ -777,7 +778,7 @@ def create_printed_doc(
 
     if pdferror:
         raise LaTeXError(pdferror)
-    return p_doc.path_to_file
+    return p_doc.path_to_file or ""
 
 
 NOT_FOUND_SVG = (
@@ -819,7 +820,6 @@ def pull_doc_path_svg(endpoint: str | None, values: dict[str, str] | None) -> No
 
 @svg_blueprint.get("/<path:doc_path>")
 def svg_document(
-    doc_path: str,
     task_id: str | None = field(metadata={"data_key": "taskid"}, default=None),
     pid: str | None = field(metadata={"data_key": "id"}, default=None),
     ftype: str | None = field(metadata={"data_key": "fileType"}, default=None),
@@ -843,7 +843,7 @@ def svg_document(
         nonlocal file_type
         # nonlocal url_macros
 
-        if file_type.lower() not in [f.value for f in PrintFormat]:
+        if file_type is None or file_type.lower() not in [f.value for f in PrintFormat]:
             return "", "Invalid file type"
         err = g.pop("error", "")
 

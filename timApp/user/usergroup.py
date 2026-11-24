@@ -36,7 +36,6 @@ from timApp.user.special_group_names import (
 )
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember, membership_current
-from timApp.util.flask.cache import cache
 
 if TYPE_CHECKING:
     from timApp.item.block import Block
@@ -65,7 +64,8 @@ ORG_GROUP_SUFFIX = " users"
 
 
 class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
-    """A usergroup. Each User should belong to a personal UserGroup that has the same name as the User name. No one
+    """A usergroup. Each User should belong to a personal UserGroup
+    that has the same name as the Username. No one
     else should belong to a personal UserGroup.
 
     A User can additionally belong to any number of other UserGroups.
@@ -196,6 +196,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     def is_large(self) -> bool:
         return self.name.endswith(ORG_GROUP_SUFFIX)
 
+    # noinspection PyAttributeOutsideInit
     def load_personal_user(self):
         """If this is a personal usergroup, loads the user object to personal_user attribute."""
         from timApp.user.user import User
@@ -231,7 +232,8 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def is_sisu_student_group(self):
-        return self.is_sisu and self.external_id.external_id.endswith("-students")
+        scim_group = self.external_id
+        return scim_group is not None and scim_group.is_student
 
     @property
     def is_self_join_course(self):
@@ -256,12 +258,12 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return ug
 
     @staticmethod
-    def get_by_external_id(name: str) -> UserGroup:
+    def get_by_external_id(name: str) -> UserGroup | None:
         r = get_sisu_groups_by_filter(ScimUserGroup.external_id == name)
         return r[0] if r else None
 
     @staticmethod
-    def get_by_name(name) -> UserGroup:
+    def get_by_name(name) -> UserGroup | None:
         return (
             run_sql(select(UserGroup).filter_by(name=name).limit(1)).scalars().first()
         )
@@ -383,7 +385,7 @@ def get_sisu_groups_by_filter(f) -> list[UserGroup]:
     return gs
 
 
-# When a SCIM group is deleted, the group name gets this prefix.
+# When an SCIM group is deleted, the group name gets this prefix.
 DELETED_GROUP_PREFIX = "deleted:"
 
 
@@ -412,6 +414,7 @@ class UserGroupWithSisuInfo:
     ug: UserGroup
 
     def to_json(self):
+        """
         return {
             **self.ug.to_json(),
             "admin_doc": self.ug.admin_doc.docentries[0] if self.ug.admin_doc else None,
@@ -420,4 +423,17 @@ class UserGroupWithSisuInfo:
             ).sisugroups_doc_path
             if self.ug.display_name
             else None,
+        }
+        """
+        sisugroup_path = None
+        if self.ug.display_name:
+            sisu_name = parse_sisu_group_display_name(self.ug.display_name)
+            if sisu_name is None:
+                raise ValueError(f"Invalid Sisu display name: {self.ug.display_name}")
+            sisugroup_path = sisu_name.sisugroups_doc_path
+
+        return {
+            **self.ug.to_json(),
+            "admin_doc": self.ug.admin_doc.docentries[0] if self.ug.admin_doc else None,
+            "sisugroup_path": sisugroup_path,
         }

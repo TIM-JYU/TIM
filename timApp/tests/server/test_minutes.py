@@ -1,4 +1,3 @@
-from timApp.admin.replace_in_documents import perform_replace, ReplaceArguments
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.specialnames import (
@@ -18,7 +17,7 @@ class MinutesCreation(TimRouteTest):
         # Tests creation of minutes based on a meeting invitation document
         self.login_test1()
         knro = 3
-        d = self.create_doc(settings={"macros": {"knro": knro}})
+        d = self.try_create_doc(settings={"macros": {"knro": knro}})
         j = self.upload_file(d, b"GIF87a", "test.jpg")
         image_path = j["image"]
         minutes_document_path = f"{d.location}/pk/pk{knro}"
@@ -32,6 +31,7 @@ class MinutesCreation(TimRouteTest):
         )
 
         d2 = DocEntry.find_by_path(minutes_document_path)
+        assert d2 is not None
         chg = d2.document.get_changelog()
         self.assertEqual(self.get_test_user_1_group_id(), chg.entries[0].group_id)
         self.assertTrue(d2.document.get_settings().memo_minutes() == "minutes")
@@ -43,47 +43,47 @@ class MinutesCreation(TimRouteTest):
         self.get(f"/images/{image_path}", expect_status=403)
 
 
-class MinutesHandling(TimRouteTest):
-    def test_minute_extracts(self):
-        with self.internal_container_ctx():
-            self.impl_test_minute_extracts()
-
-    def impl_test_minute_extracts(self):
+class MinutesExtractHelper:
+    @staticmethod
+    def impl_test_minute_extracts(
+        self: TimRouteTest, edit: list[tuple[str, str]] | None = None
+    ):
         # Tests creation of extracts from a full minutes document
         self.login_test1()
         ug1 = UserGroup.create("ittdk18")
         ug2 = UserGroup.create("ittdk1")
         u = self.current_user
+        assert u is not None
         u.groups.append(ug1)
         u.groups.append(ug2)
         db.session.commit()
         knro = 9
-        d_kokous = self.create_doc(
-            path=self.get_personal_item_path("tdk/2018/kokous9"),
-            from_file=static_tim_doc("tdk/memo.md"),
-        )
-        d_lait = self.create_doc(
+        d_lait = self.try_create_doc(
             path=self.get_personal_item_path("tdk/lait/lait"),
             from_file=static_tim_doc("tdk/lait.md"),
         )
-        d_preamble = self.create_doc(
+        edit_lait = [(r"LAIT_ID_HERE", str(d_lait.id))]
+        d_kokous = self.try_create_doc(
+            path=self.get_personal_item_path("tdk/2018/kokous9"),
+            from_file=static_tim_doc("tdk/memo.md"),
+            edit=edit_lait,
+        )
+        # noinspection PyUnusedLocal
+        d_preamble = self.try_create_doc(
             path=self.get_personal_item_path(
                 f"tdk/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/preamble"
             ),
             from_file=static_tim_doc("tdk/preamble.md"),
+            edit=edit + edit_lait if edit is not None else edit_lait,
         )
-        d_preamble_year = self.create_doc(
+        # noinspection PyUnusedLocal
+        d_preamble_year = self.try_create_doc(
             path=self.get_personal_item_path(
                 f"tdk/2018/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/preamble"
             ),
             from_file=static_tim_doc("tdk/preamble_year.md"),
+            edit=edit_lait,
         )
-        for d in (d_preamble, d_preamble_year):
-            perform_replace(d, ReplaceArguments(term="LAIT_ID_HERE", to=f"{d_lait.id}"))
-        for p in d_kokous.document.get_paragraphs():
-            if p.get_attr("rd") == "LAIT_ID_HERE":
-                p.set_attr("rd", str(d_lait.id))
-                p.save()
 
         self.get(
             f"/minutes/createMinuteExtracts/{d_kokous.path_without_lang}",
@@ -93,6 +93,7 @@ class MinutesHandling(TimRouteTest):
         ote_index = DocEntry.find_by_path(
             f"{d_kokous.location}/otteet/kokous{knro}/kokous{knro}"
         )
+        assert ote_index is not None
         t = self.get(ote_index.url, as_tree=True)
         self.assert_content(
             t,
@@ -117,23 +118,24 @@ class MinutesHandling(TimRouteTest):
             ote_index.document.export_markdown(export_ids=False),
         )
         ote1 = DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/lista1")
+        assert ote1 is not None
         self.assertEqual(
             r"""PÖYTÄKIRJANOTE - Lista 1 -  Ilmoitusasiat      
 \
 
-#- {rd="5" ra="ETUSIVU"}
+#- {rd="7" ra="ETUSIVU"}
 
-#- {rd="5" rp="dsENZazDtd1Z"}
+#- {rd="7" rp="dsENZazDtd1Z"}
 
-#- {rd="5" rp="sEj1vkUWmFmG"}
+#- {rd="7" rp="sEj1vkUWmFmG"}
 
-#- {rd="5" rp="ePZZ1MvVVb5S"}
+#- {rd="7" rp="ePZZ1MvVVb5S"}
 
-#- {rd="5" rp="RIam8d8VXbQv"}
+#- {rd="7" rp="RIam8d8VXbQv"}
 
-#- {rd="5" rp="yN0j9XeEOdZG"}
+#- {rd="7" rp="yN0j9XeEOdZG"}
 
-#- {rd="5" rp="PJxELAyKhZuu"}
+#- {rd="7" rp="PJxELAyKhZuu"}
 
 
 %%OTE_ALLEKIRJOITUKSET()%%
@@ -418,6 +420,7 @@ Yliopistonopettaja\\
             ote1_tex,
         )
         ote2 = DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/lista2")
+        assert ote2 is not None
         ote2_tex = self.get_no_warn(
             f"/print/{ote2.path}", query_string={"file_type": "latex"}
         )
@@ -589,3 +592,17 @@ Yliopistonopettaja\\
         self.assertIsNone(
             DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/lista3")
         )
+
+
+class MinutesHandling(TimRouteTest):
+    def test_minute_extracts(self):
+        with self.internal_container_ctx():
+            MinutesExtractHelper.impl_test_minute_extracts(self)
+
+
+class MinutesHandlingCached(TimRouteTest):
+    def test_minute_extracts_with_cached_addforevery(self):
+        with self.internal_container_ctx():
+            MinutesExtractHelper.impl_test_minute_extracts(
+                self, [("ADDFOREVERY", "CADDFOREVERY")]
+            )

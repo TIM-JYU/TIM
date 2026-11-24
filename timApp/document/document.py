@@ -16,7 +16,7 @@ from filelock import FileLock, BaseFileLock
 from flask import has_request_context, request
 from lxml import etree, html
 
-from timApp.document.docsettings import RECURSIVE_SETTINGS_KEY
+from timApp.document.docsettings import DocSettings
 from timApp.document.changelog import Changelog
 from timApp.document.changelogentry import ChangelogEntry
 from timApp.document.docparagraph import DocParagraph
@@ -275,7 +275,7 @@ class Document:
         if not pars:
             current_settings = {}
         else:
-            current_settings = DocSettings.from_paragraph(pars[-1]).get_dict()
+            current_settings = DocSettings.from_paragraph(pars[-1]).get_yaml_block()
         current_settings[key] = value
         self.set_settings(current_settings)
 
@@ -334,13 +334,13 @@ class Document:
         if cached:
             return cached
         settings_block = self.get_own_settings()
-        own_rec_settings = settings_block.pop(RECURSIVE_SETTINGS_KEY, None)
+        own_rec_settings = settings_block.pop_recursive_settings()
         rec_settings = []
         final_settings = YamlBlock()
         preambles = self.get_docinfo().get_preamble_docs()
         for p in preambles:
             pre_settings = resolve_settings_for_pars(p.document.get_settings_pars())
-            rec = pre_settings.pop(RECURSIVE_SETTINGS_KEY, None)
+            rec = pre_settings.pop_recursive_settings()
             if rec:
                 rec_settings.append(rec)
             final_settings = final_settings.merge_with(pre_settings)

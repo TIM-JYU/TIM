@@ -1,5 +1,6 @@
 import glob
 import os
+import re
 import sys
 import unittest
 from contextlib import contextmanager
@@ -92,11 +93,20 @@ class TimDbTest(unittest.TestCase):
         return d
 
     def init_doc(
-        self, doc: Document, from_file, initial_par: str | list[str], settings
+        self,
+        doc: Document,
+        from_file,
+        initial_par: str | list[str],
+        settings,
+        edit: list[tuple[str, str]] | None = None,
     ):
         if from_file is not None:
             with open(from_file, encoding="utf-8") as f:
-                doc.add_text(f.read())
+                text = f.read()
+            if edit is not None:
+                for pattern, replacement in edit:
+                    text = re.sub(pattern, replacement, text)
+            doc.add_text(text)
         elif initial_par is not None:
             if isinstance(initial_par, str):
                 doc.add_text(initial_par)

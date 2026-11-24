@@ -475,18 +475,21 @@ def render_plugin_multi(
                 )  # TODO implement
 
     if docsettings.plugin_md():
+        outtype = "md"
+        if plugin_output_format != PluginOutputFormat.HTML:
+            outtype = "latex"
         convert_md(
-            plugin_dicts,
-            options=opts,
-            plugin_opts=plugin_dumbo_opts,
-            outtype="md"
-            if plugin_output_format == PluginOutputFormat.HTML
-            else "latex",
+            plugin_dicts, options=opts, plugin_opts=plugin_dumbo_opts, outtype=outtype
         )
 
     if plugin_reg.instance and plugin_output_format == PluginOutputFormat.HTML:
         return plugin_reg.instance.multihtml_direct_call(plugin_dicts)
 
+    #  TODO: tämä nimi on tosi hämäävä, koska tässä ei ole kyse
+    #  pelkästään markdownista vaan html/latexista. Nimi pitäisi muuttaa.
+    #  PluginOutputFormat.MD kutsuu multimd routea joka
+    #  tuottaa LaTeXia pluginista. PluginOutputFormat.HTML
+    #  kutsuu multihtml routea joka tuottaa HTMLää pluginista.
     return call_plugin_generic(
         plugin,
         "post",

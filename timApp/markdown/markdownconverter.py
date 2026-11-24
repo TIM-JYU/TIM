@@ -14,6 +14,7 @@ from re import Pattern
 from typing import TYPE_CHECKING, Iterable, Any
 from urllib.parse import quote_plus
 
+from flask import has_request_context, g
 from jinja2 import TemplateSyntaxError, pass_context
 from jinja2.runtime import Context
 from lxml import html, etree
@@ -473,6 +474,48 @@ def timezone_filter(s: object, timezone: object | None = None) -> Any:
 # ------------------------ Jinja filters end ---------------------------------------------------------------
 
 
+def get_addforevery_exports1(
+    env: TimSandboxedEnvironment, source: str, macros: dict
+) -> dict:
+    cached = getattr(env, "_addforevery_cache", None)
+    if cached is not None and cached[0] == source:
+        return cached[1]
+    module = env.from_string(source).make_module(
+        dict(macros)
+    )  # kuvakaappaus luontihetkellä
+    exports = {k: v for k, v in vars(module).items() if not k.startswith("_")}
+    env._addforevery_cache = (source, exports)
+    return exports
+
+
+def get_addforevery_exports(
+    settings: DocSettings | None,
+    env: TimSandboxedEnvironment,
+    source: str,
+    macros: dict,
+    ctx_key=(),
+):
+    if has_request_context():
+        store = g.__dict__.setdefault("_caddforevery_cache", {})
+    else:
+        store = env.__dict__.setdefault("_caddforevery_cache", {})
+    if settings is not None:
+        key = (
+            settings.settings_hash,
+            ctx_key,
+            settings.doc.doc_id,
+            macros.get("tex", False),
+        )
+    else:
+        key = (source, ctx_key, macros.get("tex", False))
+    exports = store.get(key)
+    if exports is None:
+        module = env.from_string(source).make_module(dict(macros))
+        exports = {k: v for k, v in vars(module).items() if not k.startswith("_")}
+        store[key] = exports
+    return exports
+
+
 def expand_macros(
     text: str,
     macros,
@@ -499,9 +542,17 @@ def expand_macros(
                 if pos >= 0:
                     gm = str(globalmacros.get(gmacro, ""))
                     text = text.replace(macrotext, gm)
-            gm = str(globalmacros.get("ADDFOREVERY", ""))
-            if gm:
-                text = gm + "\n" + text
+            addforevery = str(globalmacros.get("ADDFOREVERY", ""))
+            caddforevery = str(globalmacros.get("CADDFOREVERY", ""))
+            if addforevery:
+                text = addforevery + "\n" + text
+            if caddforevery:
+                base_macros = macros or {}
+                exports = get_addforevery_exports(
+                    settings, env, caddforevery, base_macros
+                )
+                macros = {**base_macros, **exports}
+
         startstr = env.comment_start_string + "LOCAL"
         beg = text.find(startstr)
         if beg >= 0:
@@ -522,7 +573,7 @@ def expand_macros(
         return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:
-            err = check_autonumber_error(e.message)
+            err = check_autonumber_error(e.message or "")
             if err is not None:
                 return get_error_html(err)
             return get_error_html(f"Syntax error in macro template: {e}")
@@ -650,7 +701,7 @@ class GetDocumentSettingMacro:
                 for regex in regexes:
                     allowed_attr_patterns.append(re.compile(regex))
 
-            settings_dict = dict(doc.get_settings().get_dict().values)
+            settings_dict = dict(doc.get_settings().get_yaml_block().values)
             self._settings_cache[doc_id] = settings_dict
             self._allowed_docsetting_macro_attributes[doc_id] = allowed_attr_patterns
 
