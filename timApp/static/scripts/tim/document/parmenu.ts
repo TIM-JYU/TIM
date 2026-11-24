@@ -19,6 +19,7 @@ import type {EditMode} from "tim/document/popup-menu-dialog.component";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import type {MenuFunctionList} from "tim/document/viewutils";
 import {getEmptyCoords} from "tim/document/viewutils";
+import {getVisibilityVars} from "tim/timRoot";
 
 function checkIfIgnored(
     ignoredTags: string[],
@@ -49,6 +50,10 @@ export class ParmenuHandler {
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
+        if (getVisibilityVars().parMenu) {
+            // E.g. embed mode: paragraph clicks do nothing (no selection, note badge or menu).
+            return;
+        }
         onClick(
             ".paragraphs .parContent",
             ($this, e) => {

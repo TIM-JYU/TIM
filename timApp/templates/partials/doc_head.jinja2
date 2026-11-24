@@ -22,6 +22,10 @@
     <link rel="stylesheet" href="/static/stylesheets/viewhide.css">
 {% endif %}
 
+{% if embed %}
+    <link rel="stylesheet" href="/static/stylesheets/embed.css">
+{% endif %}
+
 {% if doc_css %}
     <style data-style-origin="document-settings">
         {{ doc_css | safe }}
@@ -58,6 +62,8 @@
     var hideTopButtons = {{ hide_top_buttons|tojson }};
     var hideEditMenu = {{ hide_editmenu|tojson }};
     var parsOnly = {{ pars_only|tojson }};
+    var embedMode = {{ embed|tojson }};
+    var embedAllowedOrigins = {{ embed_allowed_origins|tojson }};
     var translations = {{ translations|tojson }};
     var current_view_range = {{ current_view_range|tojson }};
     var nav_ranges = {{ nav_ranges|tojson }};
