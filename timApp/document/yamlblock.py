@@ -8,7 +8,7 @@ import yaml
 from yaml import YAMLError, CSafeLoader, Event, AliasEvent, NodeEvent
 from yaml.scanner import ScannerError
 
-from document.randutils import hashfunc
+from timApp.document.randutils import hashfunc
 from timApp.util.utils import count_chars_from_beginning
 
 
@@ -213,7 +213,7 @@ def correct_obj(text: str) -> str:
         multiline = False
         multiline_string = False
         end_str = ""
-        indent = None
+        indent: str = ""
         multiline_first_indent = None
         original_indent_len = 0
         max_allowed_spaces = 0
@@ -300,7 +300,7 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
     s = ""
     multiline = False
     end_str = ""
-    indent = None
+    indent: str = ""
     merge_hints = {}
     encountered_keys = set()
     multiline_first_indent = None
@@ -459,7 +459,7 @@ def merge(a: dict, b: dict, merge_info: YamlMergeInfo | None = None):
     :param b: The second dictionary.
 
     """
-    return __merge_helper(a, b, 0, merge_info=merge_info)
+    __merge_helper(a, b, 0, merge_info=merge_info)
 
 
 default_append_keys = {"css", "themes", "ADDFOREVERY", "CADDFOREVERY"}
@@ -474,7 +474,7 @@ def __merge_helper(
                 __merge_helper(a[key], b[key], depth + 1, merge_info)
             elif a[key] == b[key]:
                 pass
-            elif type(a[key]) != type(b[key]):
+            elif type(a[key]) is not type(b[key]):
                 a[key] = b[key]
             else:
                 m = (
