@@ -482,7 +482,7 @@ class DocumentPrinter:
                 # but that would require more work as well.  The plugin interface would need
                 # to be changed to allow for that.
                 # For now, just show the plugin output as a code block, this is better
-                # than showing it as LaTeX code, what happend before this change.
+                # than showing it as LaTeX code, what happened before this change.
                 md = p.md
                 md = expand_macros(
                     text=md,
