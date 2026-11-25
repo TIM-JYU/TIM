@@ -11,7 +11,7 @@ from timApp.timdb.sqa import db
 class ClipboardTest(TimRouteTest):
     def test_invalid(self):
         self.login_test2()
-        d = self.create_doc(initial_par=["test1", "test2", "test3"])
+        d = self.try_create_doc(initial_par=["test1", "test2", "test3"])
         pars = d.document.get_paragraphs()
         self.cut(
             d,
@@ -75,7 +75,7 @@ class ClipboardTest(TimRouteTest):
     def test_copy_one(self):
         self.login_test1()
         test_pars = ["test1", "test2", "test3"]
-        d = self.create_doc(initial_par=test_pars)
+        d = self.try_create_doc(initial_par=test_pars)
         pars = d.document.get_paragraphs()
         self.copy(d, pars[0], pars[0])
         self.show(d)
@@ -88,7 +88,7 @@ class ClipboardTest(TimRouteTest):
     def test_copy_many(self):
         self.login_test1()
         test_pars = ["test1", "test2", "test3", "test4"]
-        d = self.create_doc(initial_par=test_pars)
+        d = self.try_create_doc(initial_par=test_pars)
         pars = d.document.get_paragraphs()
         mark_read(
             usergroup_id=self.current_group().id,
@@ -143,7 +143,7 @@ class ClipboardTest(TimRouteTest):
 
     def test_copy_readings_nonteacher(self):
         self.login_test1()
-        d1 = self.create_doc(initial_par="test")
+        d1 = self.try_create_doc(initial_par="test")
         pars = d1.document.get_paragraphs()
         mark_read(
             usergroup_id=self.current_group().id,
@@ -173,7 +173,7 @@ class ClipboardTest(TimRouteTest):
         )
 
         self.login_test3()
-        d2 = self.create_doc()
+        d2 = self.try_create_doc()
         self.copy(d1, pars[0], pars[0])
         self.paste(d2, par_after=DocParagraph.help_par())
         new_readings = get_readings(self.current_group().id, d2.document)
@@ -182,16 +182,16 @@ class ClipboardTest(TimRouteTest):
 
     def test_copy_to_empty(self):
         self.login_test1()
-        d = self.create_doc(initial_par=["test1", "test2"])
+        d = self.try_create_doc(initial_par=["test1", "test2"])
         pars = d.document.get_paragraphs()
 
-        d2 = self.create_doc()
+        d2 = self.try_create_doc()
         self.copy(d, pars[0], pars[1])
         self.paste(d2, par_after=DocParagraph.help_par())
         d2_pars = d2.document.get_paragraphs()
         self.assertEqual(pars, d2_pars)
 
-        d3 = self.create_doc()
+        d3 = self.try_create_doc()
         self.copy(d, pars[0], pars[1])
         self.paste(d3, par_before=DocParagraph.help_par())
         d3_pars = d3.document.get_paragraphs()
@@ -199,7 +199,7 @@ class ClipboardTest(TimRouteTest):
 
     def test_random_actions(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {area=a1}
 #- {area_end=a1}
@@ -283,7 +283,7 @@ Document:
 
     def test_paste_permission(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {plugin=csPlugin}
 stem: x
@@ -294,23 +294,23 @@ stem: x
         self.login_test2()
         par = d.document.get_paragraphs()[0]
         self.copy(d, par, par)
-        d2 = self.create_doc(initial_par="test2")
+        d2 = self.try_create_doc(initial_par="test2")
         par2 = d2.document.get_paragraphs()[0]
         self.paste(d2, as_ref=False, expect_status=403, par_after=par2)
         self.paste(d2, as_ref=True, par_after=par2)
 
     def test_cut_to_other_doc(self):
         self.login_test1()
-        d = self.create_doc(initial_par="test")
+        d = self.try_create_doc(initial_par="test")
         p = d.document.get_paragraphs()[0]
         self.cut(d, p, p)
-        d2 = self.create_doc(initial_par="x")
+        d2 = self.try_create_doc(initial_par="x")
         p2 = d2.document.get_paragraphs()[0]
         self.paste(d2, par_after=p2)
 
     def test_copy_area_as_ref(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {area=a}
 
@@ -323,7 +323,7 @@ stem: x
 #- {area_end=a}
         """
         )
-        d2 = self.create_doc(initial_par="test")
+        d2 = self.try_create_doc(initial_par="test")
         d_pars = d.document.get_paragraphs()
         self.copy(d, d_pars[0], d_pars[-1], area_name="a")
         self.paste(d2, par_after=d2.document.get_paragraphs()[0], as_ref=True)

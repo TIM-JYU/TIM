@@ -176,16 +176,17 @@ class AutoCounters:
         :param ctype: default type for counters in this block
         :return: empty string because used from filter
         """
-        if isinstance(base_name, int):
-            base_name = None
-        self.auto_name_base = base_name
+        local_base_name = base_name
+        if isinstance(local_base_name, int):
+            local_base_name = None
+        self.auto_name_base = local_base_name
         self.auto_name_ctype = ctype
         self.auto_name_counter = 0
         return ""
 
     def start_of_block(self) -> None:
         """
-        Do things needed to know when convertiong of new block starts
+        Do things need to know when convertiong of new block starts
         Can autoname and cache labels in one block.
         Remember to do reset_label_cache when used first time
         Also reset auto names before first use
@@ -225,7 +226,7 @@ class AutoCounters:
         Get automatic name and ctype if not given
 
         :param name: if empty, give autoname
-        :param ctype: if empty give ctype from auto name
+        :param ctype: if empty give ctype from auto name.
         :return: name, ctype, error
         """
         self.auto_name_plugin: bool = False
@@ -247,7 +248,7 @@ class AutoCounters:
                 return "", "", self.error("Missing base name, use c_auto")
             sname = self.task_id
             self.set_auto_name(sname)
-            # First plugin counter is named by it's #name
+            # First plugin counter is named by its #name
             if self.is_plugin:
                 self.auto_name_plugin: bool = True
                 return sname, ctype, None
@@ -291,7 +292,7 @@ class AutoCounters:
         Separate from "t1|name|t2" t1, name and t2.
         If like "name" jsu return "", name, t2
 
-        :param name: counter name where pre and post texts are separated
+        :param name: counter name where pre- and post-texts are separated
         :return: t1, name, t2
         """
         sname = str(name) if name else ""
@@ -401,7 +402,7 @@ class AutoCounters:
         during the whole document.  If this is first call for ctype,
         create new type counter.
 
-        :param ctype: counter's type
+        :param ctype: counter's type.
         :return: type counter with value.
         """
         counters_type = self.counters.get(ctype)
@@ -497,18 +498,18 @@ class AutoCounters:
                     hname = self.get_base_name(orig_name)
                 if self.auto_name_plugin:
                     prefix = ""
-                counter = {
+                def_counter = {
                     "v": value,  # just value, mostly numeric
                     "p": pure,  # formatted value
                     "s": show,  # show in place of counter
                     "r": ref,  # normal reference format
                     "t": text,  # with text
                     "l": long,  # long format, mostly for section header
-                    "h": prefix + hname.replace(" ", "_"),  # Jump address
+                    "h": prefix + hname.replace(" ", "_"),  # hyperlink address
                     "n": sname,  # name of counter
                     "y": ctype,
                 }
-                counters_type.counters[sname] = counter
+                counters_type.counters[sname] = def_counter
         from_macros = self.autocnts.get(sname, {"s": f"?{sname}?"})
         if self.auto_labels:
             anchor = from_macros.get("h", "")
@@ -552,7 +553,7 @@ class AutoCounters:
     def labels(self, names: list) -> str:
         """
         For filter labels
-        Creates a a-tag or LaTeX label list from counter names.
+        Creates an a-tag or LaTeX label list from counter names.
 
         :param names: list of counter names that are converted to labels
         :return: string to output either a-tag's or LaTeX labels
@@ -821,7 +822,7 @@ macros:
         """
         Get how to show counter with type name ctype
 
-        :param ctype: counter's type name
+        :param ctype: counter's type name.
         :param name: name of counter
         :param value: value of counter to show
         :param showtype: for what purpose value is formatted
@@ -845,6 +846,8 @@ macros:
         reset = counter_fmt.get("reset", 0)
         if reset > 0:
             counter_type = autocounters.get(ctype, autocounters.get("all", {}))
+            if counter_type is None:
+                counter_type = {}
             pfmt = counter_type.get("pure", self.pure_reset_formats[reset])
             counter_fmt["pure"] = pfmt
 
@@ -978,7 +981,7 @@ def add_h_values(counts: dict, values: dict) -> None:
     """
     Add all non-zero h-value from counts to values
 
-    :param counts: where to finds h-values
+    :param counts: where to find h-values
     :param values: where to add h-values
     :return: None
     """
