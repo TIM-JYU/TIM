@@ -156,12 +156,12 @@ I am %%username%%.
         e = self.get(d.url, as_tree=True)
         self.assert_content(e, [app.config["TIM_HOST"]])
 
-    def assert_globalmacros_with_reference(self, macro_name: str):
+    def assert_globalmacros_with_reference(self, addforevery_name: str):
         self.login_test1()
         current_user = self.current_user
         assert current_user is not None
         pp = current_user.get_personal_folder().path
-        pp = f"{pp}/{macro_name.lower()}"
+        pp = f"{pp}/{addforevery_name.lower()}"
         d = self.try_create_doc(
             f"{pp}/a/b/d1",
             initial_par="""
@@ -170,11 +170,15 @@ this is a %%x()%%
 type: cs
 stem: this is a %%x()%%
                             """,
-            settings={"globalmacros": {macro_name: "{% macro x() %}cat{% endmacro %}"}},
+            settings={
+                "globalmacros": {addforevery_name: "{% macro x() %}cat{% endmacro %}"}
+            },
         )
         self.create_doc(
             f"{pp}/a/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}",
-            settings={"globalmacros": {macro_name: "{% macro x() %}law{% endmacro %}"}},
+            settings={
+                "globalmacros": {addforevery_name: "{% macro x() %}law{% endmacro %}"}
+            },
         )
         d2 = self.try_create_doc(f"{pp}/a/c/d2", initial_par="""this is the %%x()%%""")
         p = d2.document.get_paragraphs()[0].create_reference(d.document)

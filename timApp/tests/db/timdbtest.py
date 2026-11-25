@@ -74,6 +74,7 @@ class TimDbTest(unittest.TestCase):
         self.ctx.__exit__(None, None, None)
         close_all_sessions()
 
+    # noinspection PyMethodMayBeStatic
     def commit_db(self):
         db.session.commit()
         db.session.expire_all()
@@ -92,6 +93,7 @@ class TimDbTest(unittest.TestCase):
         TimDbTest.i += 1
         return d
 
+    # noinspection PyMethodMayBeStatic
     def init_doc(
         self,
         doc: Document,
@@ -116,21 +118,30 @@ class TimDbTest(unittest.TestCase):
         if settings is not None:
             doc.set_settings(settings)
 
+    @staticmethod
+    def get_test_user(name: str) -> User:
+        user = User.get_by_name(name)
+        if user is None:
+            raise RuntimeError(f"Test user {name} not found")
+        return user
+
     @property
     def test_user_1(self) -> User:
-        return User.get_by_name("testuser1")
+        return self.get_test_user("testuser1")
 
     @property
     def test_user_2(self) -> User:
-        return User.get_by_name("testuser2")
+        return self.get_test_user("testuser2")
 
     @property
     def test_user_3(self) -> User:
-        return User.get_by_name("testuser3")
+        return self.get_test_user("testuser3")
 
+    # noinspection PyMethodMayBeStatic
     def get_test_user_1_group_id(self):
         return 6
 
+    # noinspection PyMethodMayBeStatic
     def get_test_user_2_group_id(self):
         return 7
 
@@ -161,9 +172,9 @@ class TimDbTest(unittest.TestCase):
         primary = next(
             (uc for uc in user.contacts if uc.channel == channel and uc.primary), None
         )
-        self.assertIsNotNone(
-            primary, f"User must have a primary contact for channel {channel}"
-        )
+        if primary is None:
+            self.fail(f"User must have a primary contact for channel {channel}")
+
         self.assertEqual(primary.contact_origin, origin)
         self.assertEqual(primary.contact, contact)
         self.assertEqual(primary.contact, user.email)

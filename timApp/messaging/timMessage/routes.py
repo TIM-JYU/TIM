@@ -119,7 +119,7 @@ class TimMessageReadReceipt:
 @tim_message.get("/get")
 def get_global_messages() -> Response:
     """
-    Retrieve global messages return them in json format.
+    Retrieve global messages return them in JSON format.
 
     :return: List of TIM messages to display
     """
@@ -129,7 +129,7 @@ def get_global_messages() -> Response:
 @tim_message.get("/get/<int:item_id>")
 def get_tim_messages(item_id: int) -> Response:
     """
-    Retrieve messages displayed for current based on item id and return them in json format.
+    Retrieve messages displayed for current based on item id and return them in JSON format.
 
     :param item_id: Identifier for document or folder where message is displayed
     :return: List of TIM messages to display
@@ -172,12 +172,12 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
         return []
 
     now = get_current_time()
-    is_global = (InternalMessageDisplay.usergroup_id == None) & (
-        InternalMessageDisplay.display_doc_id == None
-    )
+    is_global = InternalMessageDisplay.usergroup_id.is_(
+        None
+    ) & InternalMessageDisplay.display_doc_id.is_(None)
     is_user_specific: Any = false()
-    can_see = (InternalMessageReadReceipt.marked_as_read_on == None) & (
-        (InternalMessage.expires == None) | (InternalMessage.expires > now)
+    can_see = InternalMessageReadReceipt.marked_as_read_on.is_(None) & (
+        InternalMessage.expires.is_(None) | (InternalMessage.expires > now)
     )
 
     if item_id is not None:
@@ -266,7 +266,7 @@ def get_read_receipt(doc_id: int) -> Response:
     """
     Retrieve read receipt object for the current user and message related to the given document id
 
-    :param doc_id: Id of the message document
+    :param doc_id: ID of the message document
     :return:
     """
     message = (
@@ -308,8 +308,7 @@ def check_urls(urls: str) -> Response:
         filter(None, urls.splitlines())
     )  # turn URL string into a list with empty values (new lines) removed
     valid_urls: list[str] = []
-    error_message: str = ""
-    status_code: int
+    error: tuple[str, int] | None = None
 
     for url in url_list:
         url = url.strip()  # remove leading and trailing whitespaces
@@ -318,7 +317,7 @@ def check_urls(urls: str) -> Response:
         hashtag_index = url.find("#")  # remove anchors
         if hashtag_index != -1:
             url = url[:hashtag_index]
-        if URL_PATTERN.search(url):  # check if url matches the TIM urls' pattern
+        if URL_PATTERN.search(url):  # check if url matches the TIM url's pattern
             shortened_url = URL_PATTERN.sub("", url)
         else:
             shortened_url = url
@@ -328,17 +327,18 @@ def check_urls(urls: str) -> Response:
         if document is None:
             document = Folder.find_by_path(shortened_url)
         if document is None:
-            error_message = url + " was not found in TIM"
-            status_code = 404
+            error = (f"{url} was not found in TIM", 404)
             break
+        # noinspection PyBroadException
         try:  # check if user has permission to edit the url
             verify_edit_access(document)
             valid_urls.append(shortened_url)
         except Exception:
-            error_message = "You don't have permission to post TIM message to " + url
-            status_code = 401
+            error = ("You don't have permission to post TIM message to " + url, 401)
+            break
 
-    if error_message:
+    if error:
+        error_message, status_code = error
         return json_response({"error": error_message}, status_code)
     else:
         valid_urls_string = "\n".join(valid_urls)  # turn URL list into a string again
@@ -366,32 +366,32 @@ def send_message_or_reply(message: MessageBody, options: MessageOptions) -> Resp
     """
     Creates a new TIM message and saves it to database.
 
-    :param options: Options related to the message
-    :param message: Message subject, contents and sender
+    :param options: Options related to the message.
+    :param message: Message subject, contents and sender.
     :return:
     """
     verify_logged_in()
 
-    tim_message = InternalMessage(
+    internal_tim_message = InternalMessage(
         can_mark_as_read=options.readReceipt,
         reply=options.reply,
         expires=options.expires,
         replies_to=options.repliesTo,
     )
     recipients = get_recipient_users(message.recipients)
-    message_doc = create_tim_message(tim_message, options, message, recipients)
+    message_doc = create_tim_message(internal_tim_message, options, message, recipients)
 
     pages = get_display_pages(options.pageList.splitlines())
-    create_message_displays(tim_message, pages, recipients)
+    create_message_displays(internal_tim_message, pages, recipients)
 
-    db.session.add(tim_message)
+    db.session.add(internal_tim_message)
     db.session.commit()
 
     return json_response({"docPath": message_doc.path})
 
 
 def create_tim_message(
-    tim_message: InternalMessage,
+    internal_tim_message: InternalMessage,
     options: MessageOptions,
     message_body: MessageBody,
     message_viewers: list[UserGroup] | None = None,
@@ -399,9 +399,9 @@ def create_tim_message(
     """
     Creates a TIM document for the message to the TIM messages folder at TIM's root.
 
-    :param tim_message: InternalMessage object
-    :param options: Options related to the message
-    :param message_body: Message subject, contents and list of recipients
+    :param internal_tim_message: InternalMessage object
+    :param options: Options related to the message.
+    :param message_body: Message subject, contents and list of recipients,
     :param message_viewers: Groups that are allowed to view the message. If None, all recipients can.
     :return: The created Document object
     """
@@ -445,9 +445,9 @@ def create_tim_message(
     message_doc.document.add_paragraph(
         "<manage-read-receipt></manage-read-receipt>", attrs={"allowangular": "true"}
     )
-    tim_message.block = message_doc.block
-    tim_message.par_id = message_par.get_id()
-    tim_message.display_type = (
+    internal_tim_message.block = message_doc.block
+    internal_tim_message.par_id = message_par.get_id()
+    internal_tim_message.display_type = (
         DisplayType.STICKY if options.important else DisplayType.TOP_OF_PAGE
     )
 
@@ -456,6 +456,10 @@ def create_tim_message(
 
 @tim_message.post("/reply")
 def reply_to_tim_message(options: ReplyOptions, message: MessageBody) -> Response:
+    current_user = get_current_user_object()
+    # noinspection PyTypeChecker
+    sender_email: str = current_user.email
+
     message_options = MessageOptions(
         options.messageChannel,
         False,
@@ -464,18 +468,20 @@ def reply_to_tim_message(options: ReplyOptions, message: MessageBody) -> Respons
         options.pageList,
         options.readReceipt,
         False,
-        get_current_user_object().name,
-        get_current_user_object().email,
+        current_user.name,
+        sender_email,
         options.repliesTo,
     )
     if not message.recipients:
         raise RouteException("Reply requires a recipient")
 
     recipient = User.get_by_name(message.recipients.pop())
-    if recipient:
-        recipient_email = recipient.email
-    else:
+    if recipient is None:
         raise NotExist("Recipient not found")
+
+    recipient_email = recipient.email
+    if not isinstance(recipient_email, str):
+        raise RouteException("Recipient has no email address")
 
     message = MessageBody(
         message.messageBody, message.messageSubject, [recipient_email]
@@ -490,7 +496,7 @@ def mark_as_read(message_id: int) -> Response:
     Marks given message as read in database.
     Expects that message receiver and marker are the same person.
 
-    :param message_id: Id of given message
+    :param message_id: ID of given message
     :return:
     """
     verify_logged_in()
@@ -665,19 +671,23 @@ def get_recipient_users(recipients: list[str] | None) -> list[UserGroup]:
     """
     if not recipients:
         return []
-    users = set()
+    users: set[UserGroup] = set()
     for rcpt in recipients:
         if not rcpt:
             continue
         if user := User.get_by_email(rcpt):
-            users.add(UserGroup.get_by_name(user.name))
+            group = UserGroup.get_by_name(user.name)
+            if group is None:
+                raise RouteException(f"Personal group not found for user {user.name}")
+            users.add(group)
+
         if msg_list := MessageListModel.get_by_email(rcpt):
             stmt = (
                 select(UserGroup)
                 .join(MessageListTimMember)
                 .filter(
                     (MessageListTimMember.message_list_id == msg_list.id)
-                    & (MessageListTimMember.membership_ended == None)
+                    & MessageListTimMember.membership_ended.is_(None)
                 )
             )
             ugs = run_sql(stmt).scalars().all()

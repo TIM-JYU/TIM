@@ -66,6 +66,7 @@ class PluginReg:
 
     @property
     def host(self) -> str:  # TODO rename to url because contains path
+        # noinspection HttpUrlsUsage
         return f"http://{self.domain}:{self.port}{self.path}"
 
 
@@ -259,7 +260,7 @@ def call_plugin_generic(
     method: str,
     route: str,
     data: Any = None,
-    headers: Any = None,
+    headers: dict[str, str] | None = None,
     params: Any = None,
     read_timeout: int = 30,
 ) -> Response:
@@ -273,13 +274,14 @@ def call_plugin_generic(
     url = host + route
     # Pass current locale if we are in a request context
     # This allows translating any server text via plugins if they support it
+    hdrs = headers
     if has_request_context():
         locale = get_locale()
-        if headers is None:
-            headers = {}
-        headers["Accept-Language"] = locale
+        if hdrs is None:
+            hdrs = {}
+        hdrs["Accept-Language"] = locale
     try:
-        r = do_request(method, url, data, params, headers, read_timeout)
+        r = do_request(method, url, data, params, hdrs, read_timeout)
     except (
         requests.exceptions.ConnectTimeout,
         requests.exceptions.ConnectionError,
@@ -334,7 +336,7 @@ def render_plugin(
     return call_plugin_generic(
         plugin.type,
         "post",
-        output_format.value,
+        str(output_format.value),
         data=json.dumps(plugin_data, cls=TimJsonEncoder),
         headers={"Content-type": "application/json"},
     ).text
@@ -352,6 +354,7 @@ def list_to_dumbo(markup_list: list[Any]) -> None:
     for val in markup_list:
         ic = i
         i += 1
+        # noinspection DuplicatedCode
         if type(val) is dict:
             dict_to_dumbo(val)
             continue
@@ -371,6 +374,7 @@ def list_to_dumbo(markup_list: list[Any]) -> None:
 def dict_to_dumbo(pm: dict) -> None:
     for mkey in pm:
         val = pm[mkey]
+        # noinspection DuplicatedCode
         if type(val) is dict:
             dict_to_dumbo(val)
             continue
@@ -465,6 +469,7 @@ def render_plugin_multi(
                 # use attribute list instead of calling the plugin
                 prepare_for_dumbo_attr_list_recursive(regex_obj, plug_dict)
             elif plugin_reg.instance:
+                # noinspection PyBroadException
                 try:
                     plugin_reg.instance.prepare_for_dumbo(plug_dict)
                 except:
@@ -485,11 +490,12 @@ def render_plugin_multi(
     if plugin_reg.instance and plugin_output_format == PluginOutputFormat.HTML:
         return plugin_reg.instance.multihtml_direct_call(plugin_dicts)
 
-    #  TODO: tämä nimi on tosi hämäävä, koska tässä ei ole kyse
-    #  pelkästään markdownista vaan html/latexista. Nimi pitäisi muuttaa.
-    #  PluginOutputFormat.MD kutsuu multimd routea joka
-    #  tuottaa LaTeXia pluginista. PluginOutputFormat.HTML
-    #  kutsuu multihtml routea joka tuottaa HTMLää pluginista.
+    # TODO: The name PluginOutputFormat.MD is very misleading
+    # because this is not just about Markdown;
+    # it also involves HTML and LaTeX. The name should be changed.
+    # PluginOutputFormat.MD calls the multimd route, which
+    # produces LaTeX from the plugin. PluginOutputFormat.HTML
+    # calls the multihtml route, which produces HTML from the plugin.
     return call_plugin_generic(
         plugin,
         "post",
@@ -509,6 +515,7 @@ def call_plugin_resource(
     try:
         plug = get_plugin(plugin)
         # We need to avoid calling ourselves to avoid infinite request loop.
+        # noinspection HttpUrlsUsage
         if plug.host.startswith(
             f'http://{current_app.config["INTERNAL_PLUGIN_DOMAIN"]}'
         ):

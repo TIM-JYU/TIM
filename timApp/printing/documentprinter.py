@@ -474,6 +474,15 @@ class DocumentPrinter:
                                          ignore_errors=True)
                 """
             if p.is_plugin() and target_format == PrintFormat.MD:
+                # If plugin and md output, show the plugin output as a code block
+                # with macro expansion done, so that the user can see what the plugin output is.
+                # Better for example to TimTable would be to show the plugin
+                # output as a MarkDown table, but hat would require more work.
+                # Same for target_format == PrintFormat.plain,
+                # but that would require more work as well.  The plugin interface would need
+                # to be changed to allow for that.
+                # For now, just show the plugin output as a code block, this is better
+                # than showing it as LaTeX code, what happend before this change.
                 md = p.md
                 md = expand_macros(
                     text=md,
@@ -482,7 +491,7 @@ class DocumentPrinter:
                     env=pdoc_macro_env,
                     ignore_errors=False,
                 )
-                md = f"````` {{plugin={p.attrs.get("plugin")}}}\n{md}\n`````"
+                md = "`````{plugin=" + p.attrs.get("plugin") + "}\n" + md + "}\n`````"
             if md.find("§") >= 0:  # check if slide fragments
                 md = md.replace("<§", "").replace("§>", "").replace("§§", "")
             if md.find("---") >= 0:  # check if slide separator

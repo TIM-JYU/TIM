@@ -1,7 +1,6 @@
 """Routes for searching."""
 import os
 import re
-import sre_constants
 import subprocess
 import time
 from dataclasses import dataclass, field
@@ -146,7 +145,7 @@ def preview_result(
     """
     Forms preview of the match paragraph.
 
-    :param md: Paragraph markdown to preview.
+    :param md: Paragraph Markdown to preview.
     :param m: Match object.
     :param snippet_length: The length of preview before and after search word.
     :param max_length: The maximum allowed length of the preview.
@@ -367,6 +366,8 @@ def validate_query(query: str, search_whole_words: bool) -> None:
 
 # Query options for loading DocEntry relevance eagerly; it should speed up search cache processing because
 # we know we'll need relevance.
+# TODO: Consider a public API for commonly used DocEntry load options.
+# noinspection PyProtectedMember
 docentry_eager_relevance_opt = (
     defaultload(DocEntry._block).selectinload(Block.relevance),
 )
@@ -381,7 +382,7 @@ def add_doc_info_content_line(
     :param doc_id: Document id.
     :param par_data: List of paragraph dictionaries.
     :param remove_deleted_pars: Check paragraph existence and leave deleted ones out.
-    :param add_title Add document title.
+    :param add_title: Add document title.
     :return: String with paragraph data grouped under a document.
     """
     if not par_data:
@@ -417,7 +418,7 @@ def add_doc_info_content_line(
             par_md_buf.write(doc_par.md)
 
         par_md = normalize_newlines(par_md_buf.getvalue())
-        # Cherry pick attributes, because others are unnecessary for the search.
+        # Cherry-pick attributes, because others are unnecessary for the search.
         par_attrs = par_dict["attrs"]
         par_json_list.append({"id": par_id, "attrs": par_attrs, "md": par_md})
     if add_title:
@@ -543,31 +544,37 @@ def create_search_files(remove_deleted_pars=True) -> tuple[int, str]:
     except FileNotFoundError:
         return 400, f"Failed to open preliminary file {RAW_CONTENT_FILE_PATH}"
     try:
-        with raw_file, temp_content_file_name.open(
-            "w+", encoding="utf-8"
-        ) as temp_content_file, temp_title_file_name.open(
-            "w+", encoding="utf-8"
-        ) as temp_title_file, temp_paths_file_name.open(
-            "w+", encoding="utf-8"
-        ) as temp_paths_file, temp_tags_file_name.open(
-            "w+", encoding="utf-8"
-        ) as temp_tags_file, index_log_file_name.open(
-            "w+", encoding="utf-8"
-        ) as index_log_file:
-            current_doc, current_pars = None, []
+        with (
+            raw_file,
+            temp_content_file_name.open("w+", encoding="utf-8") as temp_content_file,
+            temp_title_file_name.open("w+", encoding="utf-8") as temp_title_file,
+            temp_paths_file_name.open("w+", encoding="utf-8") as temp_paths_file,
+            temp_tags_file_name.open("w+", encoding="utf-8") as temp_tags_file,
+            index_log_file_name.open("w+", encoding="utf-8") as index_log_file,
+        ):
+            current_doc: int | None = None
+            current_pars: list[str] = []
 
             for line in raw_file:
                 try:
+                    doc_id: int
                     doc_id, par_id, par = get_doc_par_id(line)
                     if not doc_id:
                         continue
                     if current_doc is None:
                         current_doc = doc_id
                     # If same doc as previous line or the first, just add par data to list.
-                    if current_doc == doc_id:
+                    if current_doc is None:
+                        current_doc = doc_id
+                        current_pars.append(par)
+                    elif current_doc == doc_id:
                         current_pars.append(par)
                     # Otherwise save the previous one and empty par data.
                     else:
+                        if current_doc is None:
+                            raise RuntimeError("Current document ID is missing")
+
+                        # noinspection DuplicatedCode
                         new_content_line = add_doc_info_content_line(
                             current_doc, current_pars, remove_deleted_pars
                         )
@@ -594,6 +601,7 @@ def create_search_files(remove_deleted_pars=True) -> tuple[int, str]:
 
             # Write the last line separately, because loop leaves it unsaved.
             if current_doc and current_pars:
+                # noinspection DuplicatedCode
                 new_content_line = add_doc_info_content_line(
                     current_doc, current_pars, remove_deleted_pars
                 )
@@ -687,7 +695,7 @@ def compile_regex(
         term = rf"\b{term}\b"
     try:
         term_regex = re.compile(term, flags)
-    except sre_constants.error as e:
+    except re.error as e:
         raise RouteException(f"Invalid regex: {str(e)}")
     else:
         if not term_regex:
@@ -735,7 +743,9 @@ def fetch_search_items(search_items: dict, search_folder: str) -> list[DocInfo]:
     :param search_folder: folder path that the search is limited to
     :return: list of DocInfo objects
     """
-    doc_infos: list[DocInfo] = (
+    # TODO: Consider a public API for commonly used DocEntry load options.
+    # noinspection PyProtectedMember
+    doc_infos: list[DocInfo] = list(
         run_sql(
             select(DocEntry)
             .filter(
@@ -791,7 +801,6 @@ def filter_search_documents(
     :return: list of filtered DocInfo objects
     """
 
-    docs = []
     if search_owned_docs:
         if not ignore_relevance:
             docs = [
@@ -824,7 +833,7 @@ def filter_search_documents(
 
 
 def grep_search_file(
-    cmd: list[str], search_file_path: str, search_type: str
+    cmd: list[str], search_file_path: Path, search_type: str
 ) -> list[str]:
     """
     Helper function to grep the specified (text) file
@@ -899,9 +908,8 @@ def search():
 
     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
 
-    cmd = ["rg"]
     # disable printing line numbers into output
-    cmd.append("-N")
+    cmd = ["rg", "-N"]
     if case_sensitive:
         cmd.append("-s")
     else:
@@ -1002,7 +1010,8 @@ def search():
 
 def get_result_instance(result_type: str, alt_num_results: int) -> SearchResult:
     """
-    Returns an instance of the specified SearchResult type, parameterised with a value for alt_num_results
+    Returns an instance of the specified SearchResult type,
+    parameterized with a value for alt_num_results
     :param result_type: Type of SearchResult to instantiate and return
     :param alt_num_results: value for alt_num_results property of SearchResult
     :return: Instance of (a subclass of) SearchResult
@@ -1028,17 +1037,17 @@ def search_metadata(
     timeout: float,
     user: User,
     term_regex: Pattern[str],
-) -> (list[DocResult], int, str):
+) -> tuple[list[DocResult], int, str]:
     """
     Performs a search and collates search results for a type of search in a search index
 
-    :param req: search request containing search options
-    :param grep_output: temporary in-memory search index
-    :param target: type of search ("content", "title", "path" or "tags")
-    :param start_time: start time of the search process in seconds
-    :param timeout: timeout limit for the search process
-    :param user: current user object
-    :param term_regex: regular expression pattern to use for the search
+    :param req: search request containing search options.
+    :param grep_output: temporary in-memory search index.
+    :param target: type of search ("content", "title", "path" or "tags").
+    :param start_time: start time of the search process in seconds.
+    :param timeout: timeout limit for the search process,
+    :param user: current user object.
+    :param term_regex: regular expression pattern to use for the search.
     :return: search results as a tuple: results, result count and search abort reason, if search was aborted or timed out
     """
 
@@ -1131,16 +1140,16 @@ def search_content(
     timeout: float,
     user: User,
     term_regex: Pattern[str],
-) -> (list[DocResult], int, str):
+) -> tuple[list[DocResult], int, str]:
     """
     Performs a document content search and collates the search results
 
-    :param req: search request containing search options
-    :param content_output: temporary in-memory content search index
-    :param start_time: start time of the search process in seconds
-    :param timeout: timeout limit for the search process
-    :param user: current user object
-    :param term_regex: regular expression pattern to use for the search
+    :param req: search request containing search options.
+    :param content_output: temporary in-memory content search index.
+    :param start_time: start time of the search process in seconds.
+    :param timeout: timeout limit for the search process.
+    :param user: current user object.
+    :param term_regex: regular expression pattern to use for the search.
     :return: search results as a tuple: results, result count and search abort reason, if search was aborted or timed out
     """
 
@@ -1217,14 +1226,14 @@ def search_content(
                 # Tries to get plugin and settings key values from dict;
                 # if par isn't either, gives KeyError and does nothing.
                 try:
-                    plugin = par["attrs"]["plugin"]
+                    # plugin = par["attrs"]["plugin"]
                     # If ignore_plugins or no edit access, leave out plugin and setting results.
                     if ignore_plugins or not check_edit_acc():
                         continue
                 except KeyError:
                     pass
                 try:
-                    settings = par["attrs"]["settings"]
+                    # settings = par["attrs"]["settings"]
                     if ignore_plugins or not check_edit_acc():
                         continue
                 except KeyError:
@@ -1277,6 +1286,7 @@ def search_content(
                 break
         except TimeoutError as e:
             log_search_error(get_error_message(e), query, current_doc)
+            """
             return json_response(
                 {
                     "word_result_count": word_result_count,
@@ -1285,6 +1295,8 @@ def search_content(
                     "content_results": content_results,
                 }
             )
+            """
+            return content_results, word_result_count, incomplete_search_reason
         except Exception as e:
             log_search_error(get_error_message(e), query, current_doc, par=current_par)
 
