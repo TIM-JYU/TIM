@@ -7,7 +7,7 @@ class CsPluginTest(TimRouteTest):
         # Ensure csplugin is fully available since it's used in the plugin
         self.wait_for_url("http://csplugin:5000/cs/reqs")
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 ``` {#t plugin="csPlugin"}
 pointsRule:
@@ -45,7 +45,10 @@ public class Main {{
             )
 
         def first_answer():
-            return self.test_user_1.answers.order_by(Answer.id.desc()).first()
+            fa = self.test_user_1.answers.order_by(Answer.id.desc()).first()
+            if fa is None:
+                raise Exception("First answer not found")
+            return fa
 
         r = pa('System.out.println("hi");')
         self.assertEqual("hi\n", r["web"]["console"])
@@ -67,7 +70,7 @@ public class Main {{
         # Ensure csplugin is fully available since it's used in the plugin
         self.wait_for_url("http://csplugin:5000/cs/reqs")
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 ``` {#t plugin="csPlugin"}
 type: cs

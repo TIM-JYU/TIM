@@ -256,7 +256,7 @@ class DocumentTest(TimDbTest):
                 "macros": {"testmacro": "testvalue", "year": "2015"},
                 "macro_delimiter": "%%",
             },
-            d.get_settings().get_dict(),
+            d.get_settings().get_yaml_block(),
         )
 
         # User-specific macros should be preserved
@@ -477,11 +477,11 @@ a: 1
         d = self.create_doc().document
         d.set_settings({"x": 1})
         s1 = d.get_settings()
-        self.assertEqual({"x": 1}, s1.get_dict())
+        self.assertEqual({"x": 1}, s1.get_yaml_block())
         src1 = d.get_source_document()
         d.set_settings({"x": 2, "source_document": 10})
         s2 = d.get_settings()
         src2 = d.get_source_document()
-        self.assertEqual({"x": 2, "source_document": 10}, s2.get_dict())
+        self.assertEqual({"x": 2, "source_document": 10}, s2.get_yaml_block())
         self.assertIsNone(src1)
         self.assertEqual(10, src2.doc_id)

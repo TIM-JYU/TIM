@@ -20,7 +20,10 @@ class SearchTest(TimRouteTest):
     def test_user_search(self):
         self.login_test1()
         self.get("/users/search/test", expect_status=403)
-        self.make_admin(self.current_user)
+        local_current_user = self.current_user
+        if local_current_user is None:
+            self.fail("Current user is None after login_test1()")
+        self.make_admin(local_current_user)
         self.get(
             "/users/search/test",
             expect_content=[
@@ -281,7 +284,7 @@ class MergeTest(TimRouteTest):
             with self.assertRaises(RouteException):
                 find_and_merge_users("testuser1", u)
 
-        d = self.create_doc(initial_par="#- {plugin=textfield #t}")
+        d = self.try_create_doc(initial_par="#- {plugin=textfield #t}")
         self.post_answer("textfield", f"{d.id}.t", user_input={"c": "x"})
         path = d.path
         tg1 = UserGroup.create("tg1")
@@ -326,6 +329,7 @@ class MergeTest(TimRouteTest):
             )
 
         r = find_and_merge_users("testuser2", "testuser1")
+        # noinspection DuplicatedCode
         self.assertEqual(1, r.accesses)
         self.assertEqual(0, r.annotations)
         self.assertEqual(1, r.answers)
@@ -343,6 +347,7 @@ class MergeTest(TimRouteTest):
         check_contacts(self.test_user_2, self.test_user_1)
 
         r = find_and_merge_users("testuser2", "testuser1")
+        # noinspection DuplicatedCode
         self.assertEqual(0, r.accesses)
         self.assertEqual(0, r.annotations)
         self.assertEqual(0, r.answers)
@@ -359,6 +364,7 @@ class MergeTest(TimRouteTest):
         check_contacts(self.test_user_2, self.test_user_1)
 
         r = find_and_merge_users("testuser1", "testuser2")
+        # noinspection DuplicatedCode
         self.assertEqual(1, r.accesses)
         self.assertEqual(0, r.annotations)
         self.assertEqual(1, r.answers)
@@ -375,6 +381,7 @@ class MergeTest(TimRouteTest):
         check_contacts(self.test_user_1, self.test_user_2)
         self.assertIsNotNone(DocEntry.find_by_path(path))
 
+        # noinspection DuplicatedCode
         r = find_and_merge_users("testuser1", "testuser2")
         self.assertEqual(0, r.accesses)
         self.assertEqual(0, r.annotations)
@@ -399,6 +406,7 @@ class MergeTest(TimRouteTest):
             force_verify=True,
         )
 
+        # noinspection DuplicatedCode
         r = find_and_merge_users("testuser1", "testuser2")
         self.assertEqual(0, r.accesses)
         self.assertEqual(0, r.annotations)
@@ -421,6 +429,8 @@ class MergeTest(TimRouteTest):
         u = User.get_by_name(f"testuser2_deleted_{test_user_2.id}")
         db.session.refresh(u)
         self.assertIsNotNone(u)
+        if u is None:  # To silent PyCharm warning, but should never happen
+            self.fail("User not found after soft delete")
         self.assertEqual(u.email, u.primary_email_contact.contact)
         with self.assertRaises(RouteException):
             find_and_soft_delete("testuser2")
@@ -472,7 +482,7 @@ class UserDeleteTest(TimRouteTest):
         db.session.commit()
         self.get("/")
         self.login(username="m@example.com")
-        d = self.create_doc()
+        d = self.try_create_doc()
         find_and_soft_delete("m@example.com")
         db.session.commit()
         self.get(d.url, expect_status=302, expect_content="/")

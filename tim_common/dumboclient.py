@@ -1,7 +1,7 @@
-"""Defines a client interface for using Dumbo, the markdown converter."""
+"""Defines a client interface for using Dumbo, the Markdown converter."""
 import json
 from enum import Enum
-from typing import NamedTuple, overload, Any, Type
+from typing import NamedTuple, overload, Any, Type, Literal
 
 import requests
 
@@ -124,21 +124,32 @@ def call_dumbo(
     ...
 
 
+@overload
 def call_dumbo(
-    data: list[str] | dict | list[dict],
+    data: list[str | dict[str, Any]],
+    path: Literal["", "/", "/markdown", "/latex"] = "",
+    options: DumboOptions = DumboOptions.default(),
+    data_opts: list[DumboOptions] | None = None,
+) -> list[str]:
+    ...
+
+
+def call_dumbo(
+    data: list[str] | dict | list[dict] | list[str | dict[str, Any]],
     path: str = "",
     options: DumboOptions = DumboOptions.default(),
     data_opts: list[DumboOptions] | None = None,
 ) -> list[str] | dict | list[dict]:
-    """Calls Dumbo for converting the given markdown to HTML.
+    """Calls Dumbo for converting the given Markdown to HTML.
 
     :param options: Options for Dumbo.
     :param data: The data to be converted.
     :param path: The path of the request. Valid paths are: '', '/', '/mdkeys' and '/markdown' (same as '/' and '').
+    :param data_opts: Optional list of DumboOptions for each item in data. If not provided, the same options are used for all items.
      If path is '/mdkeys', data is expected to be a Dict or List[Dict]. Any dict value that begins with 'md:' is
-     interpreted as Pandoc markdown and is converted to HTML. Otherwise the value is unchanged.
+     interpreted as Pandoc Markdown and is converted to HTML. Otherwise, the value is unchanged.
      The return value format will be the same as input.
-     Otherwise, data is expected to be a List[str]. Each string is interpreted as Pandoc markdown and is converted to
+     Otherwise, data is expected to be a List[str]. Each string is interpreted as Pandoc Markdown and is converted to
      HTML. The return value format will be the same as input.
 
     """

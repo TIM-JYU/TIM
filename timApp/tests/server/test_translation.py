@@ -140,7 +140,7 @@ class TranslationTest(TimTranslationRouteTest):
         doc_title = "test"
         t = self.create_translation(doc, doc_title, lang)
         d = t.document
-        self.assertEqual("b", d.get_settings().get_dict()["a"])
+        self.assertEqual("b", d.get_settings().get_yaml_block()["a"])
         self.get(t.url)
 
     def test_translation_content(self):
@@ -153,7 +153,7 @@ class TranslationTest(TimTranslationRouteTest):
         tr_pars = tr_doc.get_paragraphs()
         plugin_tr_par = tr_pars[1]
         old_md = self.get(f"/getBlock/{tr_doc.doc_id}/{plugin_tr_par.get_id()}")
-        self.assertEqual({}, tr_doc.get_settings().get_dict())
+        self.assertEqual({}, tr_doc.get_settings().get_yaml_block())
 
         self.assertFalse(tr_pars[0].is_setting())
         for p in tr_pars:  # type DocParagraph
@@ -303,13 +303,15 @@ class TranslationTest(TimTranslationRouteTest):
         settings_id = orig_pars[0].get_id()
         self.assertEqual(tr_pars[0].get_attr("rp"), settings_id)
         tr_settings = DocSettings.from_paragraph(tr_pars[0])
-        self.assertEqual(tr_settings.get_dict(), {})
-        self.assertEqual(t.document.get_settings().get_dict(), {"a": "b"})
+        self.assertEqual(tr_settings.get_yaml_block(), {})
+        self.assertEqual(t.document.get_settings().get_yaml_block(), {"a": "b"})
 
         d.document.set_settings({"a": "b", "c": "d"})
         tr_pars[0].set_markdown(YamlBlock(values={"c": "x"}).to_markdown())
         tr_pars[0].save()
-        self.assertEqual(t.document.get_settings().get_dict(), {"a": "b", "c": "x"})
+        self.assertEqual(
+            t.document.get_settings().get_yaml_block(), {"a": "b", "c": "x"}
+        )
 
     def test_translation_ignored_src_doc(self):
         self.login_test1()

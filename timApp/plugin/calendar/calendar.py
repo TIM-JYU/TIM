@@ -307,6 +307,7 @@ def get_url(opts: CalendarExportOptions) -> Response:
             return export_ical(cur_user)
         case CalendarExportFormat.TEMPLATE_JSON:
             return export_template_json(cur_user, opts)
+    # noinspection PyUnreachableCode
     raise RouteException(f"Unknown export format: {format}")
 
 
@@ -453,15 +454,22 @@ def get_ical(opts: ICalFilterOptions) -> Response:
         buf.write(f"DTSTAMP:{dts}Z\r\n")
         buf.write(f"UID:{uuid.uuid4().hex[:9]}@tim.jyu.fi\r\n")
         buf.write(f"CREATED:{dts}Z\r\n")
-        if event.title is None:
+        title = event.title
+        location = event.location
+        message = event.message
+
+        if title is None:
+            title = ""
             event.title = ""
-        buf.write(f"SUMMARY:{wrap_lines(event.title)}\r\n")
-        if event.location is None:
+        buf.write(f"SUMMARY:{wrap_lines(title)}\r\n")
+        if location is None:
             event.location = ""
-        buf.write(f"LOCATION:{wrap_lines(event.location)}\r\n")
-        if event.message is None:
+            location = ""
+        buf.write(f"LOCATION:{wrap_lines(location)}\r\n")
+        if message is None:
             event.message = ""
-        buf.write(f"DESCRIPTION:{wrap_lines(event.message)}\r\n")
+            message = ""
+        buf.write(f"DESCRIPTION:{wrap_lines(message)}\r\n")
         buf.write("END:VEVENT\r\n")
 
     buf.write("END:VCALENDAR\r\n")
@@ -477,6 +485,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     :return: list of events
     """
     filter_opts = filter_opts or FilterOptions()
+    opts = filter_opts if filter_opts is not None else FilterOptions()
 
     stmt = select(Event.event_id)
     event_queries = []
@@ -484,11 +493,11 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
 
     # Events come from different places:
     # 1. Events that are created by the user
-    if filter_opts.includeOwned:
+    if opts.includeOwned:
         event_filter |= Event.creator == u
 
-    if filter_opts.includeDocumentEvents and filter_opts.docId:
-        doc = DocEntry.find_by_id(filter_opts.docId)
+    if opts.includeDocumentEvents and opts.docId:
+        doc = DocEntry.find_by_id(opts.docId)
         if doc:
             # Resolve translation, because we want to add events for the original document
             if not doc.is_original_translation:
@@ -505,23 +514,23 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     )
     subquery_event_groups = subquery_event_groups_all
     # Apply group filter if there is one
-    if filter_opts.groups is not None:
+    if opts.groups is not None:
         # noinspection PyUnresolvedReferences
         subquery_event_groups = subquery_event_groups.filter(
-            UserGroup.name.in_(filter_opts.groups)
+            UserGroup.name.in_(opts.groups)
         )
     # noinspection PyUnresolvedReferences
     event_filter |= Event.event_id.in_(subquery_event_groups)
 
     # Filter out any tags and groups
-    if filter_opts.tags is not None:
+    if opts.tags is not None:
         stmt = stmt.join(EventTag, Event.tags)
         # noinspection PyUnresolvedReferences
-        event_filter &= EventTag.tag.in_(filter_opts.tags)
+        event_filter &= EventTag.tag.in_(opts.tags)
 
     stmt = stmt.filter(event_filter)
 
-    if filter_opts.showImportant:
+    if opts.showImportant:
         # noinspection PyUnresolvedReferences
         important_q = select(Event.event_id).filter(
             Event.event_id.in_(subquery_event_groups_all) & Event.important.is_(True)
@@ -529,7 +538,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         event_queries.append(important_q)
 
     # Add in all bookend events if asked
-    if filter_opts.showBooked:
+    if opts.showBooked:
         enrolled_subquery = (
             u.get_groups(include_expired=False)
             .join(Enrollment, Enrollment.usergroup_id == UserGroup.id)
@@ -541,7 +550,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         )
         event_queries.append(booked_query)
 
-    if filter_opts.showBookedByMin is not None:
+    if opts.showBookedByMin is not None:
         booked_min_subquery = (
             select(Event)
             .filter(Event.creator_user_id == u.id)
@@ -555,16 +564,16 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
             select(Event.event_id)
             .select_from(booked_min_subquery)
             .join(Event, Event.event_id == booked_min_subquery.c.event_id)
-            .filter(booked_min_subquery.c.count >= filter_opts.showBookedByMin)
+            .filter(booked_min_subquery.c.count >= opts.showBookedByMin)
         )
         event_queries.append(booked_min_query)
 
     timing_filter: Any = true()
     # Apply date filter to all events
-    if filter_opts.fromDate:
-        timing_filter &= Event.start_time >= filter_opts.fromDate
-    if filter_opts.toDate:
-        timing_filter &= Event.end_time <= filter_opts.toDate
+    if opts.fromDate:
+        timing_filter &= Event.start_time >= opts.fromDate
+    if opts.toDate:
+        timing_filter &= Event.end_time <= opts.toDate
 
     if event_queries:
         tmp = stmt.union(*event_queries)
@@ -703,13 +712,23 @@ def save_events(
     save_origin: DocInfo | None = None,
 ) -> list[Event]:
     event_ug_names = {
-        *[ug for event in events if event.booker_groups for ug in event.booker_groups],
-        *[ug for event in events if event.setter_groups for ug in event.setter_groups],
+        *[
+            ug
+            for event in events
+            if event.booker_groups
+            for ug in (event.booker_groups or [])
+        ],
+        *[
+            ug
+            for event in events
+            if event.setter_groups
+            for ug in (event.setter_groups or [])
+        ],
         *[
             ug
             for event in events
             if event.extra_booker_groups
-            for ug in event.extra_booker_groups
+            for ug in (event.extra_booker_groups or [])
         ],
     }
 
@@ -721,13 +740,14 @@ def save_events(
         .scalars()
         .all()
     )
-    event_ugs_dict = {ug.name: ug for ug in event_ugs}
+
+    event_ugs_dict: dict[str, UserGroup] = {ug.name: ug for ug in event_ugs}
     event_tags = set(
         [
             tag.strip()
             for event in events
             if event.tags
-            for tag in event.tags
+            for tag in (event.tags or [])
             if tag.strip()
         ]
     )
@@ -744,7 +764,8 @@ def save_events(
         event_groups = []
 
         for ug_name in event_group_names:
-            if not (ug := event_ugs_dict.get(ug_name)):
+            ug = event_ugs_dict.get(ug_name)
+            if ug is None:
                 raise NotExist(f"Group '{ug_name}' not found")
 
             manager = ug_name in setters
@@ -1027,6 +1048,8 @@ def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Re
         raise AccessDenied("You are not allowed to post messages to this event")
 
     user_group = UserGroup.get_by_name(booker_group)
+    if user_group is None:
+        raise NotExist()
     enrollment = Enrollment.get_by_event_and_user(event_id, user_group.id)
     if not enrollment:
         raise NotExist()
@@ -1153,6 +1176,8 @@ def send_email_to_creator(
     event_time = f"{start_time}-{end_time}"
     name = user_obj.name
     rcpt = creator.email
+    if not isinstance(rcpt, str) or not rcpt:
+        raise RouteException("Event creator has no email address")
     msg = f"TIM-Calendar reservation {event.title} {event_time} has been {event_type.value} by {name}."
     # TODO: Subject should be shorter
     subject = msg

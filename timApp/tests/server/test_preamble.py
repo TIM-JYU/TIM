@@ -58,25 +58,25 @@ class PreambleTest(PreambleTestBase):
             ],
         )
         self.assertEqual(
-            d.document.get_settings().get_dict()["macros"],
+            d.document.get_settings().get_yaml_block()["macros"],
             {"a": "cat", "b": "mouse", "c": "elephant", "d": "fly", "e": "fox"},
         )
 
         d_no_preamble.document.set_settings({"preamble": None})
         self.assertEqual(
-            d_no_preamble.document.get_settings().get_dict(), {"preamble": None}
+            d_no_preamble.document.get_settings().get_yaml_block(), {"preamble": None}
         )
 
         self.assertEqual(
-            p1.document.get_settings().get_dict()["macros"],
+            p1.document.get_settings().get_yaml_block()["macros"],
             {"a": "cat", "b": "dog", "d": "sheep"},
         )
         self.assertEqual(
-            p2.document.get_settings().get_dict()["macros"],
+            p2.document.get_settings().get_yaml_block()["macros"],
             {"b": "mouse", "c": "giraffe"},
         )
         self.assertEqual(
-            p3.document.get_settings().get_dict()["macros"],
+            p3.document.get_settings().get_yaml_block()["macros"],
             {"c": "elephant", "d": "fly"},
         )
 
@@ -423,7 +423,7 @@ class PreambleTest5(TimRouteTest):
         d = DocEntry.find_by_path(f"{folder}/testdoc")
         d._preamble_docs = None  # Clear cached preamble docs
         d.document.settings_cache = None  # Clear cached settings
-        macros_dict = d.document.get_settings().get_dict().get("macros", {})
+        macros_dict = d.document.get_settings().get_yaml_block().get("macros", {})
 
         self.assertFalse(
             macros_dict.get("is_testgroup1_1", False),
@@ -442,7 +442,7 @@ class PreambleTest5(TimRouteTest):
         d = DocEntry.find_by_path(f"{folder}/testdoc")
         d._preamble_docs = None  # Clear cached preamble docs
         d.document.settings_cache = None  # Clear cached settings
-        macros_dict = d.document.get_settings().get_dict().get("macros", {})
+        macros_dict = d.document.get_settings().get_yaml_block().get("macros", {})
 
         self.assertFalse(
             macros_dict.get("is_testgroup1_1", False),

@@ -718,7 +718,9 @@ def par_response(
     #    )
 
     if extra_doc_settings:
-        settings = DocSettings(doc, settings.get_dict().merge_with(extra_doc_settings))
+        settings = DocSettings(
+            doc, settings.get_yaml_block().merge_with(extra_doc_settings)
+        )
 
     if edit_result and not edit_result.just_preview:
         preview = False

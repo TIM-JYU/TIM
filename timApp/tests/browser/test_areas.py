@@ -11,7 +11,7 @@ class AreasTest(BrowserTest):
     def test_areas(self):
         self.login_browser_quick_test1()
         self.login_test1()
-        ref = self.create_doc(
+        ref = self.try_create_doc(
             initial_par="""
 #- {id=hP7jT8DiV9al}
 par 13
@@ -31,7 +31,7 @@ par 18
 par 21
         """
         )
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #-
 par 1
@@ -237,7 +237,7 @@ par 22
 
     def test_area_delete_par(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {area="a"}
 
@@ -269,7 +269,7 @@ par 2
 
     def test_cut_two_areas(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 par1
 
@@ -309,7 +309,7 @@ par4
 
     def test_edit_multiple_in_area(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {.par1}
 par1
@@ -352,6 +352,8 @@ par8
 
         # Start and end inside a non-collapsible area.
         menu = self.select_pars(".par3", ".par4", toggle_edit=True)
+        if menu is None:
+            self.fail("Menu not found for selection")
         self.edit_selection_and_save(menu)
         pars = self.find_par_elems()
         self.check_par_texts(
@@ -376,6 +378,8 @@ par8
 
         # Start and end inside a collapsible area.
         menu = self.select_pars(".par6", ".par7")
+        if menu is None:
+            self.fail("Menu not found for selection")
         self.edit_selection_and_save(menu)
         pars = self.find_par_elems()
         self.check_par_texts(
@@ -398,7 +402,7 @@ par8
 
     def test_edit_selection_collapsible(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {.par1}
 par1
@@ -426,6 +430,8 @@ par4
 
         # Start outside a collapsible area, end inside.
         menu = self.select_pars(".par1", ".par3", toggle_edit=True)
+        if menu is None:
+            self.fail("Menu not found for selection")
         self.edit_selection_and_save(menu)
         self.find_element("div.areatitle").click()
         pars = self.find_par_elems()
@@ -447,7 +453,7 @@ par4
         ).click()
         self.wait_for_editor_load()
         txtelem = self.find_element(".editorContainer textarea")
-        txt = txtelem.get_attribute("value")
+        txt = txtelem.get_attribute("value") or ""
         txtelem.clear()
         txtelem.send_keys(txt.replace("par", "paredit"))
         self.save_editor()

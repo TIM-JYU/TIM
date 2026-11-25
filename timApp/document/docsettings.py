@@ -36,7 +36,6 @@ if TYPE_CHECKING:
     from timApp.document.document import Document
     from timApp.user.preferences import BookmarkCollection
 
-RECURSIVE_SETTINGS_KEY = "recursive_settings"
 RECURSIVE_SETTINGS_VALUE = "rec"
 
 
@@ -216,7 +215,7 @@ class DocSettings:
     edit_buttons_key = "edit_buttons"
 
     @classmethod
-    def from_paragraph(cls, par: DocParagraph) -> "DocSettings | None":
+    def from_paragraph(cls, par: DocParagraph) -> "DocSettings":
         """Constructs DocSettings from the given DocParagraph.
 
         :param par: The DocParagraph to extract settings from.
@@ -233,12 +232,12 @@ class DocSettings:
             return DocSettings(par.doc, settings_dict=yaml_vals)
 
     def check_recursive_settings(self):
-        d = self.get_dict()
-        rec = d.pop(RECURSIVE_SETTINGS_KEY)
+        d = self.get_yaml_block()
+        rec = d.pop_recursive_settings()
         if not rec:
             return
         ds = self.doc.get_settings()
-        settings = DocSettings(self.doc, ds.get_dict())
+        settings = DocSettings(self.doc, ds.get_yaml_block())
         if rec:
             settings.do_recursive_settings([[rec]])
 
@@ -264,7 +263,7 @@ class DocSettings:
                 for rec_set in rec_sets:
                     # macroinfo = self.get_macroinfo(default_view_ctx)
                     # macros = macroinfo.macro_map
-                    final_settings = self.__dict
+                    final_settings = self.__yaml_block
                     macros = final_settings.get("macros", {})
                     try:
                         yml = rec_set.get("yaml", None)
@@ -288,7 +287,7 @@ class DocSettings:
                             new_settings["charmacros"] = charmacros
 
                         final_settings = final_settings.merge_with(new_settings)
-                        self.__dict = final_settings
+                        self.__yaml_block = final_settings
                     except Exception as e:
                         errors += " " + str(e)
         if errors:
@@ -297,32 +296,40 @@ class DocSettings:
     @staticmethod
     def parse_values(par: DocParagraph) -> YamlBlock:
         md = par.get_markdown()
+        hashkey = hashfunc(md)
         if par.get_attr("settings", "") == RECURSIVE_SETTINGS_VALUE:
-            return YamlBlock({RECURSIVE_SETTINGS_KEY: {"yaml": md}})
-
-        return YamlBlock.from_markdown(md)
+            ret = YamlBlock()
+            ret.set_recursive_settings({"yaml": md})
+        else:
+            ret = YamlBlock.from_markdown(md)
+        ret.settings_hash = hashkey
+        return ret
 
     def get_setting_or_default(self, name: str, default: T) -> T:
         try:
-            return doc_setting_field_map[name].deserialize(self.__dict.get(name))
+            return doc_setting_field_map[name].deserialize(self.__yaml_block.get(name))
         except ValidationError:
             return default
 
     def __init__(self, doc: "Document", settings_dict: YamlBlock | None = None):
         self.doc = doc
-        self.__dict = settings_dict if settings_dict else YamlBlock()
+        self.__yaml_block = settings_dict if settings_dict else YamlBlock()
         self.macroinfo_cache: dict[MacroInfoCacheKey, MacroInfo] = {}
         self._normal_par_cache_key_hash = None
         self._static_macros_cache = {}
         self._static_macros_pum_cache = {}
         self._static_macros_hash_cache = None
 
+    @property
+    def settings_hash(self) -> str:
+        return self.__yaml_block.settings_hash
+
     def to_paragraph(self) -> DocParagraph:
-        text = "```\n" + self.__dict.to_markdown() + "\n```"
+        text = "```\n" + self.__yaml_block.to_markdown() + "\n```"
         return DocParagraph.create(self.doc, md=text, attrs={"settings": ""})
 
-    def get_dict(self) -> YamlBlock:
-        return self.__dict
+    def get_yaml_block(self) -> YamlBlock:
+        return self.__yaml_block
 
     def get_safe_dict(self) -> dict:
         """
@@ -330,17 +337,17 @@ class DocSettings:
         Any sensitive information (macros, globalmacros) is left out.
         :return: Browser-safe dictionary representation of the settings.
         """
-        result = dict(self.__dict.values)
+        result = dict(self.__yaml_block.values)
         result.pop("macros", None)
         result.pop("globalmacros", None)
         result.pop("manageKey", None)
         return result
 
     def global_plugin_attrs(self) -> dict:
-        return self.__dict.get(self.global_plugin_attrs_key, {})
+        return self.__yaml_block.get(self.global_plugin_attrs_key, {})
 
     def css(self):
-        return self.__dict.get(self.css_key)
+        return self.__yaml_block.get(self.css_key)
 
     def get_macroinfo(
         self, view_ctx: ViewContext, user_ctx: UserContext | None = None
@@ -384,61 +391,61 @@ class DocSettings:
         ).with_field_macros()
 
     def get_macro_delimiter(self) -> str:
-        return self.__dict.get(self.macro_delimiter_key, "%%")
+        return self.__yaml_block.get(self.macro_delimiter_key, "%%")
 
     def get_globalmacros(self) -> dict[str, str]:
-        return self.__dict.get(self.globalmacros_key, {})
+        return self.__yaml_block.get(self.globalmacros_key, {})
 
     def get_doctexmacros(self) -> str:
-        return self.__dict.get(self.doctexmacros_key, "")
+        return self.__yaml_block.get(self.doctexmacros_key, "")
 
     def auto_number_questions(self) -> bool:
-        return self.__dict.get(self.no_question_auto_numbering_key, False)
+        return self.__yaml_block.get(self.no_question_auto_numbering_key, False)
 
     def get_source_document(self) -> int | None:
-        return self.__dict.get(self.source_document_key)
+        return self.__yaml_block.get(self.source_document_key)
 
     def get_slide_background_url(self, default=None) -> str | None:
-        return self.__dict.get(self.slide_background_url_key, default)
+        return self.__yaml_block.get(self.slide_background_url_key, default)
 
     def get_slide_background_color(self, default=None) -> str | None:
-        return self.__dict.get(self.slide_background_color_key, default)
+        return self.__yaml_block.get(self.slide_background_color_key, default)
 
     def get_bookmarks(self) -> "BookmarkCollection":
-        return self.__dict.get(self.bookmark_key, [])
+        return self.__yaml_block.get(self.bookmark_key, [])
 
     def get_print_settings(self, default=None):
         if default is None:
             default = []
-        return self.__dict.get(self.print_settings_key, default)
+        return self.__yaml_block.get(self.print_settings_key, default)
 
     def course_group(self):
-        return self.__dict.get(self.course_group_key)
+        return self.__yaml_block.get(self.course_group_key)
 
     def lazy(self, default=False):
-        return self.__dict.get(self.lazy_key, default)
+        return self.__yaml_block.get(self.lazy_key, default)
 
     def set_bookmarks(self, bookmarks: list[dict]):
-        self.__dict[self.bookmark_key] = bookmarks
+        self.__yaml_block[self.bookmark_key] = bookmarks
 
     def set_source_document(self, source_docid: int | None):
-        self.__dict[self.source_document_key] = source_docid
+        self.__yaml_block[self.source_document_key] = source_docid
 
     def auto_number_headings(self) -> int:
-        return self.__dict.get(self.auto_number_headings_key, 0)
+        return self.__yaml_block.get(self.auto_number_headings_key, 0)
 
     def autocounters(self) -> dict:
-        return self.__dict.get(self.autocounters_key, {})
+        return self.__yaml_block.get(self.autocounters_key, {})
 
     def show_velps(self) -> bool:
-        res = self.__dict.get(self.show_velps_key, True)
+        res = self.__yaml_block.get(self.show_velps_key, True)
         return res
 
     def groups(self) -> list[str] | None:
-        g = self.__dict.get(self.group_key, None)
+        g = self.__yaml_block.get(self.group_key, None)
         if g is not None and not isinstance(g, str):
             raise ValueError(f"The setting 'group' must be a string, not {type(g)}")
-        res = self.__dict.get(self.groups_key, None)
+        res = self.__yaml_block.get(self.groups_key, None)
         if res is None:
             return [g] if g else None
         if not (isinstance(res, list) and all(isinstance(e, str) for e in res)):
@@ -449,7 +456,7 @@ class DocSettings:
 
     def auto_number_start(self) -> dict[int, int]:
         result = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
-        val = self.__dict.get(self.auto_number_start_key)
+        val = self.__yaml_block.get(self.auto_number_start_key)
         if isinstance(val, int):
             result[1] = val
         if isinstance(val, dict):
@@ -460,7 +467,7 @@ class DocSettings:
         return result
 
     def heading_format_ret(self, defaults, format_key):
-        hformat = self.__dict.get(format_key)
+        hformat = self.__yaml_block.get(format_key)
         if hformat is None:
             return defaults
         return {
@@ -551,16 +558,16 @@ class DocSettings:
         return self.heading_format_ret(defaults, self.heading_ref_format_key)
 
     def show_task_summary(self, default=False) -> bool:
-        return self.__dict.get(self.show_task_summary_key, default)
+        return self.__yaml_block.get(self.show_task_summary_key, default)
 
     def hide_links(self, default=None):
-        return self.__dict.get(self.hide_links_key, default)
+        return self.__yaml_block.get(self.hide_links_key, default)
 
     def hide_top_buttons(self, default=None):
-        return self.__dict.get(self.hide_top_buttons_key, default)
+        return self.__yaml_block.get(self.hide_top_buttons_key, default)
 
     def pars_only(self, default=None):
-        return self.__dict.get(self.pars_only_key, default)
+        return self.__yaml_block.get(self.pars_only_key, default)
 
     def exam_mode(self) -> str | None:
         return self.get_setting_or_default("exam_mode", None)
@@ -581,7 +588,7 @@ class DocSettings:
     """
 
     def point_sum_rule(self, default=None) -> PointSumRule | None:
-        psr_dict = self.__dict.get(self.point_sum_rule_key, default)
+        psr_dict = self.__yaml_block.get(self.point_sum_rule_key, default)
         if not psr_dict:
             return None
         # noinspection PyBroadException
@@ -591,16 +598,16 @@ class DocSettings:
             return None
 
     def max_points(self, default=None):
-        return self.__dict.get(self.max_points_key, default)
+        return self.__yaml_block.get(self.max_points_key, default)
 
     def live_updates(self, default=None):
-        return self.__dict.get(self.live_updates_key, default)
+        return self.__yaml_block.get(self.live_updates_key, default)
 
     def plugin_md(self, default=True) -> bool:
-        return self.__dict.get(self.plugin_md_key, default)
+        return self.__yaml_block.get(self.plugin_md_key, default)
 
     def nomacros(self, default=False):
-        nm = self.__dict.get(self.nomacros_key, None)
+        nm = self.__yaml_block.get(self.nomacros_key, None)
         if nm is None:
             nm = self.get(self.texplain_key, None)
             if nm is None:
@@ -608,46 +615,48 @@ class DocSettings:
         return nm
 
     def get_charmacros(self, default=None):
-        return self.__dict.get(self.charmacros_key, default)
+        return self.__yaml_block.get(self.charmacros_key, default)
 
     def set_charmacros(self, charmacros: dict):
-        self.__dict[self.charmacros_key] = charmacros
+        self.__yaml_block[self.charmacros_key] = charmacros
 
     def preamble(self, default=DEFAULT_PREAMBLE_DOC):
-        return self.__dict.get(self.preamble_key, default)
+        return self.__yaml_block.get(self.preamble_key, default)
 
     def get(self, key: str, default: Any = None) -> Any:
-        return self.__dict.get(key, default)
+        return self.__yaml_block.get(key, default)
 
     def is_texplain(self):
-        texplain = self.__dict.get(self.texplain_key, False)
+        texplain = self.__yaml_block.get(self.texplain_key, False)
         return texplain
 
     def allow_texplain_macros(self):
-        texplain_macros_allowed = self.__dict.get(self.allow_texplain_macros_key, False)
+        texplain_macros_allowed = self.__yaml_block.get(
+            self.allow_texplain_macros_key, False
+        )
         return texplain_macros_allowed
 
     def is_textplain(self):
-        textplain = self.__dict.get(self.textplain_key, False)
+        textplain = self.__yaml_block.get(self.textplain_key, False)
         return textplain
 
     def show_authors(self, default=False):
-        return self.__dict.get(self.show_authors_key, default)
+        return self.__yaml_block.get(self.show_authors_key, default)
 
     def par_author_only_edit(self, default=False):
-        return self.__dict.get(self.par_author_only_edit_key, default)
+        return self.__yaml_block.get(self.par_author_only_edit_key, default)
 
     def read_expiry(self, default=timedelta(weeks=9999)) -> timedelta:
-        r = self.__dict.get(self.read_expiry_key)
+        r = self.__yaml_block.get(self.read_expiry_key)
         if not isinstance(r, int):
             return default
         return timedelta(minutes=r)
 
     def add_par_button_text(self, default="Add paragraph") -> str:
-        return self.__dict.get(self.add_par_button_text_key, default)
+        return self.__yaml_block.get(self.add_par_button_text_key, default)
 
     def mathtype(self, default="mathjax") -> MathType:
-        return MathType.from_string(self.__dict.get(self.mathtype_key, default))
+        return MathType.from_string(self.__yaml_block.get(self.mathtype_key, default))
 
     def get_static_macros(self):
         """
@@ -735,11 +744,11 @@ class DocSettings:
         )
 
     def math_preamble(self):
-        return self.__dict.get(self.math_preamble_key, "")
+        return self.__yaml_block.get(self.math_preamble_key, "")
 
     def input_format(self):
         return InputFormat.from_string(
-            self.__dict.get(self.input_format_key, "markdown")
+            self.__yaml_block.get(self.input_format_key, "markdown")
         )
 
     def get_dumbo_options(self) -> DumboOptions:
@@ -751,7 +760,7 @@ class DocSettings:
         )
 
     def memo_minutes_settings(self) -> dict | None:
-        macros = self.__dict.get("macros", {})
+        macros = self.__yaml_block.get("macros", {})
         if not isinstance(macros, dict):
             return None
         dates = macros.get("dates", None)
@@ -762,28 +771,28 @@ class DocSettings:
         return {"dates": dates, "knro": knro, "stampformat": stampformat}
 
     def memo_minutes(self) -> bool:
-        return self.__dict.get(self.memo_minutes_key, "")
+        return self.__yaml_block.get(self.memo_minutes_key, "")
 
     def comments(self) -> str:
-        return self.__dict.get(self.comments_key)
+        return self.__yaml_block.get(self.comments_key)
 
     def sisu_require_manual_enroll(self) -> bool:
-        return self.__dict.get(self.sisu_require_manual_enroll_key, False)
+        return self.__yaml_block.get(self.sisu_require_manual_enroll_key, False)
 
     def course_allow_manual_enroll(self) -> bool:
-        return self.__dict.get(self.course_allow_manual_enroll_key, False)
+        return self.__yaml_block.get(self.course_allow_manual_enroll_key, False)
 
     def expire_next_doc_message(self):
-        return self.__dict.get(self.expire_next_doc_message_key)
+        return self.__yaml_block.get(self.expire_next_doc_message_key)
 
     def allow_self_confirm_from(self):
-        return self.__dict.get(self.allow_self_confirm_from_key)
+        return self.__yaml_block.get(self.allow_self_confirm_from_key)
 
     def auto_confirm(self):
-        return self.__dict.get(self.auto_confirm_key)
+        return self.__yaml_block.get(self.auto_confirm_key)
 
     def answer_grace_period(self) -> timedelta:
-        r = self.__dict.get(self.answer_grace_period_key, 5)
+        r = self.__yaml_block.get(self.answer_grace_period_key, 5)
         if not isinstance(r, int):
             return timedelta(minutes=5)
         return timedelta(minutes=r)
@@ -846,7 +855,7 @@ class DocSettings:
 
     def _get_datetime_option(self, key: str) -> datetime | None:
         # PyYAML already deserializes datetimes
-        res = self.__dict.get(key, None)
+        res = self.__yaml_block.get(key, None)
         if res is not None and not isinstance(res, datetime):
             res = self.get_setting_or_default(key, None)
         if res is None:
@@ -942,7 +951,7 @@ class DocSettings:
     def macro_trim_blocks(self) -> bool:
         return self.get_setting_or_default("macro_trim_blocks", True)
 
-    def get_edit_buttons(self, default=None) -> list[dict[str, str]] | None:
+    def get_edit_buttons(self, _default=None) -> list[dict[str, str]] | None:
         return self.get_setting_or_default("edit_buttons", [])
 
 
@@ -975,8 +984,8 @@ def __resolve_final_settings_impl(
             nonlocal had_settings
             if not local_settings:
                 return
-            d = local_settings.get_dict()
-            rec = d.pop(RECURSIVE_SETTINGS_KEY, None)
+            d = local_settings.get_yaml_block()
+            rec = d.pop_recursive_settings()
             if rec:
                 rec_settings.append(rec)
             result = result.merge_with(d)
@@ -997,7 +1006,7 @@ def __resolve_final_settings_impl(
             curr_settings = DocSettings.from_paragraph(curr)
             if is_tr_or_cit and curr_settings:
                 try:
-                    curr_own_settings = curr_settings.get_dict()
+                    curr_own_settings = curr_settings.get_yaml_block()
                 except TimDbException:
                     curr_own_settings = YamlBlock()
 
@@ -1016,17 +1025,17 @@ def __resolve_final_settings_impl(
                 break
             ref_settings, ref_had_settings = __resolve_final_settings_impl(refs)
             if ref_had_settings:
-                recursive = ref_settings.pop(RECURSIVE_SETTINGS_KEY, None)
+                recursive = ref_settings.pop_recursive_settings()
                 if recursive:
                     rec_settings.append(recursive)
                 result = result.merge_with(ref_settings)
                 had_settings = True
                 if is_tr_or_cit and curr_own_settings:
-                    recursive = curr_own_settings.pop(RECURSIVE_SETTINGS_KEY, None)
+                    recursive = curr_own_settings.pop_recursive_settings()
                     if recursive:
                         rec_settings.append(recursive)
                     result = result.merge_with(curr_own_settings)
             else:
                 break
-    result[RECURSIVE_SETTINGS_KEY] = rec_settings
+    result.set_recursive_settings(rec_settings)
     return result, had_settings

@@ -1,5 +1,4 @@
 """Server tests for macros."""
-
 from timApp.auth.accesstype import AccessType
 from timApp.document.specialnames import (
     TEMPLATE_FOLDER_NAME,
@@ -23,7 +22,7 @@ from timApp.util.utils import decode_csplugin
 class MacroTest(TimRouteTest):
     def test_macro_doc(self):
         self.login_test1()
-        doc = self.create_doc(
+        doc = self.try_create_doc(
             settings={"macro_delimiter": "%%", "macros": {"rivi": "kerros"}}
         ).document
         table_text = """
@@ -46,9 +45,9 @@ class MacroTest(TimRouteTest):
 
     def test_user_macros(self):
         self.login_test1()
-        d = self.create_doc(
-            initial_par=r"""
-Username is %%username%% and real name is %%realname%% and email is %%useremail%% and logged name is %%loggedUsername%% and id is %%userid%%
+        d = self.try_create_doc(
+            initial_par=r"""Username is %%username%% and real name is %%realname%% and email is %%useremail%% and 
+            logged name is %%loggedUsername%% and id is %%userid%%
 
 #-
 Percents: \%\%
@@ -66,7 +65,9 @@ header: %%username%% and %%realname%%
 
         pars = self.get(d.url, as_tree=True).cssselect(".parContent")
         self.assertEqual(
-            f"Username is {self.test_user_1.name} and real name is {self.test_user_1.real_name} and email is {self.test_user_1.email} and logged name is {self.test_user_1.name} and id is {self.test_user_1.id}",
+            f"Username is {self.test_user_1.name} and real name is"
+            f" {self.test_user_1.real_name} and email is {self.test_user_1.email}"
+            f" and logged name is {self.test_user_1.name} and id is {self.test_user_1.id}",
             pars[0].text_content().strip(),
         )
         self.assertEqual("Percents: %%", pars[1].text_content().strip())
@@ -82,7 +83,9 @@ header: %%username%% and %%realname%%
         self.assertEqual("testuser1 and Test user 1", p.values["header"])
         self.login_test2()
         self.assertEqual(
-            f"Username is {self.test_user_2.name} and real name is {self.test_user_2.real_name} and email is {self.test_user_2.email} and logged name is {self.test_user_2.name} and id is {self.test_user_2.id}",
+            f"Username is {self.test_user_2.name} and real name is"
+            f" {self.test_user_2.real_name} and email is {self.test_user_2.email}"
+            f" and logged name is {self.test_user_2.name} and id is {self.test_user_2.id}",
             self.get(f"/view/{d.id}", as_tree=True)
             .cssselect(".parContent")[0]
             .text_content()
@@ -97,7 +100,7 @@ header: %%username%% and %%realname%%
 
     def test_user_nocache(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {nocache=true}
 I am %%username%%.
@@ -107,7 +110,7 @@ I am %%username%%.
 
     def test_macro_only_delimiter(self):
         self.login_test1()
-        doc = self.create_doc(settings={"macro_delimiter": "%%"}).document
+        doc = self.try_create_doc(settings={"macro_delimiter": "%%"}).document
         self.new_par(
             doc,
             "{% set a = 123456+1 %}%%a%%",
@@ -117,7 +120,7 @@ I am %%username%%.
 
     def test_null_macros(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 ``` {plugin=showVideo}
 ```
@@ -129,7 +132,7 @@ I am %%username%%.
 
     def test_invalid_macros(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 ``` {plugin=showVideo}
 ```
@@ -142,21 +145,24 @@ I am %%username%%.
 
     def test_doc_macros(self):
         self.login_test1()
-        d = self.create_doc()
+        d = self.try_create_doc()
         d.document.add_paragraph("%%docid%% %%docpath%%")
         e = self.get(d.url, as_tree=True)
         self.assert_content(e, [f"{d.id} {d.path}"])
 
     def test_host_macros(self):
         self.login_test1()
-        d = self.create_doc(initial_par="%%host%%")
+        d = self.try_create_doc(initial_par="%%host%%")
         e = self.get(d.url, as_tree=True)
         self.assert_content(e, [app.config["TIM_HOST"]])
 
-    def test_globalmacros_with_reference(self):
+    def assert_globalmacros_with_reference(self, addforevery_name: str):
         self.login_test1()
-        pp = self.current_user.get_personal_folder().path
-        d = self.create_doc(
+        current_user = self.current_user
+        assert current_user is not None
+        pp = current_user.get_personal_folder().path
+        pp = f"{pp}/{addforevery_name.lower()}"
+        d = self.try_create_doc(
             f"{pp}/a/b/d1",
             initial_par="""
 this is a %%x()%%
@@ -165,31 +171,37 @@ type: cs
 stem: this is a %%x()%%
                             """,
             settings={
-                "globalmacros": {"ADDFOREVERY": "{% macro x() %}cat{% endmacro %}"}
+                "globalmacros": {addforevery_name: "{% macro x() %}cat{% endmacro %}"}
             },
         )
         self.create_doc(
             f"{pp}/a/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}",
             settings={
-                "globalmacros": {"ADDFOREVERY": "{% macro x() %}law{% endmacro %}"}
+                "globalmacros": {addforevery_name: "{% macro x() %}law{% endmacro %}"}
             },
         )
-        d2 = self.create_doc(f"{pp}/a/c/d2", initial_par="""this is the %%x()%%""")
+        d2 = self.try_create_doc(f"{pp}/a/c/d2", initial_par="""this is the %%x()%%""")
         p = d2.document.get_paragraphs()[0].create_reference(d.document)
         d.document.add_paragraph_obj(p)
         d.document.clear_mem_cache()
         tree = self.get(d.url, as_tree=True)
         pars = get_content(tree)
         self.assertEqual(
-            pars[:-2] + pars[-1::], ["", "this is a cat", "this is the law"]
+            ["", "this is a cat", "this is the law"], pars[:-2] + pars[-1::]
         )
         plugins = tree.cssselect("cs-runner")
         self.assertEqual("this is a cat", decode_csplugin(plugins[0])["stem"])
 
+    def test_globalmacros_with_reference(self):
+        self.assert_globalmacros_with_reference("ADDFOREVERY")
+
+    def test_globalmacros_with_cached_and_reference(self):
+        self.assert_globalmacros_with_reference("CADDFOREVERY")
+
     def test_usermacro_in_plugin(self):
         """User-specific macros in plugins."""
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {plugin=csPlugin}
 type: cs
@@ -202,8 +214,9 @@ stem: Hi, %%username%%!
 
     def test_addforevery_only_settings(self):
         self.login_test1()
-        x = self.create_doc(self.get_personal_item_path("x/y"))
+        x = self.try_create_doc(self.get_personal_item_path("x/y"))
         d = self.create_preamble_for(x)
+        assert d is not None
         d.document.add_text(
             """
 #- {settings=""}
@@ -226,7 +239,7 @@ globalmacros:
         )
         db.session.commit()
         self.login(username=script)
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="macros: %%username%% %%realname%% %%useremail%% %%doctitle%%",
             title=script,
         )
@@ -235,7 +248,7 @@ globalmacros:
 
     def test_fieldmacros(self):
         self.login_test1()
-        d = self.create_doc(
+        d = self.try_create_doc(
             initial_par="""
 #- {defaultplugin="textfield"}
 {#field1 #}
@@ -351,5 +364,5 @@ css: |!!
                 },
                 "css": ".red { color: red !important; }",
             },
-            settings.get_dict(),
+            settings.get_yaml_block(),
         )

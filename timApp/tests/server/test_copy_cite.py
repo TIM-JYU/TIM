@@ -24,7 +24,7 @@ class CopyCiteTest(TimRouteTest):
         d2 = self.create_doc(cite=d.id)
         self.assertEqual(
             {"source_document": d.id, "test": "hi"},
-            d2.document.get_settings().get_dict(),
+            d2.document.get_settings().get_yaml_block(),
         )
         d2_pars = d2.document.get_paragraphs()
         self.assertListEqual(

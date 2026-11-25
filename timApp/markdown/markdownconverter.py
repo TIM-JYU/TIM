@@ -14,6 +14,7 @@ from re import Pattern
 from typing import TYPE_CHECKING, Iterable, Any
 from urllib.parse import quote_plus
 
+from flask import has_request_context, g
 from jinja2 import TemplateSyntaxError, pass_context
 from jinja2.runtime import Context
 from lxml import html, etree
@@ -39,6 +40,8 @@ if TYPE_CHECKING:
     from timApp.document.docsettings import DocSettings
     from timApp.document.document import Document
     from timApp.document.macroinfo import MacroInfo
+    from timApp.user.user import User, access_sets
+
 
 heading_re = re.compile(r"<h[1-6]\b", re.IGNORECASE)
 
@@ -254,11 +257,24 @@ class HasRights:
         from timApp.user.user import access_sets
 
         acset = access_sets[acid]
+
         if logged_user:
             user = self.user_ctx.logged_user
         else:
             user = self.user_ctx.user
-        ba = user.has_some_access(self.doc.docinfo, acset)
+
+        if not isinstance(user, User):
+            raise TypeError("User context does not contain a User")
+
+        doc = self.doc
+        if doc is None:
+            raise ValueError("Cannot check rights without a document")
+
+        docinfo = doc.get_docinfo()
+        if docinfo is None:
+            raise ValueError(f"Document {doc.doc_id} not found")
+
+        ba = user.has_some_access(docinfo, acset)
         b = ba is not None
         self.cache[key] = b
         return b
@@ -473,6 +489,65 @@ def timezone_filter(s: object, timezone: object | None = None) -> Any:
 # ------------------------ Jinja filters end ---------------------------------------------------------------
 
 
+def get_addforevery_exports(
+    settings: DocSettings | None,
+    env: TimSandboxedEnvironment,
+    source: str,
+    macros: dict,
+    ctx_key=(),
+):
+    """
+    Get the function exports for the CADDFOREVERY macros.
+
+    Idea is to cache the exports for the CADDFOREVERY macros
+    so that they are not re-evaluated every time as
+    it is done for the ADDFOREVERY macros.
+    The original macros are cached also, so the CADDFOREVERY macros
+    are evaluated in the context of the original macros.
+    If current macros are needed in CADDFOREVERY functions,
+    they should be passed as a parameter to the functions,
+    not used from the "global" context.
+    That makes a difference to current ADDFOREVERY macros,
+    which are evaluated in the with the current macros.
+    The tex macro is an exception, it forces a new exports to be evaluated,
+    because it is used so heavily in the ADDFOREVERY macros and that
+    makes it easier to convert to use CADDFOREVERY.
+    Cache key is based on the settings yaml-block hash, that is calculeted
+    from the original md-text when yaml-block is created.
+    Then key includes also the context key, document id and tex macro.
+    Cache is done to global request g object if possible, that way it is
+    not dependent on the jinja environment that may change between calls
+    in the same request.
+    otherwise to the jinja environment.
+
+    :param settings: current document settings
+    :param env: environment to use for rendering
+    :param source: textual content of the caddforevery macro
+    :param macros: current macros to use for rendering
+    :param ctx_key: context key to use for caching
+    :return: computed exports for the addforevery macros
+    """
+    if has_request_context():
+        store = g.__dict__.setdefault("_caddforevery_cache", {})
+    else:
+        store = env.__dict__.setdefault("_caddforevery_cache", {})
+    if settings is not None:
+        key = (
+            settings.settings_hash,
+            ctx_key,
+            settings.doc.doc_id,
+            macros.get("tex", False),
+        )
+    else:
+        key = (source, ctx_key, macros.get("tex", False))
+    exports = store.get(key)
+    if exports is None:
+        module = env.from_string(source).make_module(dict(macros))
+        exports = {k: v for k, v in vars(module).items() if not k.startswith("_")}
+        store[key] = exports
+    return exports
+
+
 def expand_macros(
     text: str,
     macros,
@@ -482,7 +557,7 @@ def expand_macros(
 ):
     # return text  # comment out when want to take time if this slows things
     charmacros = settings.get_charmacros() if settings else None
-    if charmacros:
+    if isinstance(charmacros, dict):
         for cm_key, cm_value in charmacros.items():
             text = text.replace(cm_key, cm_value)
     if env.counters:
@@ -499,9 +574,17 @@ def expand_macros(
                 if pos >= 0:
                     gm = str(globalmacros.get(gmacro, ""))
                     text = text.replace(macrotext, gm)
-            gm = str(globalmacros.get("ADDFOREVERY", ""))
-            if gm:
-                text = gm + "\n" + text
+            addforevery = str(globalmacros.get("ADDFOREVERY", ""))
+            caddforevery = str(globalmacros.get("CADDFOREVERY", ""))
+            if addforevery:
+                text = addforevery + "\n" + text
+            if caddforevery:
+                base_macros = macros or {}
+                exports = get_addforevery_exports(
+                    settings, env, caddforevery, base_macros
+                )
+                macros = {**base_macros, **exports}
+
         startstr = env.comment_start_string + "LOCAL"
         beg = text.find(startstr)
         if beg >= 0:
@@ -522,7 +605,7 @@ def expand_macros(
         return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:
-            err = check_autonumber_error(e.message)
+            err = check_autonumber_error(e.message or "")
             if err is not None:
                 return get_error_html(err)
             return get_error_html(f"Syntax error in macro template: {e}")
@@ -535,10 +618,12 @@ def expand_macros(
 
 
 def expand_macros_info(text: str, macro_info: "MacroInfo", ignore_errors: bool = False):
+    doc = macro_info.doc
+
     return expand_macros(
         text,
         macro_info.get_macros(),
-        macro_info.doc.get_settings(),
+        doc.get_settings() if doc else None,
         macro_info.jinja_env,
         ignore_errors,
     )
@@ -581,6 +666,8 @@ def get_document_path(doc_id: Any) -> str:
         doc_id_num = int(doc_id)
     else:
         return ""
+    # TODO: Check if interface can be improved to avoid using protected member _block
+    # noinspection PyProtectedMember
     doc = DocEntry.find_by_id(
         doc_id_num,
         docentry_load_opts=[load_only(DocEntry.name), lazyload(DocEntry._block)],
@@ -638,7 +725,10 @@ class GetDocumentSettingMacro:
                     return None
                 doc = self.doc
             else:
-                doc = DocEntry.find_by_id(doc_id).document
+                doc_entry = DocEntry.find_by_id(doc_id)
+                if not doc_entry:
+                    return None
+                doc = doc_entry.document
 
             doc_settings = doc.get_settings()
             allowed_attrs = doc_settings.allowed_docsetting_macro_attributes()
@@ -650,7 +740,7 @@ class GetDocumentSettingMacro:
                 for regex in regexes:
                     allowed_attr_patterns.append(re.compile(regex))
 
-            settings_dict = dict(doc.get_settings().get_dict().values)
+            settings_dict = dict(doc.get_settings().get_yaml_block().values)
             self._settings_cache[doc_id] = settings_dict
             self._allowed_docsetting_macro_attributes[doc_id] = allowed_attr_patterns
 
@@ -675,16 +765,16 @@ class GetDocumentSettingMacro:
 
         for part in parts:
             if isinstance(current_val, list) and part.isdigit():
-                part = int(part)
-                if 0 > part or part >= len(current_val):
+                index = int(part)
+                if index < 0 or len(current_val) <= index:
                     return None
+                current_val = current_val[index]
             elif isinstance(current_val, dict):
                 if part not in current_val:
                     return None
+                current_val = current_val[part]
             else:
                 return None
-
-            current_val = current_val[part]
 
         return current_val
 
@@ -795,6 +885,8 @@ def create_environment(
     env.filters["isview"] = view_ctx.isview
     env.filters["docsetting"] = GetDocumentSettingMacro(doc).get_document_setting
 
+    env.globals["viewroute"] = view_ctx.viewroute
+
     if macros:
         counters = AutoCounters(macros, doc)
         env.set_counters(counters)  # used in print.py
@@ -882,11 +974,24 @@ def par_list_to_html_list(
 
     texplain = settings.is_texplain()
     textplain = settings.is_textplain()
+    """
     if texplain or textplain:  # add pre-markers to tex paragraphs
         for i in range(0, len(texts)):
             text = texts[i]
             if text.find("```") != 0 and text.find("#") != 0:
                 texts[i] = "```\n" + text + "\n```"
+    """
+
+    if texplain or textplain:
+        for i, item in enumerate(texts):
+            text = item if isinstance(item, str) else item["content"]
+            if not text.startswith(("```", "#")):
+                wrapped = "```\n" + text + "\n```"
+                if isinstance(item, str):
+                    texts[i] = wrapped
+                else:
+                    item["content"] = wrapped
+
     raw = call_dumbo(texts, options=dumbo_opts)
 
     # Edit html after dumbo
@@ -1103,6 +1208,9 @@ def insert_heading_numbers(
             except KeyError:
                 e.set("id", f"{curr_id}-{hcount}")
         if auto_number_headings:
+            if heading_format is None:
+                continue
+
             e.text = format_heading(
                 e.text or "",
                 int(e.tag[1]),
@@ -1125,6 +1233,10 @@ def format_heading(
     counters: AutoCounters = None,
     initial_counts: dict[int, int] | None = None,
 ):
+    if initial_counts is None:
+        initial_counts = {}
+    if initial_counts is None:
+        return text  # to make pylint happy, but this should never happen
     counts[level] += 1
     for i in range(level + 1, 7):
         counts[i] = initial_counts.get(i, 0)

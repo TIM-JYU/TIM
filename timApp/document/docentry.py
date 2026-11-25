@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, List
 
 from sqlalchemy import select, ForeignKey, Index
@@ -75,10 +76,11 @@ class DocEntry(db.Model, DocInfo):
 
     @property
     def lang_id(self) -> str | None:
-        if not self.tr:
+        tr = self.tr
+        if not tr:
             return None
-        setattr(self, "lang_id", self.tr.lang_id)
-        return self.tr.lang_id if self.tr else None
+        setattr(self, "lang_id", tr.lang_id)
+        return tr.lang_id if self.tr else None
 
     @lang_id.setter
     def lang_id(self, value: str) -> None:
@@ -106,7 +108,9 @@ class DocEntry(db.Model, DocInfo):
         return run_sql(select(DocEntry).filter_by(id=doc_id)).scalars().all()  # type: ignore
 
     @staticmethod
-    def find_by_id(doc_id: int, docentry_load_opts: Any = None) -> DocInfo | None:
+    def find_by_id(
+        doc_id: int, docentry_load_opts: Sequence[Any] | None = None
+    ) -> DocInfo | None:
         """Finds a DocInfo by id.
 
         TODO: This method doesn't really belong in DocEntry class.
@@ -239,7 +243,7 @@ class DocEntry(db.Model, DocInfo):
         owner_group: UserGroup | None = None,
         title: str | None = None,
         from_file: str | None = None,
-        initial_par: str | None = None,
+        initial_par: str | list[str] | None = None,
         settings: dict | None = None,
         folder_opts: FolderCreationOptions = FolderCreationOptions(),
     ) -> DocEntry:
@@ -278,7 +282,12 @@ class DocEntry(db.Model, DocInfo):
             with open(from_file, encoding="utf-8") as f:
                 document.add_text(f.read())
         elif initial_par is not None:
-            document.add_text(initial_par)
+            if isinstance(initial_par, str):
+                document.add_text(initial_par)
+            elif isinstance(initial_par, list):
+                for text in initial_par:
+                    document.add_text(text)
+
         if settings is not None:
             document.set_settings(settings)
 
@@ -326,12 +335,12 @@ def get_documents(
     if not include_nonpublic:
         stmt = stmt.filter_by(public=True)
     if filter_folder is not None:
-        filter_folder = filter_folder.strip("/") + "/"
-        if filter_folder == "/":
-            filter_folder = ""
-        stmt = stmt.filter(DocEntry.name.like(filter_folder + "%"))
+        folder_prefix = filter_folder.strip("/") + "/"
+        if folder_prefix == "/":
+            folder_prefix = ""
+        stmt = stmt.filter(DocEntry.name.like(folder_prefix + "%"))
         if not search_recursively:
-            stmt = stmt.filter(DocEntry.name.notlike(filter_folder + "%/%"))
+            stmt = stmt.filter(DocEntry.name.notlike(folder_prefix + "%/%"))
     if custom_filter is not None:
         stmt = stmt.filter(custom_filter)
     if query_options is not None:

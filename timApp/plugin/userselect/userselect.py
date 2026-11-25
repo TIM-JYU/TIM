@@ -402,10 +402,13 @@ def search_users(
     for field_obj in field_data:
         fields = field_obj["fields"]
         usr = field_obj["user"]
-        values_to_check: list[str | float | None | None] = [
+        # noinspection PyTypeChecker
+        email: str | None = usr.email
+
+        values_to_check: list[str | float | None] = [
             usr.name,
             usr.real_name,
-            usr.email,
+            email,
             *fields.values(),
         ]
 
@@ -451,6 +454,9 @@ def get_plugin_info(
 
     cur_user = get_current_user_object()
     user_group = UserGroup.get_by_name(username)
+    if user_group is None:
+        raise RouteException(f"Cannot find user {username}")
+
     user_acc = User.get_by_name(user_group.name)
 
     assert user_acc is not None
@@ -1074,8 +1080,9 @@ def apply(
     )
 
     # Better throw an error here. This should prompt the user to at least try again
-    # Unlike with undoing, it's better to get the user to reapply the rights or properly fix them
-    # Moreover, this should encourage the user to report the problem with distribution ASAP
+    # Unlike with undoing, it's better to get the user to reapply the rights or properly fix them.
+    # Moreover, this should encourage the user to report the problem with
+    # distribution ASAP
     if all_errors:
         raise RouteException("\n".join([f"* {error}" for error in all_errors]))
 

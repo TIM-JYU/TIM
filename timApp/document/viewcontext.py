@@ -110,6 +110,9 @@ class ViewContext:
     def copy(self, **changes: Any) -> "ViewContext":
         return replace(self, **changes)
 
+    def viewroute(self) -> str:
+        return self.route.value
+
 
 default_view_ctx = ViewContext(ViewRoute.View, False)
 

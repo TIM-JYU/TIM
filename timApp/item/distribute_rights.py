@@ -218,9 +218,8 @@ class RightLog:
         elif isinstance(r, UnlockOp):
             if curr_right.duration:
                 curr_right.accessible_from = r.timestamp
-                curr_right.accessible_to = (
-                    curr_right.accessible_from
-                    + get_duration_now(curr_right, r.timestamp)
+                curr_right.accessible_to = r.timestamp + get_duration_now(
+                    curr_right, r.timestamp
                 )
             else:
                 # TODO: This shouldn't happen in practice because non-duration rights cannot be unlocked.
@@ -310,15 +309,13 @@ def change_starttime(right: Right, op: ChangeStartTimeGroupOp) -> None:
         # It's not necessarily always desired, but makes sense in exams with non-duration rights.
         if right.accessible_to:
             dur = right.accessible_to - old_acc_from
-            right.accessible_to = right.accessible_from + dur
+            right.accessible_to = op.starttime + dur
     elif right.duration_from:
         dur_to = right.duration_to
         # Keep the difference (duration_to - duration_from) constant.
         unlock_period = dur_to - right.duration_from if dur_to else None
         right.duration_from = op.starttime
-        right.duration_to = (
-            right.duration_from + unlock_period if unlock_period else None
-        )
+        right.duration_to = op.starttime + unlock_period if unlock_period else None
 
 
 def confirm_group(right: Right, op: ConfirmGroupOp) -> None:
@@ -347,7 +344,7 @@ def read_rights(path: Path, index: int) -> tuple[list[RightOp], list[dict]]:
 
 def do_register_right(op: RightOp, target: str) -> tuple[RightLog | None, str | None]:
     rights, right_log_path = get_current_rights(target)
-    if not isinstance(op, GroupOps):
+    if not isinstance(op, (ChangeTimeGroupOp, ChangeStartTimeGroupOp, ConfirmGroupOp)):
         latest_op = rights.latest_op(op.email)
         if (
             latest_op
@@ -393,7 +390,11 @@ def do_dist_rights(
     target: str,
     distribute_target: str | None = None,
 ) -> list[str]:
-    emails = rights.group_cache[op.group] if isinstance(op, GroupOps) else [op.email]
+    if isinstance(op, (ChangeTimeGroupOp, ChangeStartTimeGroupOp, ConfirmGroupOp)):
+        emails = rights.group_cache[op.group]
+    else:
+        emails = [op.email]
+
     session = FuturesSession(
         max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"],
         adapter_kwargs={"max_retries": dist_retry},
@@ -517,6 +518,7 @@ def receive_right(
     for r in rights:
         ug = group_map[r.email]
         right = r.right
+        # TODO: Expected type 'timedelta | None', got 'Duration | None' instead
         grant_access(
             ug,
             item,
@@ -583,6 +585,8 @@ def change_starttime_route(
     if not start_time_group:
         raise RouteException(f"{conf_name} not configured.")
     ug = UserGroup.get_by_name(start_time_group)
+    if ug is None:
+        raise RouteException(f"Start time group not found: {start_time_group}")
     if u not in ug.users and not u.is_admin:
         raise AccessDenied("You are not in the group that can change the start time.")
     curr_time = get_current_time()
@@ -673,16 +677,26 @@ def distribute_current_rights(target: str, hosts: list[str], group: str) -> Resp
     host_config = app.config["DIST_RIGHTS_HOSTS"][target]
     dist_rights_send_secret = get_secret_or_abort("DIST_RIGHTS_SEND_SECRET")
     rights_to_send = []
+    errors: list[str] = []
     # Unlike in do_dist_rights, we should apply the rights only to those users who have some operation in the log.
     # That is, if there was no operation applied to the user, don't distribute their right.
     for u in ug.users:
-        op = rights.latest_op(u.email)
+        email = u.email
+        if not isinstance(email, str) or not email:
+            errors.append(f"User {u.name} has no email address; skipped")
+            continue
+
+        op = rights.latest_op(email)
         if op is None:
             continue
         rights_to_send.append({"email": u.email, "right": op.right})
 
     dist_config = get_dist_right_network()
-    host_urls = [hu for h in hosts if (hu := dist_config.hosts.get(h))]
+    host_urls: list[str] = []
+    for h in hosts:
+        hu = dist_config.hosts.get(h)
+        if hu:
+            host_urls.append(hu)
 
     session = FuturesSession(
         max_workers=app.config["DIST_RIGHTS_WORKER_THREADS"],
@@ -704,11 +718,15 @@ def distribute_current_rights(target: str, hosts: list[str], group: str) -> Resp
         )
         futures.append(r)
 
-    errors = collect_errors_from_hosts(futures, host_urls)
+    errors.extend(collect_errors_from_hosts(futures, host_urls))
 
     if errors:
         log_warning(f"Right distribution failed for some hosts: {errors}")
-        raise RouteException(f"Right distribution failed for some hosts: {errors}")
+        raise RouteException(
+            f"Right distribution encountered errors. "
+            f"Some rights may have been distributed successfully. "
+            f"Errors: {errors}"
+        )
 
     return json_response(
         {"applied_count": len([r["email"] for r in rights_to_send]), "hosts": host_urls}

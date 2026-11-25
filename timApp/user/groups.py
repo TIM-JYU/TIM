@@ -292,7 +292,7 @@ def add_group_infofield_template(doc: DocInfo):
 def update_group_doc_settings(
     doc: DocInfo, group_name: str, extra_macros: dict[str, Any] = None
 ):
-    s = doc.document.get_settings().get_dict().get("macros", {})
+    s = doc.document.get_settings().get_yaml_block().get("macros", {})
     s["group"] = group_name
     s["fields"] = ["info"]
     s["maxRows"] = "40em"  # max rows for group list

@@ -8,6 +8,7 @@ import yaml
 from yaml import YAMLError, CSafeLoader, Event, AliasEvent, NodeEvent
 from yaml.scanner import ScannerError
 
+from timApp.document.randutils import hashfunc
 from timApp.util.utils import count_chars_from_beginning
 
 
@@ -47,6 +48,8 @@ class YamlBlock:
     def __init__(self, values: dict = None, merge_hints: YamlMergeInfo | None = None):
         self.values = values if values is not None else {}
         self.merge_hints = merge_hints
+        self.settings_hash = ""
+        self._recursive_settings = None
 
     def __eq__(self, o: object) -> bool:
         if isinstance(o, self.__class__):
@@ -72,17 +75,30 @@ class YamlBlock:
 
     @staticmethod
     def from_markdown(md: str):
+        source_hash = hashfunc(md)
         md = strip_code_block(md)
         values, hints = parse_yaml(md)
-        return YamlBlock(values=values, merge_hints=hints)
+        result = YamlBlock(values=values, merge_hints=hints)
+        result.settings_hash = source_hash
+        return result
 
     def merge_with(self, other: "YamlBlock"):
         new_vals = deepcopy(self.values)
         merge(new_vals, other.values, other.merge_hints)
-        return YamlBlock(values=new_vals, merge_hints=other.merge_hints)
+        result = YamlBlock(values=new_vals, merge_hints=other.merge_hints)
+        result.settings_hash = hashfunc(f"{self.settings_hash}:{other.settings_hash}")
+        return result
 
     def to_markdown(self):
         return yaml.dump(self.values, default_flow_style=False)
+
+    def set_recursive_settings(self, value):
+        self._recursive_settings = value
+
+    def pop_recursive_settings(self):
+        rec = self._recursive_settings
+        self._recursive_settings = None
+        return rec
 
 
 missing_space_after_colon = re.compile(
@@ -133,12 +149,12 @@ def compare_same(s1: str, s2: str, n: int) -> bool:
 
 def correct_obj(text: str) -> str:
     """
-    Also gives an other way to write unindented object attributes, by starting
-    the attribute like: `object: @!!`  (`!!` could any combinations of chars except space
+    Also gives another way to write unindented object attributes, by starting
+    the attribute like: `object: @!!`  (`!!` could any combinations of chars except space)
     and ending it by `!!` in first column.
 
-    :param text: Text to convert to proper yaml.
-    :return: Text that is proper yaml obj
+    :param text: Text to convert to proper YAML.
+    :return: Text that is proper YAML obj
     """
     """
      Problem analyze:
@@ -197,7 +213,7 @@ def correct_obj(text: str) -> str:
         multiline = False
         multiline_string = False
         end_str = ""
-        indent = None
+        indent: str = ""
         multiline_first_indent = None
         original_indent_len = 0
         max_allowed_spaces = 0
@@ -207,7 +223,7 @@ def correct_obj(text: str) -> str:
             r2 = multiline_unindented_string.match(line)
             if (
                 r2 and not multiline
-            ):  # we have multiline string and we do nothing until it ends
+            ):  # we have multiline string, and we do nothing until it ends
                 end_str = r2.group(5)
                 indent = r2.group(1)
                 max_allowed_spaces = original_indent_len = len(indent)
@@ -268,12 +284,12 @@ def correct_obj(text: str) -> str:
 
 def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
     """Inserts missing spaces after `:` Like  `width:20` => `width: 20`
-    Also gives an other way to write multiline attributes, by starting
-    the multiline like: `program: |!!`  (`!!` could any combinations of chars except space
+    Also gives another way to write multiline attributes, by starting
+    the multiline like: `program: |!!`  (`!!` could any combinations of chars except space)
     and ending it by `!!` in first column.
 
-    :param text: Text to convert to proper yaml.
-    :return: Text that is proper yaml.
+    :param text: Text to convert to proper YAML.
+    :return: Text that is proper YAML.
     """
     # don't use splitlines here - it loses the possible last trailing newline character, and we don't want that.
     if (
@@ -284,7 +300,7 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
     s = ""
     multiline = False
     end_str = ""
-    indent = None
+    indent: str = ""
     merge_hints = {}
     encountered_keys = set()
     multiline_first_indent = None
@@ -443,10 +459,10 @@ def merge(a: dict, b: dict, merge_info: YamlMergeInfo | None = None):
     :param b: The second dictionary.
 
     """
-    return __merge_helper(a, b, 0, merge_info=merge_info)
+    __merge_helper(a, b, 0, merge_info=merge_info)
 
 
-default_append_keys = {"css", "themes"}
+default_append_keys = {"css", "themes", "ADDFOREVERY", "CADDFOREVERY"}
 
 
 def __merge_helper(
@@ -458,7 +474,7 @@ def __merge_helper(
                 __merge_helper(a[key], b[key], depth + 1, merge_info)
             elif a[key] == b[key]:
                 pass
-            elif type(a[key]) != type(b[key]):
+            elif type(a[key]) is not type(b[key]):
                 a[key] = b[key]
             else:
                 m = (

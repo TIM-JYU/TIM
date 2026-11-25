@@ -725,7 +725,7 @@ def create_management_doc(
     )
 
     apply_template(doc)
-    s = doc.document.get_settings().get_dict().get("macros", {})
+    s = doc.document.get_settings().get_yaml_block().get("macros", {})
     s["messagelist"] = list_options.name
     doc.document.add_setting("macros", s)
 

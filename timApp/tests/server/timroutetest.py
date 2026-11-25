@@ -952,6 +952,7 @@ class TimRouteTestBase(TimDbTest):
         template: str | None = None,
         title: str | None = None,
         expect_status: int = 200,
+        edit: list[tuple[str, str]] | None = None,
         **kwargs: object,
     ) -> DocEntry | None:
         """Creates a new document.
@@ -965,6 +966,7 @@ class TimRouteTestBase(TimDbTest):
         :param template:
         :param title: document title. If None, a default title is generated.
         :param expect_status:
+        :param edit: A list of (paragraph_id, new_text) tuples to edit the document after creation.
         :return: The DocEntry object.
 
         """
@@ -1011,7 +1013,7 @@ class TimRouteTestBase(TimDbTest):
                 cite=cite,
             )
         doc = de.document
-        self.init_doc(doc, from_file, initial_par, settings)
+        self.init_doc(doc, from_file, initial_par, settings, edit)
         return de
 
     def try_create_doc(
@@ -1025,6 +1027,7 @@ class TimRouteTestBase(TimDbTest):
         template: str | None = None,
         title: str | None = None,
         expect_status: int = 200,
+        edit: list[tuple[str, str]] | None = None,
         **kwargs: object,
     ) -> DocEntry:
         de = self.create_doc(
@@ -1037,6 +1040,7 @@ class TimRouteTestBase(TimDbTest):
             template,
             title,
             expect_status,
+            edit,
             **kwargs,
         )
         assert de is not None, f"Document creation failed with status {expect_status}"
