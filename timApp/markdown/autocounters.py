@@ -498,7 +498,7 @@ class AutoCounters:
                     hname = self.get_base_name(orig_name)
                 if self.auto_name_plugin:
                     prefix = ""
-                def_counter = {
+                def_counter: dict[str, str | int] = {
                     "v": value,  # just value, mostly numeric
                     "p": pure,  # formatted value
                     "s": show,  # show in place of counter
