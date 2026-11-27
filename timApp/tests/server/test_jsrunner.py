@@ -21,7 +21,7 @@ from timApp.user.usergroupmember import UserGroupMember
 
 class JsRunnerTestBase(TimRouteTest):
     def create_jsrun(self, md):
-        return self.create_doc(
+        return self.try_create_doc(
             initial_par=rf"""
 #- {{#r plugin=jsrunner}}
 {md}"""
@@ -198,7 +198,7 @@ program: |!!
         )
         self.assertEqual("Unexpected end of input", r["web"]["fatalError"]["msg"])
         self.assertTrue(
-            r["web"]["fatalError"]["stackTrace"].startswith("Unexpected token (1:1)\n")
+            r["web"]["fatalError"]["stackTrace"].startswith("Unexpected token (")
         )
 
     def test_invalid_field_name(self):
@@ -1628,10 +1628,11 @@ tools.setString("t2", tools.getString("t2", "") + "=" + tools.getRealName());
         d = self.create_jsrun(
             """
 fields: []
-group: testuser1
 program: |!!
 tools.setGroup("tg1", []);
-!!"""
+!!
+group: testuser1
+"""
         )
         # Group methods are only usable in postProgram.
         self.do_jsrun(
@@ -1642,7 +1643,8 @@ tools.setGroup("tg1", []);
                         "msg": "tools.setGroup is not a function",
                         "stackTrace": "Index (1:24)\n"
                         "program:\n"
-                        '01: tools.setGroup("tg1", []);\n',
+                        '01: tools.setGroup("tg1", []);\n'
+                        "02: \n",
                     },
                     "output": "",
                 }

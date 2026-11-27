@@ -1,7 +1,9 @@
 import functools
+import re
 
 from dataclasses import dataclass, fields
 from datetime import timedelta, datetime, timezone
+from html import unescape
 from typing import (
     Optional,
     Iterable,
@@ -26,11 +28,17 @@ from timApp.document.randutils import hashfunc
 from timApp.document.specialnames import DEFAULT_PREAMBLE_DOC
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
-from timApp.document.yamlblock import YamlBlock
+from timApp.document.yamlblock import YamlBlock, correct_yaml, merge, YamlMergeInfo
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from tim_common.dumboclient import MathType, DumboOptions, InputFormat
 from tim_common.markupmodels import AnswerBrowserInfo
 from tim_common.marshmallow_dataclass import field_for_schema
+
+GLOBALMACROS_KEY = "globalmacros"
+ADDFOREVERY_KEY = "ADDFOREVERY"
+GLOBALMACROS_RE = re.compile(
+    rf"^{re.escape(GLOBALMACROS_KEY)}:.*?(?=^\S|\Z)", re.M | re.S
+)
 
 if TYPE_CHECKING:
     from timApp.document.document import Document
@@ -163,7 +171,6 @@ T = TypeVar("T")
 class DocSettings:
     global_plugin_attrs_key = "global_plugin_attrs"
     css_key = "css"
-    globalmacros_key = "globalmacros"
     doctexmacros_key = "doctexmacros"
     macro_delimiter_key = "macro_delimiter"
     source_document_key = "source_document"
@@ -242,6 +249,24 @@ class DocSettings:
         if rec:
             settings.do_recursive_settings([[rec]])
 
+    @staticmethod
+    def split_globalmacros(text: str) -> tuple[str, str]:
+        """Extract the globalmacros section from the text.
+
+        :param text: The complete configuration text.
+        :return: A tuple containing the remaining text and the extracted
+            globalmacros section.
+        """
+
+        m = GLOBALMACROS_RE.search(text)
+
+        if not m:
+            return text, ""
+
+        globalmacros = m.group()
+        remaining = text[: m.start()] + text[m.end() :]
+        return remaining, globalmacros
+
     def do_recursive_settings(self, rec_settings: list[list[dict[str, str]]]):
         # Change to code below if you want fieldmacros and urlmacros to be
         # resolved in recursive settings, but it might lead to some
@@ -256,28 +281,49 @@ class DocSettings:
         changes = True
         loops = 0
         errors = ""
+        globalmacros = {}
+        settings_to_merge = DocSettings(self.doc, self.__dict)
+        # collect globalmacros and merge hints for each recursive setting
+        gmstrs: list[tuple[str, YamlMergeInfo] | None] = [None] * sum(
+            len(r) for r in rec_settings
+        )
         while changes and loops < 10:
             changes = False
             loops += 1
             errors = ""
+            index = -1
             for rec_sets in rec_settings:
                 for rec_set in rec_sets:
                     # macroinfo = self.get_macroinfo(default_view_ctx)
                     # macros = macroinfo.macro_map
-                    final_settings = self.__dict
+                    index += 1
+                    final_settings = settings_to_merge.__dict
                     macros = final_settings.get("macros", {})
+                    yml = ""
                     try:
                         yml = rec_set.get("yaml", None)
                         if not yml:
                             continue
-                        yml = expand_macros(
-                            yml, doc_macros | macros | user_preserving_macros, self, env
+                        yml, merge_hints = correct_yaml(yml)
+                        yml, gm_str = self.split_globalmacros(yml)
+                        gmstrs[index] = (gm_str, merge_hints)
+                        eyml = expand_macros(
+                            yml,
+                            doc_macros | macros | user_preserving_macros,
+                            settings_to_merge,
+                            env,
                         )
+                        if eyml.startswith("<"):  # HTML error message
+                            eyml = unescape(re.sub(r"<[^>]+>", "", str(eyml)))
+                            errors += "\n" + eyml + "\n" + yml
+                            continue
+                        yml = eyml
+
                         if yml != rec_set.get("prevyaml", ""):
                             changes = True
                             rec_set["prevyaml"] = yml
                     except Exception as e:
-                        errors += " " + str(e)
+                        errors += "\n" + str(e) + "\n" + str(yml)
                         continue
                     try:
                         new_settings = YamlBlock.from_markdown(yml)
@@ -288,11 +334,22 @@ class DocSettings:
                             new_settings["charmacros"] = charmacros
 
                         final_settings = final_settings.merge_with(new_settings)
-                        self.__dict = final_settings
+                        settings_to_merge.__dict = final_settings
+
                     except Exception as e:
-                        errors += " " + str(e)
+                        errors += " " + str(e) + " " + yml
+        for gm_str, merge_hints in gmstrs:
+            if gm_str:
+                gm = yaml.safe_load(gm_str).get(GLOBALMACROS_KEY, {})
+                merge(globalmacros, gm, merge_hints)
         if errors:
-            raise TimDbException(f"Recursive calculation error : {errors}")
+            raise TimDbException(f"Recursive settings error : {errors}")
+        if settings_to_merge:
+            self.__dict = settings_to_merge.__dict.merge_with(self.__dict)
+        if globalmacros:
+            hints = self.__dict.merge_hints or {}
+            merge(globalmacros, self.__dict.get(GLOBALMACROS_KEY, {}), hints)
+            self.__dict[GLOBALMACROS_KEY] = globalmacros
 
     @staticmethod
     def parse_values(par: DocParagraph) -> YamlBlock:
@@ -332,7 +389,7 @@ class DocSettings:
         """
         result = dict(self.__dict.values)
         result.pop("macros", None)
-        result.pop("globalmacros", None)
+        result.pop(GLOBALMACROS_KEY, None)
         result.pop("manageKey", None)
         return result
 
@@ -387,7 +444,7 @@ class DocSettings:
         return self.__dict.get(self.macro_delimiter_key, "%%")
 
     def get_globalmacros(self) -> dict[str, str]:
-        return self.__dict.get(self.globalmacros_key, {})
+        return self.__dict.get(GLOBALMACROS_KEY, {})
 
     def get_doctexmacros(self) -> str:
         return self.__dict.get(self.doctexmacros_key, "")
@@ -979,7 +1036,7 @@ def __resolve_final_settings_impl(
             rec = d.pop(RECURSIVE_SETTINGS_KEY, None)
             if rec:
                 rec_settings.append(rec)
-            result = result.merge_with(d)
+            result = result.merge_with(d, do_merge_hints=True)
             had_settings = True
 
         if not curr.is_setting():

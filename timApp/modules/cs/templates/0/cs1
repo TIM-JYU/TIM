@@ -2,7 +2,7 @@ c# main
 c# program with only main visible
 ``` {#PLUGINNAMEHERE plugin="csPlugin"}
 type: cs
-fullprogram: |!!
+fullprogram: |0!!
 public class HelloWorld
 {
     public static void Main()

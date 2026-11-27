@@ -91,7 +91,7 @@ class PrintingTest(TimRouteTest):
             expect_status=201,
             expect_content={"success": True, "url": expected_url},
         )
-        result = self.get_no_warn(expected_url)
+        result = self.get_no_warn(expected_url).strip()
         self.assertEqual("Hello 1\n\nHello 2", result)
         t2 = DocEntry.find_by_path(f"{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/base")
         tj2 = json.loads(to_json_str(t2))
@@ -164,7 +164,7 @@ not header x
         }
         r = self.get(d.url, as_tree=True)
         self.assertTrue(r.cssselect(".parContent table"))
-        r = self.get_no_warn(f"/print/{d.path}", query_string=params_url)
+        r = self.get_no_warn(f"/print/{d.path}", query_string=params_url).strip()
         self.assertEqual(
             r"""
 \hypertarget{first}{%
@@ -221,11 +221,11 @@ not header & x \\
 \bottomrule()
 \end{longtable}
         """
-        self.assertEqual(no_numbers.strip(), r)
+        self.assertEqual(no_numbers.strip(), r.strip())
         d.document.set_settings({})
         self.get(d.url, as_tree=True)
         r = self.get_no_warn(f"/print/{d.path}", query_string=params_url)
-        self.assertEqual(no_numbers.strip(), r)
+        self.assertEqual(no_numbers.strip(), r.strip())
 
     def create_empty_print_template(self):
         p = f"{self.current_user.get_personal_folder().path}/{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/empty"

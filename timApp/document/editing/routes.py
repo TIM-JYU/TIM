@@ -639,15 +639,23 @@ def preview_paragraphs(doc_id):
         edit_result = DocumentEditResult(just_preview=True)
         if doc.vr:
             edit_result.warnings = doc.vr.get_as_html()
-        return par_response(
-            blocks,
-            docinfo,
-            proofread,
-            edit_request=edit_request,
-            edit_result=edit_result,
-            extra_doc_settings=extra_doc_settings,
-            show_errors=True,
-        )
+        try:
+            return par_response(
+                blocks,
+                docinfo,
+                proofread,
+                edit_request=edit_request,
+                edit_result=edit_result,
+                extra_doc_settings=extra_doc_settings,
+                show_errors=True,
+            )
+        except Exception as e:
+            # return json_response({"error": str(e)}, status_code=400)
+            ret = f"""<div class="par" attrs="{{}}">
+                      <div class="parContent pluginError">
+                      <p class="errormsg">{str(e)}</p>
+                      </div></div>"""
+            return json_response({"texts": ret, "js": [], "css": []})
     else:
         comment_html = md_to_html(text)
         if proofread:

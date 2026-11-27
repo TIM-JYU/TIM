@@ -415,7 +415,7 @@ Pöytäkirjanotteen vakuudeksi:
 Olli Ollinen\\
 Yliopistonopettaja\\
         """.strip(),
-            ote1_tex,
+            ote1_tex.strip(),
         )
         ote2 = DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/lista2")
         ote2_tex = self.get_no_warn(
@@ -584,7 +584,7 @@ Opintopäällikkö\\
 Olli Ollinen\\
 Yliopistonopettaja\\
         """.strip(),
-            ote2_tex,
+            ote2_tex.strip(),
         )
         self.assertIsNone(
             DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/lista3")

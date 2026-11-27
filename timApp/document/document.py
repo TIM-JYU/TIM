@@ -348,15 +348,17 @@ class Document:
         if own_rec_settings:
             rec_settings.append(own_rec_settings)
         settings = DocSettings(self, settings_dict=final_settings)
-        self.settings_cache = settings
         if rec_settings:
             try:
                 settings.do_recursive_settings(rec_settings)
             except TimDbException as e:
                 if show_errors:
-                    raise TimDbException(e)
+                    from timApp.util.flask.requesthelper import RouteException
+
+                    raise RouteException(str(e))
                 pass
 
+        self.settings_cache = settings
         return settings
 
     def create(self, ignore_exists: bool = False):

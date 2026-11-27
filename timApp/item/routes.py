@@ -532,7 +532,7 @@ def goto_view(item_path, model: ViewParams) -> FlaskViewResult:
 
 
 def process_anonymous_access(doc_info: DocInfo, commit: bool = False) -> None:
-    doc_settings = doc_info.document.get_settings()
+    doc_settings = doc_info.document.get_settings(show_errors=False)
     anon_login = doc_settings.anonymous_login()
     cur_user = get_current_user_object()
 
