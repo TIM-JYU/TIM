@@ -526,8 +526,7 @@ export class JsframeComponent
         }
 
         const iframeopts =
-            this.markup.iframeopts ??
-            "sandbox='allow-scripts allow-same-origin allow-popups'";
+            this.markup.iframeopts ?? "sandbox='allow-scripts allow-popups'";
 
         const opts = parseIframeopts(iframeopts, src);
         const sandbox = opts.sandbox;

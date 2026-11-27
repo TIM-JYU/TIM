@@ -510,6 +510,7 @@ class Plugin:
             "targetFormat": options.target_format.value,
             "review": options.review,
             "current_user_id": options.user_ctx.logged_user.name,
+            "plugin_kind": self.type,
         }
 
     def get_content_field_name(self):

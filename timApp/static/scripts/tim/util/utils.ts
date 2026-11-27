@@ -873,12 +873,15 @@ export function truncate(text: string, max: number) {
     return text;
 }
 
-export function parseIframeopts(iframeopts: string, framesrc: string) {
+export function parseIframeopts(
+    iframeopts: string,
+    framesrc: string
+): {sandbox: string; allow: string | null} {
     const parse = Range.prototype.createContextualFragment.bind(
         document.createRange()
     );
     const parsed = parse(`<div ${iframeopts}></div>`);
-    let sandbox = "";
+    let sandbox: string = "";
     let allow = null;
     for (const c of parsed.firstElementChild?.attributes ?? []) {
         if (c.name === "sandbox") {
@@ -886,6 +889,9 @@ export function parseIframeopts(iframeopts: string, framesrc: string) {
         }
         if (c.name === "allow") {
             allow = c.value;
+            if (allow === "null") {
+                allow = null;
+            }
         }
         // TODO: Handle possible other iframe options.
     }
