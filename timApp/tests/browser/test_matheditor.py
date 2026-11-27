@@ -259,7 +259,7 @@ autosave: true
             Keys.SHIFT
         ).perform()
         dollar_button.click()
-        sleep(0.1)
+        sleep(0.4)
         ActionChains(self.drv).send_keys("A").perform()
         self.wait_until_present_and_vis("#cshighlight cs-ace-editor")
         element = self.find_element("#cshighlight cs-ace-editor")
@@ -272,7 +272,7 @@ autosave: true
             Keys.SHIFT
         ).perform()
         dollar_button.click()
-        sleep(0.1)
+        sleep(0.4)
         ActionChains(self.drv).send_keys("A").perform()
         self.get_uninteractable_element().click()
         self.goto_document(d)

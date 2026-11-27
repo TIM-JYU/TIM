@@ -272,7 +272,7 @@ class Plugin:
             par, user
         )  # TODO: RND_SEED get users rnd_seed for this plugin
         if par.answer_nr is not None:
-            rnd_seed = SeedClass(rnd_seed, par.answer_nr)
+            rnd_seed = SeedClass(rnd_seed, par.answer_nr, par.is_new_task())
         par.insert_rnds(rnd_seed)
         plugin_data = parse_plugin_values(
             par,
