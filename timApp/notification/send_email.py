@@ -141,7 +141,9 @@ def multi_send_email_impl(
                 bccmail = ""
                 extra = "\n\n" + "\n".join(rcpts)
         try:
-            if not s:
+            if s:
+                s.set_debuglevel(1)
+            if s:
                 s.login(mail_from, app.config["MAIL_PASSWORD"])
             for rcp in mail_targets:
                 try:
@@ -182,7 +184,7 @@ def multi_send_email_impl(
                     smtplib.SMTPDataError,
                     smtplib.SMTPNotSupportedError,
                 ) as e:
-                    log_error(str(e))
+                    log_error("MAIL: " + str(e))
                 else:
                     pass
         finally:
