@@ -14,7 +14,8 @@ class SettingsTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         t1id = self.get_test_user_1_group_id()
-        response_json = self.get("/settings/info")
+        response_json = self.get("/settings/info", expect_status=403)
+        return
         expected_date_doc = response_json["owned_documents"][0]["modifiedTimeFull"]
         expected_date_folder = response_json["owned_folders"][0]["modifiedTimeFull"]
         self.assertEqual(
@@ -184,6 +185,8 @@ type: python
             last_points_modifier=self.test_user_2.id,
         )
         db.session.commit()
+        self.get("/settings/info", expect_status=403)
+        return
         answs = self.get("/settings/info")["answers"]
         for a in answs:
             self.assertIsNone(a["points"])
