@@ -27,6 +27,16 @@ import {AnnotationComponent} from "tim/velp/annotation.component";
 import * as velpSelection from "tim/velp/velpSelection";
 import {staticDynamicImport} from "tim/staticDynamicImport";
 import {AppModule} from "tim/app.module";
+import {BadgeComponent} from "tim/gamification/badge/badge.component";
+import {BadgeViewerComponent} from "tim/gamification/badge/badge-viewer.component";
+import {BadgeCreatorComponent} from "tim/gamification/badge/badge-creator.component";
+import {BadgeGiverComponent} from "tim/gamification/badge/badge-giver.component";
+import {BadgeWithdrawComponent} from "tim/gamification/badge/badge-withdraw.component";
+import {BadgeLeaderboardComponent} from "tim/gamification/badge/badge.leaderboard";
+import {BadgeUserLeaderboardComponent} from "tim/gamification/badge/badge.user.leaderboard";
+import {NameChangerComponent} from "tim/plugin/group-dashboard/name-changer.component";
+import {GroupDashboardComponent} from "tim/plugin/group-dashboard/group-dashboard.component";
+import {SubgroupsManagerComponent} from "tim/user/subgroups-manager.component";
 import {HeaderComponent} from "tim/header/header.component";
 import {CreateItemComponent} from "tim/item/create-item.component";
 import {TimAlertComponent} from "tim/ui/tim-alert.component";
@@ -154,6 +164,16 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timUserProfile", UserProfileComponent);
     doDowngrade(dg, "timParticipantList", ParticipantListComponent);
     doDowngrade(dg, "timCourseManager", CourseManagerComponent);
+    doDowngrade(dg, "timBadge", BadgeComponent);
+    doDowngrade(dg, "timBadgeViewer", BadgeViewerComponent);
+    doDowngrade(dg, "timBadgeCreator", BadgeCreatorComponent);
+    doDowngrade(dg, "timBadgeGiver", BadgeGiverComponent);
+    doDowngrade(dg, "timBadgeWithdraw", BadgeWithdrawComponent);
+    doDowngrade(dg, "timNameChanger", NameChangerComponent);
+    doDowngrade(dg, "timBadgeLeaderboard", BadgeLeaderboardComponent);
+    doDowngrade(dg, "timBadgeUserLeaderboard", BadgeUserLeaderboardComponent);
+    doDowngrade(dg, "timGroupDashboard", GroupDashboardComponent);
+    doDowngrade(dg, "timSubgroupsManager", SubgroupsManagerComponent);
     return dg;
 }
 

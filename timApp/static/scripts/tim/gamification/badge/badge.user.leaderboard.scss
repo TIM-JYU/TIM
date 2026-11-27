@@ -1,0 +1,125 @@
+// Styles for tim-badge-user-leaderboard. The layout mirrors badge.leaderboard.scss,
+// but the podium is ten places wide instead of five, and each place is labelled with a
+// CSS medallion rather than an SVG from the material-design-icons vendor folder: that
+// folder only carries counter icons up to 5, and Material Symbols has no counter_10 to
+// complete the set with.
+
+.no-badges-txt {
+  color: darkgrey;
+  font-style: italic;
+}
+
+.viewer-container {
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 30px 200px #0000cc38, 0 0 20px #0F0C0020;
+  padding: 1em;
+  border-radius: 1em;
+  margin: 2em 0;
+  width: 100%;
+  background-color: #fff;
+  z-index: 10;
+}
+
+.leaderboard {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  font-weight: bold;
+  padding-top: 32px;
+  // Ten places do not fit a narrow screen even fully shrunk, so let the podium scroll
+  // sideways instead of squeezing the names into unreadable columns.
+  overflow-x: auto;
+}
+
+.position {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 100px;
+  min-width: 70px;
+}
+
+.rank {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  background: #e8e8e8;
+  border: 2px solid #c8c8c8;
+}
+
+.trophy {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  padding-top: 10px;
+  transition: height 0.3s ease;
+}
+
+// Podium colours: gold, silver and bronze for the top three, then a grey that fades
+// out towards tenth place.
+$place-colors: (
+  "first": #ffd700,
+  "second": #c0c0c0,
+  "third": #cd7f32,
+  "fourth": #9a9a9a,
+  "fifth": #a5a5a5,
+  "sixth": #b0b0b0,
+  "seventh": #bbbbbb,
+  "eighth": #c6c6c6,
+  "ninth": #d1d1d1,
+  "tenth": #dcdcdc,
+);
+
+// The tallest bar is capped at 370px and each place below it loses 35px, so the podium
+// keeps its staircase shape no matter how lopsided the badge counts are.
+$place-heights: (
+  "first": 370px,
+  "second": 335px,
+  "third": 300px,
+  "fourth": 265px,
+  "fifth": 230px,
+  "sixth": 195px,
+  "seventh": 160px,
+  "eighth": 125px,
+  "ninth": 90px,
+  "tenth": 55px,
+);
+
+@each $place, $color in $place-colors {
+  .position.#{$place} .trophy {
+    background: $color;
+    max-height: map-get($place-heights, $place);
+  }
+
+  .position.#{$place} .rank {
+    background: $color;
+    border-color: darken($color, 12%);
+  }
+}
+
+.user-name {
+  font-size: 12px;
+  height: 30px;
+  font-weight: bold;
+  max-width: 100px;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.badge-count {
+  font-size: 16px;
+  color: #555;
+}

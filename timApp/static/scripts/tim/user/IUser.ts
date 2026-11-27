@@ -44,6 +44,18 @@ export interface IUserApiKey {
     quotaChecked: boolean;
 }
 
+export interface IUserLLMApiKey {
+    provider: string;
+    APIkey: string;
+    alias: string;
+    // TODO needed for tokens?
+    usedTokens: number;
+    availableTokens: number;
+    tokensChecked: boolean;
+    groups?: IGroup[];
+    itemPaths?: string[];
+}
+
 export interface IFullUser extends IUser {
     groups: IGroup[];
     consent: ConsentType | undefined;
