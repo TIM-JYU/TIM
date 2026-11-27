@@ -60,6 +60,7 @@ def send_email_impl(
         s = smtplib.SMTP_SSL(
             flask_app.config["MAIL_HOST"], flask_app.config["MAIL_PORT"]
         )
+        s.set_debuglevel(1)
         try:
             s.login(mail_from, app.config["MAIL_PASSWORD"])
             s.sendmail(mail_from, [rcpt], mime_msg.as_string())
@@ -131,6 +132,8 @@ def multi_send_email_impl(
             if not is_localhost()
             else None
         )
+        if s:
+            s.set_debuglevel(1)
         rcpts = rcpt.split(";")
         mail_targets: list[str | list[str]] = list(rcpts) if not reply_all else [rcpts]
         bccmail = bcc
@@ -141,8 +144,6 @@ def multi_send_email_impl(
                 bccmail = ""
                 extra = "\n\n" + "\n".join(rcpts)
         try:
-            if s:
-                s.set_debuglevel(1)
             if s:
                 s.login(mail_from, app.config["MAIL_PASSWORD"])
             for rcp in mail_targets:
