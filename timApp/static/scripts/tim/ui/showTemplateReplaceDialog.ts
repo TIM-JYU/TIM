@@ -52,6 +52,7 @@ export async function showTemplateReplaceDialog(
                 text: param.text ?? `Replacement for ${param.default}`,
                 title: "Parameter",
                 okText: "OK",
+                allowEmpty: true,
                 defaultValue: param.default,
                 validator: (input) =>
                     new Promise<Result<string, string>>((res) => {

@@ -30,6 +30,7 @@ export type InputDialogParams<T> = {
     options?: string[];
     selected?: boolean[];
     selectedIndex?: number;
+    allowEmpty?: boolean;
     validator?: (s: string) => Promise<Result<T, string>>;
 } & (
     | {isInput?: InputDialogKind.NoValidator; okValue: T}
@@ -141,7 +142,7 @@ export type InputDialogParams<T> = {
             </ng-container>
             <ng-container footer>
                 <tim-loading *ngIf="loading"></tim-loading>
-                <button [disabled]="!value || loading"
+                <button [disabled]="!this.canSubmit()"
                         class="timButton" type="button" (click)="ok()">{{ okText() }}
                 </button>
                 <button [disabled]="loading" class="btn btn-default" type="button" (click)="dismiss()">{{ cancelText() }}</button>
@@ -237,6 +238,11 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
         }
     }
 
+    // helper
+    canSubmit() {
+        return (this.data.allowEmpty || !!this.value) && !this.loading;
+    }
+
     onCheckboxChange(option: string, event: Event) {
         const isChecked = (event.target as HTMLInputElement).checked;
         if (isChecked) {
@@ -249,7 +255,7 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     }
 
     async ok() {
-        if (!this.value || this.loading) {
+        if (!this.canSubmit()) {
             return;
         }
         if (this.data.isInput === InputDialogKind.NoValidator) {

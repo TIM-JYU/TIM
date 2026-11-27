@@ -15,6 +15,7 @@ class DumboHTMLException(Exception):
 
 class MathType(Enum):
     SVG = "svg"
+    CSVG = "csvg"
     MathJax = "mathjax"
     PNG = "png"
 
